@@ -1,0 +1,6 @@
+<%
+  std_opts = "-r features/ --no-source --format pretty"
+%>
+
+default: <%= std_opts %>
+wip: <%= std_opts %> --tags @wip
