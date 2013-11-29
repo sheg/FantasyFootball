@@ -11,11 +11,18 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20131128075630) do
+ActiveRecord::Schema.define(version: 20131128075631) do
 
   create_table "activity_types", force: true do |t|
     t.string   "name"
     t.string   "display_name"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
+  create_table "game_rosters", force: true do |t|
+    t.integer  "game_id"
+    t.integer  "roster_id"
     t.datetime "created_at"
     t.datetime "updated_at"
   end
@@ -32,11 +39,14 @@ ActiveRecord::Schema.define(version: 20131128075630) do
   end
 
   create_table "leagues", force: true do |t|
+    t.integer  "season_id"
     t.string   "name"
     t.integer  "size"
     t.datetime "created_at"
     t.datetime "updated_at"
   end
+
+  add_index "leagues", ["season_id"], name: "index_leagues_on_season_id"
 
   create_table "nfl_game_stats", force: true do |t|
     t.integer  "nfl_game_id"
@@ -116,6 +126,7 @@ ActiveRecord::Schema.define(version: 20131128075630) do
   create_table "rosters", force: true do |t|
     t.integer  "league_team_id"
     t.integer  "nfl_player_id"
+    t.boolean  "is_active"
     t.datetime "created_at"
     t.datetime "updated_at"
   end
