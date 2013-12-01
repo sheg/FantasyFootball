@@ -6,3 +6,4 @@ Feature: Login
 
   Scenario: login successfully
   Scenario: attempt to log in using invalid credentials
+  Scenario: log out of the application
