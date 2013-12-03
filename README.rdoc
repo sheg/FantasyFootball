@@ -1,28 +1,37 @@
-== README
+==
+Fantasy Football
 
-This README would normally document whatever steps are necessary to get the
-application up and running.
+===
+Basic setup
 
-Things you may want to cover:
+*  install gems specified in Gemfile:
+  bundle install
+  
+*  update gems specified in Gemfile:
+  bundle update
+  
+*  run rails server
+  rails s
 
-* Ruby version
+===
+Unit Tests with rspec
 
-* System dependencies
+*  run all unit tests:
+  rspec spec/
+  
+*  run all unit tests with documentation format:
+  rspec spec/ -f d
+  
+*  for more...
+  rspec -h
 
-* Configuration
+===
+Database
 
-* Database creation
+*   To migrate dev db schema:
+  rake db:migrate
 
-* Database initialization
-
-* How to run the test suite
-
-* Services (job queues, cache servers, search engines, etc.)
-
-* Deployment instructions
-
-* ...
-
-
-Please feel free to use a different markup language if you do not plan to run
-<tt>rake doc:app</tt>.
+*   To migrate test db schema:
+  rake test:prepare
+  
+* Database info is located in config/database.yml
