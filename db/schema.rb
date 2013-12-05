@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20131202224753) do
+ActiveRecord::Schema.define(version: 20131205015159) do
 
   create_table "activity_types", force: true do |t|
     t.string   "name"
@@ -39,14 +39,11 @@ ActiveRecord::Schema.define(version: 20131202224753) do
   end
 
   create_table "leagues", force: true do |t|
-    t.integer  "season_id"
     t.string   "name"
     t.integer  "size"
     t.datetime "created_at"
     t.datetime "updated_at"
   end
-
-  add_index "leagues", ["season_id"], name: "index_leagues_on_season_id"
 
   create_table "nfl_game_stats", force: true do |t|
     t.integer  "nfl_game_id"
@@ -126,7 +123,6 @@ ActiveRecord::Schema.define(version: 20131202224753) do
   create_table "rosters", force: true do |t|
     t.integer  "league_team_id"
     t.integer  "nfl_player_id"
-    t.boolean  "is_active"
     t.datetime "created_at"
     t.datetime "updated_at"
   end
@@ -155,6 +151,6 @@ ActiveRecord::Schema.define(version: 20131202224753) do
     t.string   "password_digest"
   end
 
-  add_index "users", ["email"], name: "index_users_on_email", unique: true
+  add_index "users", ["email"], name: "index_users_on_email"
 
 end
