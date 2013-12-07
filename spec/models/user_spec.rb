@@ -19,6 +19,7 @@ describe User do
   it { should respond_to(:password) }
   it { should respond_to(:password_confirmation) }
   it { should respond_to(:authenticate) }
+  it { should respond_to(:remember_token) }
 
   describe "when email is not present" do
     before { @user.email = '' }
@@ -83,7 +84,6 @@ describe User do
     it { should_not be_valid}
   end
 
-  #user.authenticate(password) returns the user or nil
   describe "authentication" do
     before { @user.save }
     let(:found_user) { User.find_by(:email => @user.email) }
@@ -97,5 +97,10 @@ describe User do
       it { should_not eq user_with_bad_password }
       specify { expect(user_with_bad_password).to be_false }
     end
+  end
+
+  describe "remember token" do
+    before { @user.save }
+    it { expect(@user.remember_token).not_to be_blank }
   end
 end

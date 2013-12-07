@@ -106,3 +106,8 @@ input, textarea, select, .uneditable-input {
 input {
   height: auto;
 }
+
+label.required:after{
+  content:"*";
+  color: red;
+}
