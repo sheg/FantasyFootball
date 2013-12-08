@@ -11,4 +11,8 @@ class TeamLoader
       }
     end
   end
+
+  def new_function
+    #nothing here
+  end
 end
