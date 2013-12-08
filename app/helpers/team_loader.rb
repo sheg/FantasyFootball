@@ -13,6 +13,6 @@ class TeamLoader
   end
 
   def new_function
-    #nothing here
+    #nothing here as well whatever the hell
   end
 end
