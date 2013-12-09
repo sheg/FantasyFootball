@@ -1,10 +1,14 @@
-namespace :db do
+namespace :ff_db do
   desc "Fill database with NFL Teams"
   task populate_teams: :environment do
     loader = TeamLoader.new
-    loader.load_teams_via_fantasy_data
-    loader.teams.each do |team|
-      NflTeam.create!(name: team[:name], abbr: team[:abbr])
-    end
+    loader.load_teams
   end
+
+  desc "Fill database with players"
+  task populate_players: :environment do
+    loader = TeamLoader.new
+    loader.load_players
+  end
+
 end
