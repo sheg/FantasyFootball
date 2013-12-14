@@ -34,4 +34,10 @@ Database
 *   To migrate test db schema:
   rake test:prepare
   
+*   To populate nfl teams to database:
+  rake db:populate_teams
+
+*   To reset the database:
+  rake db:reset
+  
 * Database info is located in config/database.yml
