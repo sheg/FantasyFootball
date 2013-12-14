@@ -111,3 +111,15 @@ label.required:after{
   content:"*";
   color: red;
 }
+
+.error-message {
+  display: none;
+}
+
+.error .help-inline {
+  display: block;
+}
+
+.help-inline {
+  display: none;
+}

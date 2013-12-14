@@ -24,6 +24,12 @@ class UsersController < ApplicationController
 
   def destroy
   end
+
+  def email_exists
+    result = User.exists?(email: params[:email_address])
+    result = 0 unless result
+    render text: result
+  end
 end
 
 

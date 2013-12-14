@@ -1,0 +1,6 @@
+$.ajax("/users", {
+    success: function(response) {
+        $("#sign-up-form").html(response);
+    },
+    error: alert("cheese")
+});
