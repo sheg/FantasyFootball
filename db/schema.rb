@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20131207191329) do
+ActiveRecord::Schema.define(version: 20131207191430) do
 
   create_table "activity_types", force: true do |t|
     t.string   "name"
@@ -70,6 +70,7 @@ ActiveRecord::Schema.define(version: 20131207191329) do
     t.datetime "time_remaining"
     t.datetime "created_at"
     t.datetime "updated_at"
+    t.string   "external_game_id"
   end
 
   add_index "nfl_games", ["away_team_id"], name: "index_nfl_games_on_away_team_id"
@@ -80,6 +81,8 @@ ActiveRecord::Schema.define(version: 20131207191329) do
     t.string   "last_name"
     t.datetime "created_at"
     t.datetime "updated_at"
+    t.string   "photo_url"
+    t.string   "external_player_id"
   end
 
   create_table "nfl_positions", force: true do |t|
@@ -96,6 +99,7 @@ ActiveRecord::Schema.define(version: 20131207191329) do
     t.integer  "position_id"
     t.datetime "created_at"
     t.datetime "updated_at"
+    t.integer  "player_number"
   end
 
   create_table "nfl_seasons", force: true do |t|

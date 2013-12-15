@@ -23,13 +23,6 @@ namespace :ff do
 
     desc "Restore NFL data"
     task restore: :environment do
-      puts 'Clearing NflGames'
-      NflGame.destroy_all
-      puts 'Clearing NflPlayers'
-      NflPlayer.destroy_all
-      puts 'Clearing NflTeams'
-      NflTeam.destroy_all
-
       Rake::Task['ff:nfl:load_teams'].invoke
       Rake::Task['ff:nfl:load_games'].invoke
       Rake::Task['ff:nfl:load_players'].invoke
