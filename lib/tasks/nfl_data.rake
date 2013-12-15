@@ -21,11 +21,19 @@ namespace :ff do
       loader.load_players
     end
 
+    desc "Fill database with game scores"
+    task load_scores: :environment do
+      puts 'Loading NFL game scores'
+      loader = NflLoader.new
+      loader.load_game_scores
+    end
+
     desc "Restore NFL data"
     task restore: :environment do
       Rake::Task['ff:nfl:load_teams'].invoke
       Rake::Task['ff:nfl:load_games'].invoke
       Rake::Task['ff:nfl:load_players'].invoke
+      Rake::Task['ff:nfl:load_game_scores'].invoke
     end
   end
 end

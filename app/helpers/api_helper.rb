@@ -19,11 +19,21 @@ module ApiHelper
     end
   end
 
-  def load_json_data(url, cache_file)
+  def load_json_data(url, cache_file, cache_seconds = 0)
     cache_fullpath = File.join($base_folder, $my_folder, cache_file)
     FileUtils.mkpath(File.dirname(cache_fullpath))
+    use_cache = false
 
     if(File.exists?(cache_fullpath))
+      if(cache_seconds > 0)
+        cache_age = Time.now - File.stat(cache_fullpath).mtime
+        use_cache = (cache_age <= cache_seconds)
+      else
+        use_cache = true
+      end
+    end
+
+    if(use_cache)
       puts "Using cache file #{cache_fullpath}"
       ret = JSON.parse(File.open(cache_fullpath).read)
     else
@@ -51,7 +61,7 @@ module ApiHelper
 
   def load_from_api(url)
     options = { query: { key: $api_key } }
-    response = self.class.get(url, options)
+    response = ApiHelper.get(url, options)
     response.body if response.code == 200
   end
 end

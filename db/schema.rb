@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20131207191430) do
+ActiveRecord::Schema.define(version: 20131207191431) do
 
   create_table "activity_types", force: true do |t|
     t.string   "name"
@@ -61,16 +61,34 @@ ActiveRecord::Schema.define(version: 20131207191430) do
     t.datetime "start_time"
     t.integer  "home_score"
     t.integer  "away_score"
-    t.integer  "quarter"
-    t.boolean  "posession"
+    t.boolean  "possession"
     t.integer  "down"
-    t.integer  "yards_to_go"
-    t.integer  "yardline"
+    t.integer  "yard_line"
     t.boolean  "field_side"
-    t.datetime "time_remaining"
     t.datetime "created_at"
     t.datetime "updated_at"
     t.string   "external_game_id"
+    t.integer  "away_score_q1"
+    t.integer  "away_score_q2"
+    t.integer  "away_score_q3"
+    t.integer  "away_score_q4"
+    t.integer  "away_score_ot"
+    t.integer  "home_score_q1"
+    t.integer  "home_score_q2"
+    t.integer  "home_score_q3"
+    t.integer  "home_score_q4"
+    t.integer  "home_score_ot"
+    t.boolean  "has_started"
+    t.boolean  "has_started_q1"
+    t.boolean  "has_started_q2"
+    t.boolean  "has_started_q3"
+    t.boolean  "has_started_q4"
+    t.boolean  "is_overtime"
+    t.boolean  "is_over"
+    t.boolean  "is_in_progress"
+    t.string   "quarter"
+    t.string   "time_remaining"
+    t.string   "yards_to_go"
   end
 
   add_index "nfl_games", ["away_team_id"], name: "index_nfl_games_on_away_team_id"
