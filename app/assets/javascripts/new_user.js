@@ -28,6 +28,17 @@ $(function() {
             });
         }
     });
+    $('.control-group-password').on("keyup", "input", function() {
+        var control_group = $(this).closest(".control-group-password");
+        var password = control_group.find('.password');
+        var password_confirmation = control_group.find('.password-confirmation');
+        if(password.val() !=  password_confirmation.val()) {
+            control_group.addClass("error");
+            control_group.find(".password-mismatch").addClass('help-inline');
+        } else {
+            control_group.removeClass("error");
+        }
+    });
 });
 
 function adjust_submit(button) {

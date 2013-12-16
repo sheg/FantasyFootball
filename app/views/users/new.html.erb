@@ -7,19 +7,21 @@
 
         <div class="control-group control-group-email">
           <%= f.label :email, "Email Address", class: "required" %>
-          <%= f.text_field :email, class: "email", remote: true %>
+          <%= f.text_field :email, class: "email" %>
           <span class="error-message error-required"> Email Address is required </span>
           <span class="error-message error-taken"> Email Address already taken </span>
-          <span class="error-message error-invalid-format"> Email Address format is invalid (i.e. name@domain.com) </span>
+          <span class="error-message error-invalid-format"> Email Address format is invalid (e.g. name@domain.com) </span>
         </div>
 
-        <%= f.label :password, "Password", class: "required" %>
-        <%= f.password_field :password %>
+        <div class="control-group control-group-password">
+            <%= f.label :password, "Password", class: "required" %>
+            <%= f.password_field :password, class: "password" %>
+            <span class="error-message password-short"> Passwords must be over 6 characters long </span>
 
-        <%= f.label :password_confirmation, "Password Confirmation", class: "required" %>
-        <%= f.password_field :password_confirmation %>
-
-
+            <%= f.label :password_confirmation, "Password Confirmation", class: "required" %>
+            <%= f.password_field :password_confirmation, class: "password-confirmation" %>
+            <span class="error-message password-mismatch"> Passwords do not match </span>
+        </div>
 
         <%= f.submit "Create my account", class: "btn btn-large btn-primary" %>
     <% end %>
