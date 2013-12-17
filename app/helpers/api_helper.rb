@@ -3,7 +3,8 @@ require 'httparty'
 module ApiHelper
   include HTTParty
 
-  $api_key = 'EE80A3DB-D928-4AFB-9931-57BB7B7892FE'
+  # $api_key = '8C885035-7832-4EEA-BE33-A8C5AE5711D1'
+  $api_key = '2A0F233B-183D-414B-BCF5-96E4EE62E0E7'
   base_uri('http://api.nfldata.apiphany.com/trial/JSON/')
 
   $base_folder = File.join(Rails.root, 'lib', 'json_data')

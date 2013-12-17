@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20131207191431) do
+ActiveRecord::Schema.define(version: 20131215192303) do
 
   create_table "activity_types", force: true do |t|
     t.string   "name"
@@ -39,11 +39,14 @@ ActiveRecord::Schema.define(version: 20131207191431) do
   end
 
   create_table "leagues", force: true do |t|
+    t.integer  "season_id"
     t.string   "name"
     t.integer  "size"
     t.datetime "created_at"
     t.datetime "updated_at"
   end
+
+  add_index "leagues", ["season_id"], name: "index_leagues_on_season_id", using: :btree
 
   create_table "nfl_game_stats", force: true do |t|
     t.integer  "nfl_game_id"
@@ -89,10 +92,12 @@ ActiveRecord::Schema.define(version: 20131207191431) do
     t.string   "quarter"
     t.string   "time_remaining"
     t.string   "yards_to_go"
+    t.integer  "season_id"
   end
 
-  add_index "nfl_games", ["away_team_id"], name: "index_nfl_games_on_away_team_id"
-  add_index "nfl_games", ["home_team_id"], name: "index_nfl_games_on_home_team_id"
+  add_index "nfl_games", ["away_team_id"], name: "index_nfl_games_on_away_team_id", using: :btree
+  add_index "nfl_games", ["external_game_id"], name: "index_nfl_games_on_external_game_id", using: :btree
+  add_index "nfl_games", ["home_team_id"], name: "index_nfl_games_on_home_team_id", using: :btree
 
   create_table "nfl_players", force: true do |t|
     t.string   "first_name"
@@ -102,6 +107,8 @@ ActiveRecord::Schema.define(version: 20131207191431) do
     t.string   "photo_url"
     t.string   "external_player_id"
   end
+
+  add_index "nfl_players", ["external_player_id"], name: "index_nfl_players_on_external_player_id", using: :btree
 
   create_table "nfl_positions", force: true do |t|
     t.string   "name"
@@ -134,6 +141,8 @@ ActiveRecord::Schema.define(version: 20131207191431) do
     t.datetime "updated_at"
   end
 
+  add_index "nfl_teams", ["abbr"], name: "index_nfl_teams_on_abbr", using: :btree
+
   create_table "roster_activities", force: true do |t|
     t.integer  "roster_id"
     t.integer  "activity_type_id"
@@ -145,6 +154,7 @@ ActiveRecord::Schema.define(version: 20131207191431) do
   create_table "rosters", force: true do |t|
     t.integer  "league_team_id"
     t.integer  "nfl_player_id"
+    t.boolean  "is_active"
     t.datetime "created_at"
     t.datetime "updated_at"
   end
@@ -157,8 +167,8 @@ ActiveRecord::Schema.define(version: 20131207191431) do
     t.datetime "updated_at"
   end
 
-  add_index "teams", ["league_id"], name: "index_teams_on_league_id"
-  add_index "teams", ["user_id"], name: "index_teams_on_user_id"
+  add_index "teams", ["league_id"], name: "index_teams_on_league_id", using: :btree
+  add_index "teams", ["user_id"], name: "index_teams_on_user_id", using: :btree
 
   create_table "users", force: true do |t|
     t.string   "email"
@@ -174,7 +184,7 @@ ActiveRecord::Schema.define(version: 20131207191431) do
     t.string   "remember_token"
   end
 
-  add_index "users", ["email"], name: "index_users_on_email"
-  add_index "users", ["remember_token"], name: "index_users_on_remember_token"
+  add_index "users", ["email"], name: "index_users_on_email", unique: true, using: :btree
+  add_index "users", ["remember_token"], name: "index_users_on_remember_token", using: :btree
 
 end
