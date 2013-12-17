@@ -1,3 +1,5 @@
+require 'thread'
+
 class NflLoader
   include ApiHelper
   set_my_folder('nfl')
@@ -195,40 +197,88 @@ class NflLoader
   private :get_player_stats
 
   def load_player_stats(season, week, cache_timeout = 0)
+    get_start = Time.now
     players = get_player_stats(season.year, week, cache_timeout)
-    players.each do |item|
-      player = NflPlayer.find_by(external_player_id: item['PlayerID'])
-      unless player
-        puts "Player not found in DB ExternalID: #{item['PlayerID']}, Team: #{item['Team']}, Name: #{item['Name']}... retrying"
 
-        if(item['PlayerID'])
-          player = load_player(season, item['PlayerID'])
-          puts "Found player in DB ExternalID: #{player.external_player_id}, Name: #{player.full_name}" if player
-        else
-          team = NflTeam.find_by(abbr: item['Team'])
-          team_player = NflSeasonTeamPlayer.find_by(season_id: season.id, team_id: team.id, player_number: item['Number'])
-          if(team_player)
-            player = NflPlayer.find_by(id: team_player.player_id)
-            puts "Found player in DB ExternalID: #{player.external_player_id}, Name: #{player.full_name}, Number: #{team_player.player_number}" if player
-          end
+    $players = players
+
+    threads = Array.new
+    for i in 1..3
+      t = Thread.new { thread_process_player_stats(season, week) }
+      t["name"] = i
+      threads.push(t)
+    end
+
+    threads.each do |t|
+      t.join
+    end
+
+    puts "Week #{week}: time taken: #{Time.now - get_start}"
+  end
+  private :load_player_stats
+
+  def thread_process_player_stats(season, week)
+    Thread.exclusive {
+      NflPlayer   # Gets around issue error in autoload activerecord objects
+    }
+
+    while $players.count > 0
+      item = nil
+      Thread.exclusive {
+        item = $players.pop
+        # puts "Thread #{Thread.current["name"]} processing, players remaining #{$players.count}"
+      }
+      player = process_player_stats(season, week, item) if item
+      # puts "Thread #{Thread.current["name"]} processed ID #{player.id}, #{player.full_name}"
+    end
+
+    ActiveRecord::Base.connection.close   # Release any DB connections used by the current thread
+  end
+  private :thread_process_player_stats
+
+  def process_player_stats(season, week, item)
+    player = NflPlayer.find_by(external_player_id: item['PlayerID'])
+    unless player
+      puts "Player not found in DB ExternalID: #{item['PlayerID']}, Team: #{item['Team']}, Name: #{item['Name']}... retrying"
+
+      if(item['PlayerID'])
+        player = load_player(season, item['PlayerID'])
+        puts "Found player in DB ExternalID: #{player.external_player_id}, Name: #{player.full_name}" if player
+      else
+        team = NflTeam.find_by(abbr: item['Team'])
+        team_player = NflSeasonTeamPlayer.find_by(season_id: season.id, team_id: team.id, player_number: item['Number'])
+        if(team_player)
+          player = NflPlayer.find_by(id: team_player.player_id)
+          puts "Found player in DB ExternalID: #{player.external_player_id}, Name: #{player.full_name}, Number: #{team_player.player_number}" if player
         end
-
-        puts "Player not found in DB ExternalID: #{item['PlayerID']}, Team: #{item['Team']}, Name: #{item['Name']}" unless player
       end
 
-      nfl_game = NflGame.find_by!(external_game_id: item['GameKey'])
-      puts "Game not found in DB ExternalID: #{item['GameKey']}" unless nfl_game
-
-      next unless player && nfl_game
-
-      stat = NflGameStats.find_or_create_by!(nfl_game_id: nfl_game.id, nfl_player_id: player.id)
-      stat.passing_yards = item['PassingYards']
-      stat.interceptions = item['Interceptions']
-
-      puts "Player stats updated #{player.full_name}, Game #{nfl_game.external_game_id}, Week #{nfl_game.week}, #{nfl_game.away_team.abbr} @#{nfl_game.home_team.abbr}" if stat.changed?
-
-      stat.save
+      puts "Player not found in DB ExternalID: #{item['PlayerID']}, Team: #{item['Team']}, Name: #{item['Name']}" unless player
     end
+
+    # Cache NFLGames to minimize DB hits
+    $nfl_games = Hash.new unless $nfl_games
+    nfl_game = $nfl_games[item['GameKey']]
+    Thread.exclusive {
+      nfl_game = $nfl_games[item['GameKey']]
+      unless(nfl_game)
+        nfl_game = NflGame.find_by!(external_game_id: item['GameKey'])
+        $nfl_games[item['GameKey']] = nfl_game
+      end
+    }
+    puts "Game not found in DB ExternalID: #{item['GameKey']}" unless nfl_game
+
+    return unless player && nfl_game
+
+    stat = NflGameStats.find_or_create_by!(nfl_game_id: nfl_game.id, nfl_player_id: player.id)
+    stat.passing_yards = item['PassingYards']
+    stat.interceptions = item['Interceptions']
+
+    puts "Player stats updated #{player.full_name}, Game #{nfl_game.external_game_id}, Week #{nfl_game.week}, #{nfl_game.away_team.abbr} @#{nfl_game.home_team.abbr}" if stat.changed?
+
+    stat.save
+
+    player
   end
   private :load_player_stats
 

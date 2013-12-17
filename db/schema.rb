@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20131215192303) do
+ActiveRecord::Schema.define(version: 20131216123123) do
 
   create_table "activity_types", force: true do |t|
     t.string   "name"
@@ -56,6 +56,8 @@ ActiveRecord::Schema.define(version: 20131215192303) do
     t.datetime "created_at"
     t.datetime "updated_at"
   end
+
+  add_index "nfl_game_stats", ["nfl_game_id", "nfl_player_id"], name: "index_nfl_game_stats_on_nfl_game_id_and_nfl_player_id", using: :btree
 
   create_table "nfl_games", force: true do |t|
     t.integer  "week"

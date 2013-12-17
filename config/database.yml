@@ -14,7 +14,7 @@ development:
   adapter: mysql2
   encoding: utf8
   database: fantasy_football
-  pool: 5
+  pool: 30
   username: ff_user
   password: ff_us3r
   host: 127.0.0.1
