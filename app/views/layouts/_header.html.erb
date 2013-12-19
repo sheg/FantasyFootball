@@ -2,7 +2,11 @@
   <div class="navbar-inner">
     <div class="container">
       <nav>
-        <%= link_to "Fantasy Football", root_path, id: "logo" %>
+        <% if current_user %>
+            <%= link_to "Fantasy Football", current_user, id: "logo" %>
+        <% else %>
+            <%= link_to "Fantasy Football", root_path, id: "logo" %>
+        <% end %>
         <ul class="nav pull-right">
       <% if signed_in? %>
         <li id="fat-menu" class="dropdown">

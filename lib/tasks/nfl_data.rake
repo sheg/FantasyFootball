@@ -34,11 +34,5 @@ namespace :ff do
       Rake::Task['ff:nfl:load_games'].invoke
       Rake::Task['ff:nfl:load_players'].invoke
     end
-
-    desc "calculate Vernon Davis's season fantasy score"
-    task calculate_davis_score: :environment do
-      loader = NflLoader.new
-      puts loader.calculate_season_player_points("Vernon Davis")
-    end
   end
 end
