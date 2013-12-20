@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20131207191329) do
+ActiveRecord::Schema.define(version: 20131216123123) do
 
   create_table "activity_types", force: true do |t|
     t.string   "name"
@@ -39,11 +39,14 @@ ActiveRecord::Schema.define(version: 20131207191329) do
   end
 
   create_table "leagues", force: true do |t|
+    t.integer  "season_id"
     t.string   "name"
     t.integer  "size"
     t.datetime "created_at"
     t.datetime "updated_at"
   end
+
+  add_index "leagues", ["season_id"], name: "index_leagues_on_season_id", using: :btree
 
   create_table "nfl_game_stats", force: true do |t|
     t.integer  "nfl_game_id"
@@ -54,6 +57,8 @@ ActiveRecord::Schema.define(version: 20131207191329) do
     t.datetime "updated_at"
   end
 
+  add_index "nfl_game_stats", ["nfl_game_id", "nfl_player_id"], name: "index_nfl_game_stats_on_nfl_game_id_and_nfl_player_id", using: :btree
+
   create_table "nfl_games", force: true do |t|
     t.integer  "week"
     t.integer  "home_team_id"
@@ -61,26 +66,51 @@ ActiveRecord::Schema.define(version: 20131207191329) do
     t.datetime "start_time"
     t.integer  "home_score"
     t.integer  "away_score"
-    t.integer  "quarter"
-    t.boolean  "posession"
+    t.boolean  "possession"
     t.integer  "down"
-    t.integer  "yards_to_go"
-    t.integer  "yardline"
+    t.integer  "yard_line"
     t.boolean  "field_side"
-    t.datetime "time_remaining"
     t.datetime "created_at"
     t.datetime "updated_at"
+    t.string   "external_game_id"
+    t.integer  "away_score_q1"
+    t.integer  "away_score_q2"
+    t.integer  "away_score_q3"
+    t.integer  "away_score_q4"
+    t.integer  "away_score_ot"
+    t.integer  "home_score_q1"
+    t.integer  "home_score_q2"
+    t.integer  "home_score_q3"
+    t.integer  "home_score_q4"
+    t.integer  "home_score_ot"
+    t.boolean  "has_started"
+    t.boolean  "has_started_q1"
+    t.boolean  "has_started_q2"
+    t.boolean  "has_started_q3"
+    t.boolean  "has_started_q4"
+    t.boolean  "is_overtime"
+    t.boolean  "is_over"
+    t.boolean  "is_in_progress"
+    t.string   "quarter"
+    t.string   "time_remaining"
+    t.string   "yards_to_go"
+    t.integer  "season_id"
   end
 
-  add_index "nfl_games", ["away_team_id"], name: "index_nfl_games_on_away_team_id"
-  add_index "nfl_games", ["home_team_id"], name: "index_nfl_games_on_home_team_id"
+  add_index "nfl_games", ["away_team_id"], name: "index_nfl_games_on_away_team_id", using: :btree
+  add_index "nfl_games", ["external_game_id"], name: "index_nfl_games_on_external_game_id", using: :btree
+  add_index "nfl_games", ["home_team_id"], name: "index_nfl_games_on_home_team_id", using: :btree
 
   create_table "nfl_players", force: true do |t|
     t.string   "first_name"
     t.string   "last_name"
     t.datetime "created_at"
     t.datetime "updated_at"
+    t.string   "photo_url"
+    t.string   "external_player_id"
   end
+
+  add_index "nfl_players", ["external_player_id"], name: "index_nfl_players_on_external_player_id", using: :btree
 
   create_table "nfl_positions", force: true do |t|
     t.string   "name"
@@ -96,6 +126,7 @@ ActiveRecord::Schema.define(version: 20131207191329) do
     t.integer  "position_id"
     t.datetime "created_at"
     t.datetime "updated_at"
+    t.integer  "player_number"
   end
 
   create_table "nfl_seasons", force: true do |t|
@@ -112,6 +143,8 @@ ActiveRecord::Schema.define(version: 20131207191329) do
     t.datetime "updated_at"
   end
 
+  add_index "nfl_teams", ["abbr"], name: "index_nfl_teams_on_abbr", using: :btree
+
   create_table "roster_activities", force: true do |t|
     t.integer  "roster_id"
     t.integer  "activity_type_id"
@@ -123,6 +156,7 @@ ActiveRecord::Schema.define(version: 20131207191329) do
   create_table "rosters", force: true do |t|
     t.integer  "league_team_id"
     t.integer  "nfl_player_id"
+    t.boolean  "is_active"
     t.datetime "created_at"
     t.datetime "updated_at"
   end
@@ -135,8 +169,8 @@ ActiveRecord::Schema.define(version: 20131207191329) do
     t.datetime "updated_at"
   end
 
-  add_index "teams", ["league_id"], name: "index_teams_on_league_id"
-  add_index "teams", ["user_id"], name: "index_teams_on_user_id"
+  add_index "teams", ["league_id"], name: "index_teams_on_league_id", using: :btree
+  add_index "teams", ["user_id"], name: "index_teams_on_user_id", using: :btree
 
   create_table "users", force: true do |t|
     t.string   "email"
@@ -152,7 +186,7 @@ ActiveRecord::Schema.define(version: 20131207191329) do
     t.string   "remember_token"
   end
 
-  add_index "users", ["email"], name: "index_users_on_email"
-  add_index "users", ["remember_token"], name: "index_users_on_remember_token"
+  add_index "users", ["email"], name: "index_users_on_email", unique: true, using: :btree
+  add_index "users", ["remember_token"], name: "index_users_on_remember_token", using: :btree
 
 end
