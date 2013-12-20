@@ -5,13 +5,8 @@
     <%= form_for(@user) do |f| %>
         <%= render "shared/error_messages" %>
 
-        <div class="control-group control-group-email">
-          <%= f.label :email, "Email Address", class: "required" %>
-          <%= f.text_field :email, class: "email" %>
-          <span class="error-message error-required"> Email Address is required </span>
-          <span class="error-message error-taken"> Email Address already taken </span>
-          <span class="error-message error-invalid-format"> Email Address format is invalid (i.e. name@domain.com) </span>
-        </div>
+        <label>Email Address</label>
+        <input type="text" placeholder=<%= @user.email %> disabled>
 
         <div class="control-group control-group-password">
           <%= f.label :password, "Password", class: "required" %>
@@ -41,7 +36,7 @@
         <%= f.label :zip, "Zip Code" %>
         <%= f.text_field :zip %>
 
-        <%= f.submit "Create my account", class: "btn btn-large btn-primary" %>
+        <%= f.submit "Update Account", class: "btn btn-large btn-primary" %>
     <% end %>
   </div>
 </div>

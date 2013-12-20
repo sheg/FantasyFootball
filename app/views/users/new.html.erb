@@ -1,16 +1,24 @@
-<h1>Create New User</h1>
+<% @action_name = signed_in? ? "Update" : "Create" %>
+
+<h1><%= @action_name %> User</h1>
 
 <div class="row">
   <div class="span6 offset3">
     <%= form_for(@user) do |f| %>
         <%= render "shared/error_messages" %>
-
         <div class="control-group control-group-email">
-          <%= f.label :email, "Email Address", class: "required" %>
-          <%= f.text_field :email, class: "email" %>
-          <span class="error-message error-required"> Email Address is required </span>
-          <span class="error-message error-taken"> Email Address already taken </span>
-          <span class="error-message error-invalid-format"> Email Address format is invalid (e.g. name@domain.com) </span>
+            <% if signed_in? %>
+                <label>Email Address</label>
+                <div>
+                    <label class="span6"><%= @user.email %></label>
+                </div>
+            <% else %>
+                <%= f.label :email, "Email Address", class: "required" %>
+                <%= f.text_field :email, class: "email" %>
+                <span class="error-message error-required"> Email Address is required </span>
+                <span class="error-message error-taken"> Email Address already taken </span>
+                <span class="error-message error-invalid-format"> Email Address format is invalid (e.g. name@domain.com) </span>
+            <% end %>
         </div>
 
         <div class="control-group control-group-password">
@@ -23,7 +31,26 @@
             <span class="error-message password-mismatch"> Passwords do not match </span>
         </div>
 
-        <%= f.submit "Create my account", class: "btn btn-large btn-primary" %>
+        <% if signed_in? %>
+            <%= f.label :first_name, "First Name" %>
+            <%= f.text_field :first_name %>
+
+            <%= f.label :last_name, "Last Name" %>
+            <%= f.text_field :last_name %>
+
+            <%= f.label :address, "Address" %>
+            <%= f.text_field :address %>
+
+            <%= f.label :city, "City" %>
+            <%= f.text_field :city %>
+
+            <%= f.label :state, "State" %>
+            <%= f.text_field :state %>
+
+            <%= f.label :zip, "Zip Code" %>
+            <%= f.text_field :zip %>
+        <% end %>
+        <%= f.submit "#{@action_name} User", class: "btn btn-large btn-primary" %>
     <% end %>
       </div>
     </div>
