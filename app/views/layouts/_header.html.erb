@@ -8,7 +8,7 @@
             <%= link_to "Fantasy Football", root_path, id: "logo" %>
         <% end %>
         <ul class="nav navbar-nav pull-right">
-            <li><%= link_to "Leagues", "#" %></li>
+            <li><%= link_to "Leagues", leagues_path %></li>
             <% if signed_in? %>
                 <li id="fat-menu" class="dropdown">
                 <a href="#" class="dropdown-toggle" data-toggle="dropdown">

@@ -39,14 +39,11 @@ ActiveRecord::Schema.define(version: 20131216123123) do
   end
 
   create_table "leagues", force: true do |t|
-    t.integer  "season_id"
     t.string   "name"
     t.integer  "size"
     t.datetime "created_at"
     t.datetime "updated_at"
   end
-
-  add_index "leagues", ["season_id"], name: "index_leagues_on_season_id", using: :btree
 
   create_table "nfl_game_stats", force: true do |t|
     t.integer  "nfl_game_id"
@@ -57,7 +54,7 @@ ActiveRecord::Schema.define(version: 20131216123123) do
     t.datetime "updated_at"
   end
 
-  add_index "nfl_game_stats", ["nfl_game_id", "nfl_player_id"], name: "index_nfl_game_stats_on_nfl_game_id_and_nfl_player_id", using: :btree
+  add_index "nfl_game_stats", ["nfl_game_id", "nfl_player_id"], name: "index_nfl_game_stats_on_nfl_game_id_and_nfl_player_id"
 
   create_table "nfl_games", force: true do |t|
     t.integer  "week"
@@ -97,9 +94,9 @@ ActiveRecord::Schema.define(version: 20131216123123) do
     t.integer  "season_id"
   end
 
-  add_index "nfl_games", ["away_team_id"], name: "index_nfl_games_on_away_team_id", using: :btree
-  add_index "nfl_games", ["external_game_id"], name: "index_nfl_games_on_external_game_id", using: :btree
-  add_index "nfl_games", ["home_team_id"], name: "index_nfl_games_on_home_team_id", using: :btree
+  add_index "nfl_games", ["away_team_id"], name: "index_nfl_games_on_away_team_id"
+  add_index "nfl_games", ["external_game_id"], name: "index_nfl_games_on_external_game_id"
+  add_index "nfl_games", ["home_team_id"], name: "index_nfl_games_on_home_team_id"
 
   create_table "nfl_players", force: true do |t|
     t.string   "first_name"
@@ -110,7 +107,7 @@ ActiveRecord::Schema.define(version: 20131216123123) do
     t.string   "external_player_id"
   end
 
-  add_index "nfl_players", ["external_player_id"], name: "index_nfl_players_on_external_player_id", using: :btree
+  add_index "nfl_players", ["external_player_id"], name: "index_nfl_players_on_external_player_id"
 
   create_table "nfl_positions", force: true do |t|
     t.string   "name"
@@ -143,7 +140,7 @@ ActiveRecord::Schema.define(version: 20131216123123) do
     t.datetime "updated_at"
   end
 
-  add_index "nfl_teams", ["abbr"], name: "index_nfl_teams_on_abbr", using: :btree
+  add_index "nfl_teams", ["abbr"], name: "index_nfl_teams_on_abbr"
 
   create_table "roster_activities", force: true do |t|
     t.integer  "roster_id"
@@ -156,7 +153,6 @@ ActiveRecord::Schema.define(version: 20131216123123) do
   create_table "rosters", force: true do |t|
     t.integer  "league_team_id"
     t.integer  "nfl_player_id"
-    t.boolean  "is_active"
     t.datetime "created_at"
     t.datetime "updated_at"
   end
@@ -169,8 +165,8 @@ ActiveRecord::Schema.define(version: 20131216123123) do
     t.datetime "updated_at"
   end
 
-  add_index "teams", ["league_id"], name: "index_teams_on_league_id", using: :btree
-  add_index "teams", ["user_id"], name: "index_teams_on_user_id", using: :btree
+  add_index "teams", ["league_id"], name: "index_teams_on_league_id"
+  add_index "teams", ["user_id"], name: "index_teams_on_user_id"
 
   create_table "users", force: true do |t|
     t.string   "email"
@@ -186,7 +182,7 @@ ActiveRecord::Schema.define(version: 20131216123123) do
     t.string   "remember_token"
   end
 
-  add_index "users", ["email"], name: "index_users_on_email", unique: true, using: :btree
-  add_index "users", ["remember_token"], name: "index_users_on_remember_token", using: :btree
+  add_index "users", ["email"], name: "index_users_on_email"
+  add_index "users", ["remember_token"], name: "index_users_on_remember_token"
 
 end
