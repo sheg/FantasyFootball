@@ -131,6 +131,7 @@ class NflLoader
       nfl_game.home_team_id = home_team.id
       nfl_game.away_team_id = away_team.id
       nfl_game.start_time = game[:start_time]
+      nfl_game.season_id = season.id
 
       puts "Game data updated ExternalID #{nfl_game.external_game_id}, Week #{nfl_game.week}, #{nfl_game.away_team.abbr} @#{nfl_game.home_team.abbr}" if nfl_game.changed?
 
@@ -201,6 +202,8 @@ class NflLoader
     players = get_player_stats(season.year, week, cache_timeout)
 
     $players = players
+    $nfl_games = Hash.new
+    $player_stat_sql = Array.new
 
     threads = Array.new
     for i in 1..3
@@ -213,13 +216,37 @@ class NflLoader
       t.join
     end
 
-    puts "Week #{week}: time taken: #{Time.now - get_start}"
+    puts "Week #{week}: loading time taken: #{Time.now - get_start}"
+
+    get_start = Time.now
+    NflGameStatMap.transaction do
+      sql_array = Array.new
+
+      game_ids = $nfl_games.values.map { |v| v.id }.join(',')
+      sql_array.push "DELETE FROM nfl_game_stat_maps WHERE nfl_game_id IN (#{game_ids});"
+
+      inserts = $player_stat_sql.join(",\n    ")
+      sql_array.push "INSERT INTO nfl_game_stat_maps (nfl_game_id, nfl_player_id, stat_type_id, value) VALUES #{inserts};"
+
+      sql_array.each { |sql|
+        begin
+          NflGameStatMap.connection.execute(sql)
+        rescue Exception => e
+          puts e.message[0,400]
+          puts e.backtrace.join("\n   ")
+        end
+      }
+    end
+
+    puts "Week #{week}: SQL time taken: #{Time.now - get_start}"
   end
   private :load_player_stats
 
   def thread_process_player_stats(season, week)
     Thread.exclusive {
-      NflPlayer   # Gets around issue error in autoload activerecord objects
+      # Gets around issue error in autoload activerecord objects
+      NflSeasonTeamPlayer
+      NflPlayer
     }
 
     while $players.count > 0
@@ -257,7 +284,6 @@ class NflLoader
     end
 
     # Cache NFLGames to minimize DB hits
-    $nfl_games = Hash.new unless $nfl_games
     nfl_game = $nfl_games[item['GameKey']]
     Thread.exclusive {
       nfl_game = $nfl_games[item['GameKey']]
@@ -270,13 +296,21 @@ class NflLoader
 
     return unless player && nfl_game
 
-    stat = NflGameStats.find_or_create_by!(nfl_game_id: nfl_game.id, nfl_player_id: player.id)
-    stat.passing_yards = item['PassingYards']
-    stat.interceptions = item['Interceptions']
+    # Cache StatTypes to minimize DB hits
+    unless $stat_types
+      Thread.exclusive {
+        unless $stat_types
+          $stat_types = StatType.all
+        end
+      }
+    end
 
-    puts "Player stats updated #{player.full_name}, Game #{nfl_game.external_game_id}, Week #{nfl_game.week}, #{nfl_game.away_team.abbr} @#{nfl_game.home_team.abbr}" if stat.changed?
-
-    stat.save
+    changed = true
+    $stat_types.each { |stat_type|
+      next unless (item[stat_type.name])
+      $player_stat_sql.push "(#{nfl_game.id}, #{player.id}, #{stat_type.id}, #{item[stat_type.name]})"
+    }
+    # puts "Player stats updated #{player.full_name}, Game #{nfl_game.external_game_id}, Week #{nfl_game.week}, #{nfl_game.away_team.abbr} @#{nfl_game.home_team.abbr}" if changed
 
     player
   end
@@ -285,7 +319,25 @@ class NflLoader
   def load_current_player_stats
     season = current_season
     week = current_week
-    players = load_player_stats(season, week)
+
+    t1 = Thread.new { load_player_stats(season, week) }
+    t2 = Thread.new {
+      Thread.exclusive {
+        NflSeasonTeamPlayer
+        NflGameStatMap
+      }
+      for i in 1..20 do
+        stats = NflGameStatMap.where(nfl_game_id: NflGame.find_by(external_game_id: 201311534).id)
+        puts stats.count
+        puts stats[0].inspect
+        sleep(0.2)
+      end
+    }
+
+    t1.join
+    t2.join
+
+    # players = load_player_stats(season, week)
     # players = load_player_stats(season, week, 30)
   end
 

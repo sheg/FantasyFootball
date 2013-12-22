@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20131216123123) do
+ActiveRecord::Schema.define(version: 20131222220553) do
 
   create_table "activity_types", force: true do |t|
     t.string   "name"
@@ -38,6 +38,16 @@ ActiveRecord::Schema.define(version: 20131216123123) do
     t.datetime "updated_at"
   end
 
+  create_table "league_point_rules", force: true do |t|
+    t.integer  "league_id"
+    t.integer  "stat_type_id"
+    t.decimal  "multiplier",   precision: 10, scale: 4
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
+  add_index "league_point_rules", ["league_id", "stat_type_id"], name: "index_league_point_rules_on_league_id_and_stat_type_id", unique: true, using: :btree
+
   create_table "leagues", force: true do |t|
     t.integer  "season_id"
     t.string   "name"
@@ -48,16 +58,14 @@ ActiveRecord::Schema.define(version: 20131216123123) do
 
   add_index "leagues", ["season_id"], name: "index_leagues_on_season_id", using: :btree
 
-  create_table "nfl_game_stats", force: true do |t|
-    t.integer  "nfl_game_id"
-    t.integer  "nfl_player_id"
-    t.integer  "passing_yards"
-    t.integer  "interceptions"
+  create_table "nfl_game_stat_maps", id: false, force: true do |t|
+    t.integer  "nfl_game_id",                            default: 0, null: false
+    t.integer  "nfl_player_id",                          default: 0, null: false
+    t.integer  "stat_type_id",                           default: 0, null: false
+    t.decimal  "value",         precision: 10, scale: 4
     t.datetime "created_at"
     t.datetime "updated_at"
   end
-
-  add_index "nfl_game_stats", ["nfl_game_id", "nfl_player_id"], name: "index_nfl_game_stats_on_nfl_game_id_and_nfl_player_id", using: :btree
 
   create_table "nfl_games", force: true do |t|
     t.integer  "week"
@@ -100,6 +108,8 @@ ActiveRecord::Schema.define(version: 20131216123123) do
   add_index "nfl_games", ["away_team_id"], name: "index_nfl_games_on_away_team_id", using: :btree
   add_index "nfl_games", ["external_game_id"], name: "index_nfl_games_on_external_game_id", using: :btree
   add_index "nfl_games", ["home_team_id"], name: "index_nfl_games_on_home_team_id", using: :btree
+  add_index "nfl_games", ["season_id", "week"], name: "index_nfl_games_on_season_id_and_week", using: :btree
+  add_index "nfl_games", ["season_id", "week"], name: "index_nfl_games_on_season_week", using: :btree
 
   create_table "nfl_players", force: true do |t|
     t.string   "first_name"
@@ -160,6 +170,17 @@ ActiveRecord::Schema.define(version: 20131216123123) do
     t.datetime "created_at"
     t.datetime "updated_at"
   end
+
+  create_table "stat_types", force: true do |t|
+    t.string   "name"
+    t.string   "group"
+    t.string   "abbr"
+    t.string   "display_name"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
+  add_index "stat_types", ["name"], name: "index_stat_types_on_name", using: :btree
 
   create_table "teams", force: true do |t|
     t.integer  "league_id"
