@@ -326,6 +326,10 @@ class NflLoader
         NflSeasonTeamPlayer
         NflGameStatMap
       }
+      test = NflGameStatMap.where(nfl_game_id: NflGame.find_by(external_game_id: 201311534).id).first
+      test.value = 666
+      test.save
+
       for i in 1..20 do
         stats = NflGameStatMap.where(nfl_game_id: NflGame.find_by(external_game_id: 201311534).id)
         puts stats.count

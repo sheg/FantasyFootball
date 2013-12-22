@@ -8,7 +8,7 @@ class PointsHelper
       stat = stats.find { |item| item.stat_type_id == rule.stat_type_id }
       if stat
         calc = (stat.value * rule.multiplier).round(4)
-        # puts "#{stat.stat_type.name}: #{stat.value} * #{rule.multiplier} = #{calc}" if stat.value > 0 and rule.multiplier > 0
+        puts "#{stat.stat_type.name}: #{stat.value} * #{rule.multiplier} = #{calc}" if stat.value > 0 and rule.multiplier > 0
 
         points += calc
         points = points.round(4)
