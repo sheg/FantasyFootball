@@ -1,13 +1,19 @@
 <h1><%= "Leagues".titleize %></h1>
 
 <table class="table table-responsive table-condensed">
-    <th>League Name</th>
-    <th>League Size</th>
+    <th>Name</th>
+    <th>Size</th>
+    <th>Entry</th>
+    <th></th>
     <tbody>
         <% @leagues.each do |league| %>
         <tr>
           <td><%= link_to league.name, league %></td>
           <td><%= league.size %></td>
+          <td>$100</td>
+          <div>
+            <td><%= link_to "Join", '#', class: "btn btn-success" %></td>
+          </div>
         </tr>
         <% end %>
     </tbody>

@@ -2,10 +2,12 @@
 
 <table class="table table-responsive table-condensed">
   <th>Team Name</th>
+  <th>Team Owner</th>
   <tbody>
-  <% @teams.each do |team| %>
+  <% @league.teams.each do |team| %>
       <tr>
         <td><%= link_to team.name, '#' %></td>
+        <td><%= link_to team.user.email, '#' %></td>
       </tr>
   <% end %>
   </tbody>

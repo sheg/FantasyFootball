@@ -1,9 +1,8 @@
 class UsersController < ApplicationController
-  before_action :signed_in_user, only: [:show, :edit, :update]
-  before_action :correct_user, only: [:show, :edit, :update]
+  before_action :signed_in_user, only: [:show, :edit, :update, :user_leagues]
+  before_action :correct_user, only: [:show, :edit, :update, :user_leagues]
 
   def show
-    @user = User.find(params[:id])
   end
 
   def new
@@ -22,12 +21,10 @@ class UsersController < ApplicationController
   end
 
   def edit
-    @user = User.find(params[:id])
     render 'new'
   end
 
   def update
-    @user = User.find(params[:id])
     if @user.update_attributes(edit_user_params)
       flash[:success] = "User updated successfully"
       redirect_to @user
@@ -37,6 +34,10 @@ class UsersController < ApplicationController
   end
 
   def destroy
+  end
+
+  def user_leagues
+    @user_leagues = @user.leagues
   end
 
   def email_exists
