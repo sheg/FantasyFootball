@@ -109,7 +109,6 @@ ActiveRecord::Schema.define(version: 20131222220553) do
   add_index "nfl_games", ["external_game_id"], name: "index_nfl_games_on_external_game_id", using: :btree
   add_index "nfl_games", ["home_team_id"], name: "index_nfl_games_on_home_team_id", using: :btree
   add_index "nfl_games", ["season_id", "week"], name: "index_nfl_games_on_season_id_and_week", using: :btree
-  add_index "nfl_games", ["season_id", "week"], name: "index_nfl_games_on_season_week", using: :btree
 
   create_table "nfl_players", force: true do |t|
     t.string   "first_name"

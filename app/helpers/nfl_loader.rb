@@ -97,41 +97,26 @@ class NflLoader
   end
   private :create_player
 
-  def get_games(season)
-    items = load_json_data("/Schedules/#{season}", "#{season}/schedule.json")
-    games = items.map do |game|
-      game_time = convert_fantasy_data_time(game['Date'])
-      {
-          week: game['Week'],
-          home_team: game['HomeTeam'],
-          away_team: game['AwayTeam'],
-          start_time: game_time,
-          external_game_id: game['GameKey']
-      }
-    end
-    games
-  end
-  private :get_games
 
   def load_games
     season = current_season
-    games = get_games(season.year)
+    games = load_json_data("/Schedules/#{season.year}", "#{season.year}/schedule.json")
 
     games.each do |game|
-      home_team = NflTeam.find_by(abbr: game[:home_team])
-      away_team = NflTeam.find_by(abbr: game[:away_team])
+      home_team = NflTeam.find_by(abbr: game['HomeTeam'])
+      away_team = NflTeam.find_by(abbr: game['AwayTeam'])
 
       if(away_team.abbr == 'BYE')
-        nfl_game = NflGame.find_or_create_by!(season_id: season.id, home_team_id: home_team.id)
+        nfl_game = NflGame.find_or_create_by!(season_id: season.id, home_team_id: home_team.id, away_team_id: away_team.id)
       else
-        nfl_game = NflGame.find_or_create_by!(external_game_id: game[:external_game_id])
+        nfl_game = NflGame.find_or_create_by!(external_game_id: game['GameKey'])
       end
 
-      nfl_game.week = game[:week]
       nfl_game.home_team_id = home_team.id
       nfl_game.away_team_id = away_team.id
-      nfl_game.start_time = game[:start_time]
+      nfl_game.start_time = convert_fantasy_data_time(game['Date'])
       nfl_game.season_id = season.id
+      nfl_game.week = game['Week']
 
       puts "Game data updated ExternalID #{nfl_game.external_game_id}, Week #{nfl_game.week}, #{nfl_game.away_team.abbr} @#{nfl_game.home_team.abbr}" if nfl_game.changed?
 
@@ -156,7 +141,7 @@ class NflLoader
 
       puts "Mismatched HomeTeam DB: #{nfl_game.home_team.abbr}, JSON: #{home_team.abbr}" if nfl_game.home_team.abbr != home_team.abbr
       puts "Mismatched AwayTeam DB: #{nfl_game.away_team.abbr}, JSON: #{away_team.abbr}" if nfl_game.home_team.abbr != home_team.abbr
-      puts "Mismatched GameWeek DB: #{nfl_game.week}, JSON: #{game['Week']}" if nfl_game.week != game['Week']
+      puts "Mismatched GameWeek #{nfl_game.external_game_id} DB: #{nfl_game.week}, JSON: #{game['Week']}" if nfl_game.week != game['Week']
 
       nfl_game.has_started = game["HasStarted"]
       nfl_game.has_started_q1 = game["Has1stQuarterStarted"]
@@ -327,14 +312,17 @@ class NflLoader
         NflGameStatMap
       }
       test = NflGameStatMap.where(nfl_game_id: NflGame.find_by(external_game_id: 201311534).id).first
-      test.value = 666
-      test.save
 
-      for i in 1..20 do
-        stats = NflGameStatMap.where(nfl_game_id: NflGame.find_by(external_game_id: 201311534).id)
-        puts stats.count
-        puts stats[0].inspect
-        sleep(0.2)
+      if test
+        test.value = 666
+        test.save
+
+        for i in 1..10 do
+          stats = NflGameStatMap.where(nfl_game_id: NflGame.find_by(external_game_id: 201311534).id)
+          puts stats.count
+          puts stats[0].inspect
+          sleep(0.2)
+        end
       end
     }
 
