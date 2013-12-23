@@ -1,0 +1,9 @@
+<% @name = @user.first_name ? @user.first_name : @user.email %>
+
+<h1>Greetings <%= @name %>!</h1>
+
+<p>Your username is: <%= @user.email %></p>
+
+<p>Log in here: <%= link_to "Fantasy Football Login", signin_path %></p>
+
+<p>Thank you for choosing Fantasy Football!</p>

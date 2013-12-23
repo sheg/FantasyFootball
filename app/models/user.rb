@@ -1,6 +1,7 @@
 class User < ActiveRecord::Base
   before_save { self.email = email.downcase.strip }
   before_create :create_remember_token
+  after_save :signup_success_notification, if: :id_changed?
 
   has_secure_password
 
@@ -25,5 +26,9 @@ class User < ActiveRecord::Base
 
     def create_remember_token
       self.remember_token = User.encrypt(User.new_remember_token)
+    end
+
+    def signup_success_notification
+      UserMailer.signup_success(self).deliver
     end
 end
