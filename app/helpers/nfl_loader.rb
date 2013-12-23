@@ -97,40 +97,26 @@ class NflLoader
   end
   private :create_player
 
-  def get_games(season)
-    items = load_json_data("/Schedules/#{season}", "#{season}/schedule.json")
-    games = items.map do |game|
-      game_time = convert_fantasy_data_time(game['Date'])
-      {
-          week: game['Week'],
-          home_team: game['HomeTeam'],
-          away_team: game['AwayTeam'],
-          start_time: game_time,
-          external_game_id: game['GameKey']
-      }
-    end
-    games
-  end
-  private :get_games
 
   def load_games
     season = current_season
-    games = get_games(season.year)
+    games = load_json_data("/Schedules/#{season.year}", "#{season.year}/schedule.json")
 
     games.each do |game|
-      home_team = NflTeam.find_by(abbr: game[:home_team])
-      away_team = NflTeam.find_by(abbr: game[:away_team])
+      home_team = NflTeam.find_by(abbr: game['HomeTeam'])
+      away_team = NflTeam.find_by(abbr: game['AwayTeam'])
 
       if(away_team.abbr == 'BYE')
-        nfl_game = NflGame.find_or_create_by!(season_id: season.id, home_team_id: home_team.id)
+        nfl_game = NflGame.find_or_create_by!(season_id: season.id, home_team_id: home_team.id, away_team_id: away_team.id)
       else
-        nfl_game = NflGame.find_or_create_by!(external_game_id: game[:external_game_id])
+        nfl_game = NflGame.find_or_create_by!(external_game_id: game['GameKey'])
       end
 
-      nfl_game.week = game[:week]
       nfl_game.home_team_id = home_team.id
       nfl_game.away_team_id = away_team.id
-      nfl_game.start_time = game[:start_time]
+      nfl_game.start_time = convert_fantasy_data_time(game['Date'])
+      nfl_game.season_id = season.id
+      nfl_game.week = game['Week']
 
       puts "Game data updated ExternalID #{nfl_game.external_game_id}, Week #{nfl_game.week}, #{nfl_game.away_team.abbr} @#{nfl_game.home_team.abbr}" if nfl_game.changed?
 
@@ -155,7 +141,7 @@ class NflLoader
 
       puts "Mismatched HomeTeam DB: #{nfl_game.home_team.abbr}, JSON: #{home_team.abbr}" if nfl_game.home_team.abbr != home_team.abbr
       puts "Mismatched AwayTeam DB: #{nfl_game.away_team.abbr}, JSON: #{away_team.abbr}" if nfl_game.home_team.abbr != home_team.abbr
-      puts "Mismatched GameWeek DB: #{nfl_game.week}, JSON: #{game['Week']}" if nfl_game.week != game['Week']
+      puts "Mismatched GameWeek #{nfl_game.external_game_id} DB: #{nfl_game.week}, JSON: #{game['Week']}" if nfl_game.week != game['Week']
 
       nfl_game.has_started = game["HasStarted"]
       nfl_game.has_started_q1 = game["Has1stQuarterStarted"]
@@ -201,6 +187,8 @@ class NflLoader
     players = get_player_stats(season.year, week, cache_timeout)
 
     $players = players
+    $nfl_games = Hash.new
+    $player_stat_sql = Array.new
 
     threads = Array.new
     for i in 1..3
@@ -213,13 +201,37 @@ class NflLoader
       t.join
     end
 
-    puts "Week #{week}: time taken: #{Time.now - get_start}"
+    puts "Week #{week}: loading time taken: #{Time.now - get_start}"
+
+    get_start = Time.now
+    NflGameStatMap.transaction do
+      sql_array = Array.new
+
+      game_ids = $nfl_games.values.map { |v| v.id }.join(',')
+      sql_array.push "DELETE FROM nfl_game_stat_maps WHERE nfl_game_id IN (#{game_ids});"
+
+      inserts = $player_stat_sql.join(",\n    ")
+      sql_array.push "INSERT INTO nfl_game_stat_maps (nfl_game_id, nfl_player_id, stat_type_id, value) VALUES #{inserts};"
+
+      sql_array.each { |sql|
+        begin
+          NflGameStatMap.connection.execute(sql)
+        rescue Exception => e
+          puts e.message[0,400]
+          puts e.backtrace.join("\n   ")
+        end
+      }
+    end
+
+    puts "Week #{week}: SQL time taken: #{Time.now - get_start}"
   end
   private :load_player_stats
 
   def thread_process_player_stats(season, week)
     Thread.exclusive {
-      NflPlayer   # Gets around issue error in autoload activerecord objects
+      # Gets around issue error in autoload activerecord objects
+      NflSeasonTeamPlayer
+      NflPlayer
     }
 
     while $players.count > 0
@@ -257,7 +269,6 @@ class NflLoader
     end
 
     # Cache NFLGames to minimize DB hits
-    $nfl_games = Hash.new unless $nfl_games
     nfl_game = $nfl_games[item['GameKey']]
     Thread.exclusive {
       nfl_game = $nfl_games[item['GameKey']]
@@ -270,13 +281,21 @@ class NflLoader
 
     return unless player && nfl_game
 
-    stat = NflGameStats.find_or_create_by!(nfl_game_id: nfl_game.id, nfl_player_id: player.id)
-    stat.passing_yards = item['PassingYards']
-    stat.interceptions = item['Interceptions']
+    # Cache StatTypes to minimize DB hits
+    unless $stat_types
+      Thread.exclusive {
+        unless $stat_types
+          $stat_types = StatType.all
+        end
+      }
+    end
 
-    puts "Player stats updated #{player.full_name}, Game #{nfl_game.external_game_id}, Week #{nfl_game.week}, #{nfl_game.away_team.abbr} @#{nfl_game.home_team.abbr}" if stat.changed?
-
-    stat.save
+    changed = true
+    $stat_types.each { |stat_type|
+      next unless (item[stat_type.name])
+      $player_stat_sql.push "(#{nfl_game.id}, #{player.id}, #{stat_type.id}, #{item[stat_type.name]})"
+    }
+    # puts "Player stats updated #{player.full_name}, Game #{nfl_game.external_game_id}, Week #{nfl_game.week}, #{nfl_game.away_team.abbr} @#{nfl_game.home_team.abbr}" if changed
 
     player
   end
@@ -285,7 +304,32 @@ class NflLoader
   def load_current_player_stats
     season = current_season
     week = current_week
-    players = load_player_stats(season, week)
+
+    t1 = Thread.new { load_player_stats(season, week) }
+    t2 = Thread.new {
+      Thread.exclusive {
+        NflSeasonTeamPlayer
+        NflGameStatMap
+      }
+      test = NflGameStatMap.where(nfl_game_id: NflGame.find_by(external_game_id: 201311534).id).first
+
+      if test
+        test.value = 666
+        test.save
+
+        for i in 1..10 do
+          stats = NflGameStatMap.where(nfl_game_id: NflGame.find_by(external_game_id: 201311534).id)
+          puts stats.count
+          puts stats[0].inspect
+          sleep(0.2)
+        end
+      end
+    }
+
+    t1.join
+    t2.join
+
+    # players = load_player_stats(season, week)
     # players = load_player_stats(season, week, 30)
   end
 

@@ -20,6 +20,7 @@ development:
   host: 127.0.0.1
   post: 3306
   timeout: 5000
+  reconnect: true
 
 # Warning: The database defined as "test" will be erased and
 # re-generated from your development database when you run "rake".
