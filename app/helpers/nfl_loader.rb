@@ -311,14 +311,14 @@ class NflLoader
         NflSeasonTeamPlayer
         NflGameStatMap
       }
-      test = NflGameStatMap.where(nfl_game_id: NflGame.find_by(external_game_id: 201311534).id).first
+      test = NflGameStatMap.where(nfl_game_id: NflGame.find_by(external_game_id: 201311612).id).first
 
       if test
         test.value = 666
         test.save
 
-        for i in 1..10 do
-          stats = NflGameStatMap.where(nfl_game_id: NflGame.find_by(external_game_id: 201311534).id)
+        for i in 1..20 do
+          stats = NflGameStatMap.where(nfl_game_id: NflGame.find_by(external_game_id: 201311612).id)
           puts stats.count
           puts stats[0].inspect
           sleep(0.2)
