@@ -2,7 +2,11 @@ require 'thread'
 
 class NflLoader
   include ApiHelper
-  set_my_folder('nfl')
+
+  def initialize
+    super
+    set_my_folder('nfl')
+  end
 
   def current_season
     data = load_json_data('/CurrentSeason', 'current_season.json')
@@ -17,26 +21,42 @@ class NflLoader
   def get_teams
     season = current_season.year
     items = load_json_data("/Teams/#{season}", "#{season}/teams.json")
-    teams = items.map do |team|
-      {
-          name: team['FullName'],
-          abbr: team['Key']
-      }
-    end
-
-    teams
   end
   private :get_teams
 
   def load_teams
     NflTeam.find_or_create_by!(name: 'BYE', abbr: 'BYE') #needed for bye weeks
 
-    teams = get_teams
-    teams.each do |team|
+    items = get_teams
+    items.each do |item|
       # Creates team as needed or updates existing if data has changed
-      team = NflTeam.find_or_create_by!(abbr: team[:abbr])
-      team.name = team[:name]
+      team = NflTeam.find_or_create_by!(abbr: item['Key'])
+      team.name = item['FullName']
       team.save
+    end
+
+    create_defense_players
+  end
+
+  def create_defense_players
+    season = current_season
+
+    NflTeam.where.not(abbr: 'BYE').each do |team|
+      position = NflPosition.find_or_create_by(abbr: 'DEF')
+      player = NflPlayer.find_or_create_by(external_player_id: "DEF_#{team.abbr}")
+      player.first_name = team.name
+      player.last_name = 'Defense'
+
+      puts "NFL Player data updated ExternalID #{player.external_player_id}, #{player.full_name}" if player.changed?
+
+      player.save
+
+      seasonEntry = NflSeasonTeamPlayer.find_or_create_by(season_id: season.id, team_id: team.id, player_id: player.id, position_id: position.id)
+      seasonEntry.player_number = 0
+
+      puts "NFL SeasonTeamPlayer data updated #{player.full_name}, position #{position.abbr}, team #{team.abbr}" if seasonEntry.changed?
+
+      seasonEntry.save
     end
   end
 
@@ -65,6 +85,7 @@ class NflLoader
       puts "Positions: #{NflPosition.count}, NflSeasonTeamPlayer: #{NflSeasonTeamPlayer.where(team_id: team.id).count}"
     }
   end
+
 
   def load_player(season, external_player_id)
     item = load_json_data("/Player/#{external_player_id}", "#{season.year}/players/lookup/#{external_player_id}.json")
@@ -96,7 +117,6 @@ class NflLoader
     player
   end
   private :create_player
-
 
   def load_games
     season = current_season
@@ -177,10 +197,53 @@ class NflLoader
     end
   end
 
+  def load_defense_stats(season, week, cache_timeout)
+    items = load_json_data("/FantasyDefenseByGame/#{season}/#{week}", "#{season}/weeks/#{week}/stats_defense.json", cache_timeout)
+    stat_types = get_stat_types
+
+    items.each do |item|
+      player = NflPlayer.find_by!(external_player_id: "DEF_#{item['Team']}")
+      nfl_game = get_nfl_game item['GameKey']
+      next unless nfl_game
+
+      stat_types.each { |stat_type|
+        next unless (item[stat_type.name])
+        $player_stat_sql.push "(#{nfl_game.id}, #{player.id}, #{stat_type.id}, #{item[stat_type.name]})"
+      }
+    end
+  end
+
   def get_player_stats(season, week, cache_timeout = 0)
     load_json_data("/PlayerGameStatsByWeek/#{season}/#{week}", "#{season}/weeks/#{week}/stats.json", cache_timeout)
   end
   private :get_player_stats
+
+  def get_nfl_game(external_game_id)
+    # Cache NFLGames to minimize DB hits
+    nfl_game = $nfl_games[external_game_id]
+    Thread.exclusive {
+      nfl_game = $nfl_games[external_game_id]
+      unless(nfl_game)
+        nfl_game = NflGame.find_by!(external_game_id: external_game_id)
+        $nfl_games[external_game_id] = nfl_game
+      end
+    }
+    puts "Game not found in DB ExternalID: #{external_game_id}" unless nfl_game
+    nfl_game
+  end
+
+  def get_stat_types
+    # Cache StatTypes to minimize DB hits
+    unless $stat_types
+      Thread.exclusive {
+        unless $stat_types
+          $stat_types = StatType.all
+        end
+      }
+    end
+
+    $stat_types
+  end
 
   def load_player_stats(season, week, cache_timeout = 0)
     get_start = Time.now
@@ -201,6 +264,8 @@ class NflLoader
       t.join
     end
 
+    load_defense_stats(season.year, week, cache_timeout)
+
     puts "Week #{week}: loading time taken: #{Time.now - get_start}"
 
     get_start = Time.now
@@ -210,8 +275,11 @@ class NflLoader
       game_ids = $nfl_games.values.map { |v| v.id }.join(',')
       sql_array.push "DELETE FROM nfl_game_stat_maps WHERE nfl_game_id IN (#{game_ids});"
 
-      inserts = $player_stat_sql.join(",\n    ")
-      sql_array.push "INSERT INTO nfl_game_stat_maps (nfl_game_id, nfl_player_id, stat_type_id, value) VALUES #{inserts};"
+      while $player_stat_sql.size > 0 do
+        statements = $player_stat_sql.slice!(0, 100000)
+        inserts = statements.join(",\n    ")
+        sql_array.push "INSERT INTO nfl_game_stat_maps (nfl_game_id, nfl_player_id, stat_type_id, value) VALUES #{inserts};"
+      end
 
       sql_array.each { |sql|
         begin
@@ -268,30 +336,13 @@ class NflLoader
       puts "Player not found in DB ExternalID: #{item['PlayerID']}, Team: #{item['Team']}, Name: #{item['Name']}" unless player
     end
 
-    # Cache NFLGames to minimize DB hits
-    nfl_game = $nfl_games[item['GameKey']]
-    Thread.exclusive {
-      nfl_game = $nfl_games[item['GameKey']]
-      unless(nfl_game)
-        nfl_game = NflGame.find_by!(external_game_id: item['GameKey'])
-        $nfl_games[item['GameKey']] = nfl_game
-      end
-    }
-    puts "Game not found in DB ExternalID: #{item['GameKey']}" unless nfl_game
+    nfl_game = get_nfl_game item['GameKey']
 
     return unless player && nfl_game
 
-    # Cache StatTypes to minimize DB hits
-    unless $stat_types
-      Thread.exclusive {
-        unless $stat_types
-          $stat_types = StatType.all
-        end
-      }
-    end
+    stat_types = get_stat_types
 
-    changed = true
-    $stat_types.each { |stat_type|
+    stat_types.each { |stat_type|
       next unless (item[stat_type.name])
       $player_stat_sql.push "(#{nfl_game.id}, #{player.id}, #{stat_type.id}, #{item[stat_type.name]})"
     }
@@ -301,43 +352,56 @@ class NflLoader
   end
   private :load_player_stats
 
-  def load_current_player_stats
-    season = current_season
-    week = current_week
-
-    t1 = Thread.new { load_player_stats(season, week) }
-    t2 = Thread.new {
-      Thread.exclusive {
-        NflSeasonTeamPlayer
-        NflGameStatMap
-      }
-      test = NflGameStatMap.where(nfl_game_id: NflGame.find_by(external_game_id: 201311612).id).first
-
-      if test
-        test.value = 666
-        test.save
-
-        for i in 1..20 do
-          stats = NflGameStatMap.where(nfl_game_id: NflGame.find_by(external_game_id: 201311612).id)
-          puts stats.count
-          puts stats[0].inspect
-          sleep(0.2)
-        end
-      end
-    }
-
-    t1.join
-    t2.join
-
-    # players = load_player_stats(season, week)
-    # players = load_player_stats(season, week, 30)
-  end
-
   def load_all_player_stats
     season = current_season
     week = current_week
     for i in 1..week.to_i
       players = load_player_stats(season, i)
+    end
+  end
+
+  def load_current_player_stats
+    season = current_season
+    week = current_week
+    load_player_stats(season, week)
+  end
+
+  def load_current_player_stats_thread_test
+    season = current_season
+    week = current_week
+
+    test = NflGameStatMap.where(nfl_game_id: NflGame.find_by(external_game_id: 201311612).id).first
+
+    if test
+      test.value = 666
+      test.save
+    end
+
+    t1 = Thread.new { load_player_stats(season, week) }
+
+    threads = Array.new
+    for i in 1..5 do
+      threads.push Thread.new {
+        Thread.exclusive {
+          NflSeasonTeamPlayer
+          NflGameStatMap
+        }
+        test = NflGameStatMap.where(nfl_game_id: NflGame.find_by(external_game_id: 201311612).id).first
+
+        if test
+          for i in 1..20 do
+            stats = NflGameStatMap.where(nfl_game_id: NflGame.find_by(external_game_id: 201311612).id)
+            puts stats.count
+            puts stats[0].inspect
+            sleep(0.2)
+          end
+        end
+      }
+    end
+
+    t1.join
+    threads.each do |thread|
+      thread.join
     end
   end
 
