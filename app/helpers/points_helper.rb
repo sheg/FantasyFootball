@@ -1,4 +1,4 @@
-class PointsHelper
+module PointsHelper
   def self.calculate(game_id, player_id, league_id = nil)
     points = 0.0
     stats = NflGameStatMap.where(nfl_game_id: game_id, nfl_player_id: player_id).includes(:stat_type).to_ary
