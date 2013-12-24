@@ -1,11 +1,11 @@
 class LeaguesController < ApplicationController
 
   def index
-    @leagues = League.all
+    @leagues = League.all.includes(:teams)
   end
 
   def show
-    @league = League.find(params[:id])
+    @league = League.includes(:users).find_by(id: params[:id])
   end
 
   def new

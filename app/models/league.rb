@@ -4,4 +4,7 @@ class League < ActiveRecord::Base
 
   validates :name, :uniqueness => { :case_sensitive => false }
 
+  def available_teams
+    self.size - self.teams_count
+  end
 end

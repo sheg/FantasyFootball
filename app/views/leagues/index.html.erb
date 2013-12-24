@@ -3,6 +3,7 @@
 <table class="table table-responsive table-condensed">
     <th>Name</th>
     <th>Size</th>
+    <th>Available</th>
     <th>Entry</th>
     <th></th>
     <tbody>
@@ -10,10 +11,9 @@
         <tr>
           <td><%= link_to league.name, league %></td>
           <td><%= league.size %></td>
+          <td><%= league.available_teams %></td>
           <td>$100</td>
-          <div>
-            <td><%= link_to "Join", '#', class: "btn btn-success" %></td>
-          </div>
+          <td><%= link_to "Join", '#', class: "btn btn-success" %></td>
         </tr>
         <% end %>
     </tbody>
