@@ -24,6 +24,7 @@ gem 'bcrypt-ruby', '~> 3.0.0'
 gem 'bootstrap-sass', '2.3.2.0'
 gem 'httparty', '0.12.0'
 gem 'composite_primary_keys'
+gem 'faker'
 
 group :doc do
   gem 'sdoc', '0.3.20', require: false

@@ -3,4 +3,8 @@ class League < ActiveRecord::Base
   has_many :users, :through => :teams
 
   validates :name, :uniqueness => { :case_sensitive => false }
+
+  def available_teams
+    self.size - self.teams_count
+  end
 end

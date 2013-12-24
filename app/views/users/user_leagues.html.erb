@@ -1,0 +1,17 @@
+<% if @user_leagues.count > 0 %>
+    <h1>My Leagues</h1>
+    <table class="table table-responsive table-condensed">
+      <th>Name</th>
+      <th>Type</th>
+      <tbody>
+      <% @user_leagues.each do |league| %>
+          <tr>
+            <td><%= link_to league.name, league %></td>
+          </tr>
+      <% end %>
+      </tbody>
+    </table>
+<% else %>
+    <p>No current leagues</p>
+    <%= link_to "Join a League", leagues_path, class: "btn btn-success" %>
+<% end %>
