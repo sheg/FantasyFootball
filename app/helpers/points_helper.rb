@@ -1,7 +1,9 @@
 module PointsHelper
   def self.calculate(game_id, player_id, league_id = nil)
     points = 0.0
-    stats = NflGameStatMap.where(nfl_game_id: game_id, nfl_player_id: player_id).includes(:stat_type).to_ary
+    game_player = NflGamePlayer.find_by(nfl_game_id: game_id, nfl_player_id: player_id)
+
+    stats = NflGameStatMap.where(nfl_game_player_id: game_player.id).includes(:stat_type).to_ary
 
     rules = LeaguePointRule.where(league_id: league_id).to_ary
     rules = LeaguePointRule.where(league_id: nil).to_ary unless rules.count > 0

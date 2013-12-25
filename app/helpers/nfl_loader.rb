@@ -104,7 +104,7 @@ class NflLoader
 
     player.save
 
-    team = NflTeam.find_by(abbr: item['Team']) unless team
+    team = get_team(item['Team']) unless team
 
     seasonEntry = NflSeasonTeamPlayer.find_or_create_by(season_id: season.id, team_id: team.id, player_id: player.id, position_id: position.id)
     # current_team_abbr: item['CurrentTeam'],
@@ -123,8 +123,8 @@ class NflLoader
     games = load_json_data("/Schedules/#{season.year}", "#{season.year}/schedule.json")
 
     games.each do |game|
-      home_team = NflTeam.find_by(abbr: game['HomeTeam'])
-      away_team = NflTeam.find_by(abbr: game['AwayTeam'])
+      home_team = get_team(game['HomeTeam'])
+      away_team = get_team(game['AwayTeam'])
 
       if(away_team.abbr == 'BYE')
         nfl_game = NflGame.find_or_create_by!(season_id: season.id, home_team_id: home_team.id, away_team_id: away_team.id)
@@ -156,8 +156,8 @@ class NflLoader
     games.each do |game|
       nfl_game = NflGame.find_by!(external_game_id: game["GameKey"])
 
-      home_team = NflTeam.find_by(abbr: game["HomeTeam"])
-      away_team = NflTeam.find_by(abbr: game["AwayTeam"])
+      home_team = get_team(game["HomeTeam"])
+      away_team = get_team(game["AwayTeam"])
 
       puts "Mismatched HomeTeam DB: #{nfl_game.home_team.abbr}, JSON: #{home_team.abbr}" if nfl_game.home_team.abbr != home_team.abbr
       puts "Mismatched AwayTeam DB: #{nfl_game.away_team.abbr}, JSON: #{away_team.abbr}" if nfl_game.home_team.abbr != home_team.abbr
@@ -206,9 +206,14 @@ class NflLoader
       nfl_game = get_nfl_game item['GameKey']
       next unless nfl_game
 
+      team = get_team(item['Team'])
+      position = get_position('DEF')
+
+      game_player = update_game_player(nfl_game, player, team, position)
+
       stat_types.each { |stat_type|
         next unless (item[stat_type.name])
-        $player_stat_sql.push "(#{nfl_game.id}, #{player.id}, #{stat_type.id}, #{item[stat_type.name]})"
+        $player_stat_sql.push "(#{game_player.id}, #{stat_type.id}, #{item[stat_type.name]})"
       }
     end
   end
@@ -217,6 +222,34 @@ class NflLoader
     load_json_data("/PlayerGameStatsByWeek/#{season}/#{week}", "#{season}/weeks/#{week}/stats.json", cache_timeout)
   end
   private :get_player_stats
+
+  def get_team(abbr)
+    # Cache NFLTeams to minimize DB hits
+    unless $nfl_teams
+      Thread.exclusive {
+        unless $nfl_teams
+          $nfl_teams = NflTeam.all.to_ary
+        end
+      }
+    end
+    team = $nfl_teams.find { |i| i.abbr == abbr }
+    puts "Team not found in DB: #{abbr}" unless team
+    team
+  end
+
+  def get_position(abbr)
+    # Cache NFLPositions to minimize DB hits
+    unless $nfl_positions
+      Thread.exclusive {
+        unless $nfl_positions
+          $nfl_positions = NflPosition.all.to_ary
+        end
+      }
+    end
+    position = $nfl_positions.find { |i| i.abbr == abbr }
+    # puts "Position not found in DB: #{abbr}" unless position
+    position
+  end
 
   def get_nfl_game(external_game_id)
     # Cache NFLGames to minimize DB hits
@@ -237,7 +270,7 @@ class NflLoader
     unless $stat_types
       Thread.exclusive {
         unless $stat_types
-          $stat_types = StatType.all
+          $stat_types = StatType.all.to_ary
         end
       }
     end
@@ -273,12 +306,21 @@ class NflLoader
       sql_array = Array.new
 
       game_ids = $nfl_games.values.map { |v| v.id }.join(',')
-      sql_array.push "DELETE FROM nfl_game_stat_maps WHERE nfl_game_id IN (#{game_ids});"
+      sql_array.push "
+        delete
+        from nfl_game_stat_maps
+        where nfl_game_player_id in (
+          select gp.id
+          from nfl_game_players gp
+            inner join nfl_games g on gp.nfl_game_id = g.id
+          where g.id in (#{game_ids})
+        )
+      "
 
       while $player_stat_sql.size > 0 do
         statements = $player_stat_sql.slice!(0, 100000)
         inserts = statements.join(",\n    ")
-        sql_array.push "INSERT INTO nfl_game_stat_maps (nfl_game_id, nfl_player_id, stat_type_id, value) VALUES #{inserts};"
+        sql_array.push "INSERT INTO nfl_game_stat_maps (nfl_game_player_id, stat_type_id, value) VALUES #{inserts};"
       end
 
       sql_array.each { |sql|
@@ -287,6 +329,8 @@ class NflLoader
         rescue Exception => e
           puts e.message[0,400]
           puts e.backtrace.join("\n   ")
+          raise ActiveRecord::Rollback
+          break
         end
       }
     end
@@ -316,6 +360,17 @@ class NflLoader
   end
   private :thread_process_player_stats
 
+  def update_game_player(nfl_game, player, team, position)
+    game_player = NflGamePlayer.find_or_create_by(nfl_game_id: nfl_game.id, nfl_player_id: player.id)
+    game_player.nfl_team_id = team.id
+    game_player.nfl_position_id = position.id
+
+    puts "GamePlayer data updated ExternalID #{nfl_game.external_game_id}, Player #{player.full_name}, Team #{team.abbr}, Position #{position.abbr}" if game_player.changed?
+
+    game_player.save
+    game_player
+  end
+
   def process_player_stats(season, week, item)
     player = NflPlayer.find_by(external_player_id: item['PlayerID'])
     unless player
@@ -325,7 +380,7 @@ class NflLoader
         player = load_player(season, item['PlayerID'])
         puts "Found player in DB ExternalID: #{player.external_player_id}, Name: #{player.full_name}" if player
       else
-        team = NflTeam.find_by(abbr: item['Team'])
+        team = get_team(item['Team'])
         team_player = NflSeasonTeamPlayer.find_by(season_id: season.id, team_id: team.id, player_number: item['Number'])
         if(team_player)
           player = NflPlayer.find_by(id: team_player.player_id)
@@ -340,13 +395,19 @@ class NflLoader
 
     return unless player && nfl_game
 
+    team = get_team(item['Team'])
+    position = get_position(item['Position'])
+
+    return unless team && position
+
+    game_player = update_game_player(nfl_game, player, team, position)
+
     stat_types = get_stat_types
 
     stat_types.each { |stat_type|
       next unless (item[stat_type.name])
-      $player_stat_sql.push "(#{nfl_game.id}, #{player.id}, #{stat_type.id}, #{item[stat_type.name]})"
+      $player_stat_sql.push "(#{game_player.id}, #{stat_type.id}, #{item[stat_type.name]})"
     }
-    # puts "Player stats updated #{player.full_name}, Game #{nfl_game.external_game_id}, Week #{nfl_game.week}, #{nfl_game.away_team.abbr} @#{nfl_game.home_team.abbr}" if changed
 
     player
   end
@@ -361,6 +422,8 @@ class NflLoader
   end
 
   def load_current_player_stats
+    load_current_player_stats_thread_test
+    return
     season = current_season
     week = current_week
     load_player_stats(season, week)
@@ -370,39 +433,37 @@ class NflLoader
     season = current_season
     week = current_week
 
-    test = NflGameStatMap.where(nfl_game_id: NflGame.find_by(external_game_id: 201311612).id).first
+    game = NflGame.find_by(season_id: season.id, week: week)
+    game_player = NflGamePlayer.find_by(nfl_game_id: game.id)
+    test = NflGameStatMap.where(nfl_game_player_id: game_player.id).first
+
+    t1 = Thread.new { load_player_stats(season, week) }
 
     if test
       test.value = 666
       test.save
-    end
 
-    t1 = Thread.new { load_player_stats(season, week) }
+      threads = Array.new
+      for i in 1..5 do
+        threads.push Thread.new {
+          Thread.exclusive {
+            NflSeasonTeamPlayer
+            NflGameStatMap
+          }
 
-    threads = Array.new
-    for i in 1..5 do
-      threads.push Thread.new {
-        Thread.exclusive {
-          NflSeasonTeamPlayer
-          NflGameStatMap
-        }
-        test = NflGameStatMap.where(nfl_game_id: NflGame.find_by(external_game_id: 201311612).id).first
-
-        if test
           for i in 1..20 do
-            stats = NflGameStatMap.where(nfl_game_id: NflGame.find_by(external_game_id: 201311612).id)
-            puts stats.count
-            puts stats[0].inspect
-            sleep(0.2)
+            test = NflGameStatMap.where(nfl_game_player_id: game_player.id).first
+            puts test.inspect
+            sleep(0.4)
           end
-        end
-      }
+        }
+      end
+      threads.each do |thread|
+        thread.join
+      end
     end
 
     t1.join
-    threads.each do |thread|
-      thread.join
-    end
   end
 
   def convert_fantasy_data_time(epoch_time)
