@@ -4,7 +4,9 @@ module PointsHelper
     stats = NflGameStatMap.where(nfl_game_id: game_id, nfl_player_id: player_id).includes(:stat_type).to_ary
 
     rules = LeaguePointRule.where(league_id: league_id).to_ary
+    rules = LeaguePointRule.where(league_id: nil).to_ary unless rules.count > 0
     rules = rules.keep_if { |r| r.multiplier > 0 || r.min_range > 0 || r.max_range > 0 }
+
     rules.each { |rule|
       stat = stats.find { |item| item.stat_type_id == rule.stat_type_id }
       if stat and stat.value > 0
