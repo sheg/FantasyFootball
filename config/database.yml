@@ -19,7 +19,7 @@ development:
   password: ff_us3r
   host: 127.0.0.1
   post: 3306
-  timeout: 5000
+  timeout: 20000
   reconnect: true
 
 # Warning: The database defined as "test" will be erased and
