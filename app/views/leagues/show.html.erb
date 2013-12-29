@@ -1,5 +1,7 @@
 <h1> <%= @league.name.titleize %> </h1>
 
+<%= link_to "League Schedule", league_schedule_path, class: "btn btn-primary", style: "margin-bottom: 10px" %>
+
 <table class="table table-responsive table-condensed">
   <th>Team Name</th>
   <th>Team Owner</th>

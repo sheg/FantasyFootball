@@ -13,4 +13,9 @@ class LeaguesController < ApplicationController
 
   def create
   end
+
+  def schedule
+    @league = League.includes(:games).find_by(id: params[:id])
+    @teams = Team.where(league_id: params[:id])
+  end
 end
