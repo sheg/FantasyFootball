@@ -3,11 +3,6 @@ require 'thread'
 class NflLoader
   include ApiHelper
 
-  def initialize
-    super
-    set_my_folder('nfl')
-  end
-
   def current_season
     data = load_json_data('/CurrentSeason', 'current_season.json')
     season = NflSeason.find_or_create_by(year: data['data'])

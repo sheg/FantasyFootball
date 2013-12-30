@@ -1,3 +1,5 @@
+<% @my_teams = current_user.teams.map { |team| team.name } if signed_in? %>
+
 <h1> <%= @league.name.titleize %> </h1>
 
 <%= link_to "League Schedule", league_schedule_path, class: "btn btn-primary", style: "margin-bottom: 10px" %>
@@ -8,8 +10,8 @@
   <tbody>
   <% @league.teams.each do |team| %>
       <tr>
-        <td><%= link_to team.name, '#' %></td>
-        <td><%= link_to team.user.email, '#' %></td>
+        <%= content_tag(:td, link_to(team.name,'#', class: highlight_my_team(@my_teams, team.name))) %>
+        <%= content_tag(:td, link_to(team.user.email, '#' )) %>
       </tr>
   <% end %>
   </tbody>
