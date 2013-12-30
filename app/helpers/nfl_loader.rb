@@ -86,7 +86,6 @@ class NflLoader
     }
   end
 
-
   def load_player(season, external_player_id)
     item = load_json_data("/Player/#{external_player_id}", "#{season.year}/players/lookup/#{external_player_id}.json")
     create_player(item, season)
@@ -103,6 +102,20 @@ class NflLoader
     puts "NFL Player data updated ExternalID #{player.external_player_id}, #{player.full_name}" if player.changed?
 
     player.save
+
+    item['LatestNews'].each { |news_data|
+      news = NflPlayerNews.find_or_create_by(nfl_player_id: player.id, external_news_id: news_data['NewsID'])
+      news.headline = news_data['Title']
+      news.body = news_data['Content']
+      news.source = news_data['Source']
+      news.url = news_data['Url']
+      news.terms = news_data['TermsOfUse']
+      news.news_date = convert_fantasy_data_time(news_data['Updated'])
+
+      puts "NFL Player News updated #{player.full_name}, ExternalID #{news.external_news_id}, #{news.headline}" if news.changed?
+
+      news.save
+    }
 
     team = get_team(item['Team']) unless team
 
@@ -422,8 +435,6 @@ class NflLoader
   end
 
   def load_current_player_stats
-    load_current_player_stats_thread_test
-    return
     season = current_season
     week = current_week
     load_player_stats(season, week)

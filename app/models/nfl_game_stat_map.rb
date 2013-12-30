@@ -13,5 +13,5 @@ class NflGameStatMap < ActiveRecord::Base
   has_one :position, class_name: NflPosition, through: :game_player
   has_one :season, class_name: NflSeason, through: :game
 
-  scope :for_season_week, ->(s, w) { joins(:season).where('year = ? and week = ?', s, w) }
+  scope :for_season_week, ->(s, w) { joins(:season).where(nfl_seasons: { year: s }, nfl_games: { week: w }) }
 end

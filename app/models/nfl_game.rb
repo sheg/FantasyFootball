@@ -9,4 +9,14 @@ class NflGame < ActiveRecord::Base
   def self.[](s)
     items = NflGame.find_by(external_game_id: s)
   end
+
+  def description
+    "Week #{week}: #{away_team.abbr} @#{home_team.abbr} #{start_time.strftime('%m/%d/%Y %I:%M%p')}"
+  end
+
+  def self.by_week
+    find :all, order: :week
+  end
+
+  scope :with_teams, -> { includes(:home_team, :away_team) }
 end
