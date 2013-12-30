@@ -51,7 +51,9 @@ class PointsCalculator
     all_stats = Array.new
     season = NflLoader.new.current_season unless season
     game_players = NflGamePlayer.includes(:player).joins(:season).where(nfl_seasons: { id: season.id }, nfl_player_id: player_id).to_ary
-    stats = NflGameStatMap.includes(:stat_type, { :game => [:home_team, :away_team] }).where(nfl_game_player_id: game_players)
+
+    stats = NflGameStatMap.includes({ :game => [:home_team, :away_team] })
+      .where(nfl_game_player_id: game_players).where("value > 0")
       .order('nfl_games.week').group_by{ |s| s.game }
 
     stats.each { |key, value|
