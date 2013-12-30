@@ -1,4 +1,4 @@
-class PointsHelper
+class PointsCalculator
   class PlayerGameData
     attr_accessor :player
     attr_accessor :game_player
