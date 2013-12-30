@@ -41,20 +41,22 @@ class PointsCalculator
   end
   private :do_calculation
 
-  def calculate(game_id, player_id)
-    game_player = NflGamePlayer.find_by(nfl_game_id: game_id, nfl_player_id: player_id)
-    stats = NflGameStatMap.where(nfl_game_player_id: game_player.id).includes(:stat_type).to_ary
-    do_calculation(stats)
-  end
-
-  def calculate_season(player_id, season = nil)
-    all_stats = Array.new
-    season = NflLoader.new.current_season unless season
-    game_players = NflGamePlayer.includes(:player).joins(:season).where(nfl_seasons: { id: season.id }, nfl_player_id: player_id).to_ary
-
+  def get_stats(game_players)
     stats = NflGameStatMap.includes({ :game => [:home_team, :away_team] })
       .where(nfl_game_player_id: game_players).where("value > 0")
       .order('nfl_games.week').group_by{ |s| s.game }
+  end
+
+  def get_player_game_data(player_id, year = nil, week = nil)
+    all_stats = Array.new
+
+    season = year ? NflSeason.find_by(year: year) : NflLoader.new.current_season
+
+    game_players = NflGamePlayer.includes(:player).joins(:season).where(nfl_seasons: { id: season.id }, nfl_player_id: player_id)
+    game_players = game_players.includes(:game).where(nfl_games: { week: week }) if week
+    game_players = game_players.to_ary
+
+    stats = get_stats(game_players)
 
     stats.each { |key, value|
       puts key.description
@@ -67,5 +69,30 @@ class PointsCalculator
       all_stats.push(data)
     }
     all_stats
+  end
+
+  def test_threads
+    results = Array.new
+    threads = Array.new
+    for i in 1..20 do
+      t = Thread.new {
+        Thread.exclusive {
+          NflSeasonTeamPlayer
+          NflGameStatMap
+        }
+        player_id = Thread.current.thread_variable_get(:player_id)
+        results.push get_player_game_data(player_id, 2013).first
+      }
+      t.thread_variable_set(:player_id, i)
+      threads.push t
+    end
+    threads.each do |thread|
+      thread.join
+    end
+
+    10.times { puts '' }
+
+    results.count
+    #results
   end
 end
