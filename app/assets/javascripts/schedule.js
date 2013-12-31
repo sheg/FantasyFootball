@@ -1,6 +1,5 @@
 $(function() {
-    $('.week-bar').on('click', 'button', function(event) {
-        event.preventDefault();
+    $('.week-bar').on('click', 'button', function() {
         var $this = $(this)
         $this.closest('.week-bar').find('button').removeClass('highlight');
         $this.addClass('highlight');

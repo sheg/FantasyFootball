@@ -12,6 +12,7 @@ module FantasyFootball
   class Application < Rails::Application
 
     config.assets.precompile += %w(*.png *.jpg *.jpeg *.gif)
+    config.middleware.use Rack::Deflater
 
   end
 end
