@@ -4,7 +4,7 @@ class NflLoader
   include ApiHelper
 
   def initialize
-    super
+    api_init
     set_my_folder('nfl')
   end
 

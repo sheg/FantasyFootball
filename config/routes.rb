@@ -2,6 +2,7 @@ FantasyFootball::Application.routes.draw do
   root "fantasy_football#home"
 
   resources :leagues, only: [:index, :show, :new, :create]
+  match "/leagues/:id/schedule", to: "leagues#schedule", via: "get", as: "league_schedule"
 
   resources :sessions, only: [:new, :create, :destroy]
   match "/signin", to: "sessions#new", via: "get"

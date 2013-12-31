@@ -124,11 +124,21 @@ label.required:after{
   display: none;
 }
 
-/* DEBUGGING */
-
 .debug_dump {
-
   float: left;
   width: 75%;
   margin-top: 45px;
+}
+
+.week-bar {
+  margin-bottom: 25px
+}
+
+.highlight {
+  color: green !important;
+  font-weight: bold !important;
+}
+
+.schedule-games {
+  display: none;
 }
