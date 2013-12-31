@@ -4,9 +4,9 @@ module ApiHelper
   include HTTParty
   base_uri('http://api.nfldata.apiphany.com/trial/JSON/')
 
-  def initialize
+  def api_init
     # @api_key= '8C885035-7832-4EEA-BE33-A8C5AE5711D1'
-    @api_key= 'D471592E-6185-4CE1-AAD5-5F85298B0F4B'
+    @api_key = 'D471592E-6185-4CE1-AAD5-5F85298B0F4B'
     @base_folder = File.join(Rails.root, 'lib', 'json_data')
     @my_folder = ''
   end
