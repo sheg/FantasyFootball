@@ -52,9 +52,11 @@ class PointsCalculator
 
     season = year ? NflSeason.find_by(year: year) : NflLoader.new.current_season
 
-    game_players = NflGamePlayer.includes(:player).joins(:season).where(nfl_seasons: { id: season.id }, nfl_player_id: player_id)
+    game_players = NflGamePlayer.includes(player: [ :news, :injuries ]).joins(:season).where(nfl_seasons: { id: season.id }, nfl_player_id: player_id)
     game_players = game_players.includes(:game).where(nfl_games: { week: week }) if week
     game_players = game_players.to_ary
+
+    puts game_players.count
 
     stats = get_stats(game_players)
 
@@ -82,6 +84,7 @@ class PointsCalculator
         }
         player_id = Thread.current.thread_variable_get(:player_id)
         results.push get_player_game_data(player_id, 2013).first
+        ActiveRecord::Base.connection.close   # Release any DB connections used by the current thread
       }
       t.thread_variable_set(:player_id, i)
       threads.push t

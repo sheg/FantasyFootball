@@ -117,6 +117,21 @@ class NflLoader
       news.save
     }
 
+    if item['InjuryStatus']
+      injury_data = item['InjuryStatus']
+      injury = NflPlayerInjury.find_or_create_by(nfl_player_id: player.id, external_injury_id: injury_data['InjuryID'])
+      injury.injury_date = convert_fantasy_data_time(injury_data['Updated'])
+      injury.body_part = injury_data['BodyPart']
+      injury.practice = injury_data['Practice']
+      injury.practice_description = injury_data['PracticeDescription']
+      injury.status = injury_data['Status']
+      injury.week = injury_data['Week']
+
+      puts "NFL Player Injury updated #{player.full_name}, ExternalID #{injury.external_injury_id}, #{injury.body_part}, #{injury.status}" if injury.changed?
+
+      injury.save
+    end
+
     team = get_team(item['Team']) unless team
 
     seasonEntry = NflSeasonTeamPlayer.find_or_create_by(season_id: season.id, team_id: team.id, player_id: player.id, position_id: position.id)
@@ -318,17 +333,19 @@ class NflLoader
     NflGameStatMap.transaction do
       sql_array = Array.new
 
-      game_ids = $nfl_games.values.map { |v| v.id }.join(',')
-      sql_array.push "
-        delete
-        from nfl_game_stat_maps
-        where nfl_game_player_id in (
-          select gp.id
-          from nfl_game_players gp
-            inner join nfl_games g on gp.nfl_game_id = g.id
-          where g.id in (#{game_ids})
-        )
-      "
+      if($nfl_games.count > 0)
+        game_ids = $nfl_games.values.map { |v| v.id }.join(',')
+        sql_array.push "
+          delete
+          from nfl_game_stat_maps
+          where nfl_game_player_id in (
+            select gp.id
+            from nfl_game_players gp
+              inner join nfl_games g on gp.nfl_game_id = g.id
+            where g.id in (#{game_ids})
+          )
+        "
+      end
 
       while $player_stat_sql.size > 0 do
         statements = $player_stat_sql.slice!(0, 100000)

@@ -44,6 +44,7 @@ namespace :ff do
 
     desc "Restore NFL data"
     task restore: :environment do
+      Rake::Task['db:seed'].invoke
       Rake::Task['ff:nfl:load_teams'].invoke
       Rake::Task['ff:nfl:load_games'].invoke
       Rake::Task['ff:nfl:load_players'].invoke
