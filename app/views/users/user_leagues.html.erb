@@ -7,6 +7,7 @@
       <% @user_leagues.each do |league| %>
           <tr>
             <td><%= link_to league.name, league %></td>
+            <td><%= %W{Normal Flex9 Flex10}.sample %></td>
           </tr>
       <% end %>
       </tbody>

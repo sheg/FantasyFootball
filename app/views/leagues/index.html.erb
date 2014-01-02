@@ -2,6 +2,7 @@
 
 <table class="table table-responsive table-condensed">
     <th>Name</th>
+    <th>Type</th>
     <th>Size</th>
     <th>Available</th>
     <th>Entry</th>
@@ -10,10 +11,15 @@
         <% @leagues.each do |league| %>
         <tr>
           <td><%= link_to league.name, league %></td>
+          <td><%= %W{Normal Flex9 Flex10}.sample %></td>
           <td><%= league.size %></td>
           <td><%= league.available_teams %></td>
           <td>$100</td>
-          <td><%= link_to "Join", '#', class: "btn btn-success" %></td>
+          <% if signed_in? && @user_leagues.find { |user_league| user_league.id == league.id } %>
+            <td class="joined-league">My League!</td>
+          <% else %>
+            <td><%= link_to "Join", join_league_path, class: "btn btn-success" %></td>
+          <% end %>
         </tr>
         <% end %>
     </tbody>

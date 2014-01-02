@@ -1,5 +1,9 @@
 @import "bootstrap";
 
+label {
+  cursor: default;
+}
+
 html {
   overflow-y: scroll;
 }
@@ -141,4 +145,47 @@ label.required:after{
 
 .schedule-games {
   display: none;
+}
+
+.joined-league {
+  font-weight: bold;
+  font-style: italic;
+  color: darkslategrey;
+}
+
+.user-combobox {
+  width: 250px;
+  font-size: 15px;
+  height: 22px;
+  margin-top: 12px;
+}
+
+.league-nav {
+  margin-top: -20px;
+  width: 100%;
+}
+
+.registration-name label {
+  width: 200px;
+  float: left;
+  margin: 0 20px 0 0;
+  display: block;
+}
+
+.registration-name input {
+  width: 200px;
+}
+
+.registration-name .name1 {
+  float: left;
+  width: 50%;
+}
+
+.registration-name .name2 {
+  float: right;
+  width: 50%;
+}
+
+.registration-name .name2 input {
+  width: 100%;
 }
