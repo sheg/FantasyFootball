@@ -15,7 +15,8 @@ class NflGame < ActiveRecord::Base
   end
 
   def description
-    "Week #{week}: #{away_team.abbr} @#{home_team.abbr} #{start_time.strftime('%m/%d/%Y %I:%M%p')}"
+    start_time = Date.parse('1/1/1973') unless start_time
+    "Week #{week}: #{away_team.abbr} @#{home_team.abbr} #{start_time.strftime('%m/%d/%Y %I:%M%p')}" if home_team
   end
 
   def self.by_week

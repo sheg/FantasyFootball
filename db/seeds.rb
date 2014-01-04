@@ -6,6 +6,20 @@
 #   cities = City.create([{ name: 'Chicago' }, { name: 'Copenhagen' }])
 #   Mayor.create(name: 'Emanuel', city: cities.first)
 
+positions = [
+  { abbr: "QB", name: 'Quarterback' },
+  { abbr: "RB", name: 'Running Back' },
+  { abbr: "WR", name: 'Wide Receiver' },
+  { abbr: "TE", name: 'Tight End' },
+  { abbr: "K", name: 'Kicker' },
+  { abbr: "DST", name: 'Defense' },
+]
+positions.each do |data|
+  position = NflPosition.find_or_create_by(abbr: data[:abbr])
+  position.name = data[:name]
+  position.save
+end
+
 stat_types = [
   { name: "PassingAttempts", group: 'Passing', abbr: 'Att', display_name: 'Passing Attempts' },
   { name: "PassingCompletions", group: 'Passing', abbr: 'Comp', display_name: 'Passing Completions' },

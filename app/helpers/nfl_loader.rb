@@ -42,8 +42,8 @@ class NflLoader
     season = current_season
 
     NflTeam.where.not(abbr: 'BYE').each do |team|
-      position = NflPosition.find_or_create_by(abbr: 'DEF')
-      player = NflPlayer.find_or_create_by(external_player_id: "DEF_#{team.abbr}")
+      position = NflPosition.find_or_create_by(abbr: 'DST')
+      player = NflPlayer.find_or_create_by(external_player_id: "DST_#{team.abbr}")
       player.first_name = team.name
       player.last_name = 'Defense'
 
@@ -63,7 +63,9 @@ class NflLoader
   def get_players(season)
     hash = Hash.new
     NflTeam.where.not(abbr: 'BYE').each { |team|
-      items = load_json_data("/Players/#{team.abbr}", "#{season.year}/players/#{team.abbr}.json", 86400)
+      #items = load_json_data("/Players/#{team.abbr}", "#{season.year}/players/#{team.abbr}.json", 86400)
+      items = load_json_data("/Players/#{team.abbr}", "#{season.year}/players/#{team.abbr}.json", 0)
+      items = [] unless items
       hash[team] = items
     }
     hash
@@ -93,7 +95,9 @@ class NflLoader
   private :load_player
 
   def create_player(item, season, team = nil)
-    position = NflPosition.find_or_create_by(abbr: item['FantasyPosition'])
+    position = get_position(item['FantasyPosition'])
+    return unless position
+
     player = NflPlayer.find_or_create_by(external_player_id: item['PlayerID'])
     player.first_name = item['FirstName']
     player.last_name = item['LastName']
@@ -117,25 +121,9 @@ class NflLoader
       news.save
     }
 
-    if item['InjuryStatus']
-      injury_data = item['InjuryStatus']
-      injury = NflPlayerInjury.find_or_create_by(nfl_player_id: player.id, external_injury_id: injury_data['InjuryID'])
-      injury.injury_date = convert_fantasy_data_time(injury_data['Updated'])
-      injury.body_part = injury_data['BodyPart']
-      injury.practice = injury_data['Practice']
-      injury.practice_description = injury_data['PracticeDescription']
-      injury.status = injury_data['Status']
-      injury.week = injury_data['Week']
-
-      puts "NFL Player Injury updated #{player.full_name}, ExternalID #{injury.external_injury_id}, #{injury.body_part}, #{injury.status}" if injury.changed?
-
-      injury.save
-    end
-
     team = get_team(item['Team']) unless team
 
     seasonEntry = NflSeasonTeamPlayer.find_or_create_by(season_id: season.id, team_id: team.id, player_id: player.id, position_id: position.id)
-    # current_team_abbr: item['CurrentTeam'],
     seasonEntry.player_number = item['Number']
 
     puts "NFL SeasonTeamPlayer data updated #{player.full_name}, position #{position.abbr}, team #{team.abbr}" if seasonEntry.changed?
@@ -166,7 +154,7 @@ class NflLoader
       nfl_game.season_id = season.id
       nfl_game.week = game['Week']
 
-      puts "Game data updated ExternalID #{nfl_game.external_game_id}, Week #{nfl_game.week}, #{nfl_game.away_team.abbr} @#{nfl_game.home_team.abbr}" if nfl_game.changed?
+      puts "Game data updated ExternalID #{nfl_game.external_game_id}, Week #{nfl_game.week}, #{away_team.abbr} @#{home_team.abbr}" if nfl_game.changed?
 
       nfl_game.save
     end
@@ -226,16 +214,17 @@ class NflLoader
   end
 
   def load_defense_stats(season, week, cache_timeout)
-    items = load_json_data("/FantasyDefenseByGame/#{season}/#{week}", "#{season}/weeks/#{week}/stats_defense.json", cache_timeout)
+    year = season.year
+    items = load_json_data("/FantasyDefenseByGame/#{year}/#{week}", "#{year}/weeks/#{week}/stats_defense.json", cache_timeout)
     stat_types = get_stat_types
 
     items.each do |item|
-      player = NflPlayer.find_by!(external_player_id: "DEF_#{item['Team']}")
+      player = NflPlayer.find_by!(external_player_id: "DST_#{item['Team']}")
       nfl_game = get_nfl_game item['GameKey']
       next unless nfl_game
 
       team = get_team(item['Team'])
-      position = get_position('DEF')
+      position = get_position('DST')
 
       game_player = update_game_player(nfl_game, player, team, position)
 
@@ -243,6 +232,33 @@ class NflLoader
         next unless (item[stat_type.name])
         $player_stat_sql.push "(#{game_player.id}, #{stat_type.id}, #{item[stat_type.name]})"
       }
+    end
+  end
+
+  def load_injuries(season, week, cache_timeout)
+    year = season.year
+    items = load_json_data("/Injuries/#{year}/#{week}", "#{year}/weeks/#{week}/injuries.json", cache_timeout)
+
+    items.each do |item|
+      player = NflPlayer.find_by(external_player_id: item['PlayerID'])
+      unless player
+        #puts "No player #{item['Name']}, ExternalID #{item['PlayerID']} found when loading injury"
+        next
+      end
+
+      injury = NflPlayerInjury.find_or_create_by(nfl_player_id: player.id, external_injury_id: item['InjuryID'])
+      injury.injury_date = convert_fantasy_data_time(item['Updated'])
+      injury.body_part = item['BodyPart']
+      injury.practice = item['Practice']
+      injury.practice_description = item['PracticeDescription']
+      injury.status = item['Status']
+      injury.week = item['Week']
+      injury.season_id = season.id
+      injury.season_type_id = item['SeasonType']
+
+      puts "NFL Player Injury updated #{player.full_name}, ExternalID #{injury.external_injury_id}, #{injury.body_part}, #{injury.status}" if injury.changed?
+
+      injury.save
     end
   end
 
@@ -325,7 +341,8 @@ class NflLoader
       t.join
     end
 
-    load_defense_stats(season.year, week, cache_timeout)
+    load_defense_stats(season, week, cache_timeout)
+    load_injuries(season, week, cache_timeout)
 
     puts "Week #{week}: loading time taken: #{Time.now - get_start}"
 
@@ -402,6 +419,9 @@ class NflLoader
   end
 
   def process_player_stats(season, week, item)
+    position = get_position(item['Position'])
+    return unless position
+
     player = NflPlayer.find_by(external_player_id: item['PlayerID'])
     unless player
       puts "Player not found in DB ExternalID: #{item['PlayerID']}, Team: #{item['Team']}, Name: #{item['Name']}... retrying"
@@ -420,15 +440,13 @@ class NflLoader
 
       puts "Player not found in DB ExternalID: #{item['PlayerID']}, Team: #{item['Team']}, Name: #{item['Name']}" unless player
     end
+    return unless player
 
     nfl_game = get_nfl_game item['GameKey']
-
-    return unless player && nfl_game
+    return unless nfl_game
 
     team = get_team(item['Team'])
-    position = get_position(item['Position'])
-
-    return unless team && position
+    return unless team
 
     game_player = update_game_player(nfl_game, player, team, position)
 
