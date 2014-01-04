@@ -3,11 +3,13 @@
     <table class="table table-responsive table-condensed">
       <th>Name</th>
       <th>Type</th>
+      <th>Rank</th>
       <tbody>
       <% @user_leagues.each do |league| %>
           <tr>
             <td><%= link_to league.name, league %></td>
             <td><%= %W{Normal Flex9 Flex10}.sample %></td>
+            <td><%=%W{1 2 3 4 5 6 7 8 9 10 11 12}.sample%></td>
           </tr>
       <% end %>
       </tbody>
