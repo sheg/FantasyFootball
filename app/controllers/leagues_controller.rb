@@ -35,9 +35,3 @@ class LeaguesController < ApplicationController
     @my_team = @league.users.find(current_user.id).inspect
   end
 end
-
-private
-
-  def signed_in_user
-    redirect_to signin_url, notice: "Please sign in" unless signed_in?
-  end
