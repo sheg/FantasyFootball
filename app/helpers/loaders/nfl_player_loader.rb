@@ -160,20 +160,19 @@ module Loaders
           sql_array.push "INSERT INTO nfl_game_stat_maps (nfl_game_player_id, stat_type_id, value) VALUES #{inserts};"
         end
 
-        sql_array.each { |sql|
-          begin
+        begin
+          sql_array.each { |sql|
             NflGameStatMap.connection.execute(sql)
-            puts "Week #{week}: SQL time taken: #{Time.now - get_start}"
+          }
+          puts "Week #{week}: SQL time taken: #{Time.now - get_start}"
 
-            load_defense_stats(season, week, season_type_id, cache_timeout)
-            PointsCalculator.new.update_game_player_points_for_games($nfl_games.values.map{|g| g.id})
-          rescue Exception => e
-            puts e.message[0,400]
-            puts e.backtrace.join("\n   ")
-            raise ActiveRecord::Rollback
-            break
-          end
-        }
+          load_defense_stats(season, week, season_type_id, cache_timeout)
+          PointsCalculator.new.update_game_player_points_for_games($nfl_games.values.map{|g| g.id})
+        rescue Exception => e
+          puts e.message[0,400]
+          puts e.backtrace.join("\n   ")
+          raise ActiveRecord::Rollback
+        end
       end
     end
     private :load_items
@@ -240,7 +239,7 @@ module Loaders
 
       player
     end
-    private :load_items
+    private :process_player_stats
 
     def update_game_player(nfl_game, player, team, position)
       game_player = NflGamePlayer.find_or_create_by(nfl_game_id: nfl_game.id, nfl_player_id: player.id)
