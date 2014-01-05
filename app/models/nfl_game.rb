@@ -10,6 +10,10 @@ class NflGame < ActiveRecord::Base
     items = NflGame.find_by(external_game_id: s)
   end
 
+  def attributes
+    super.merge('description' => self.description)
+  end
+
   def description
     "Week #{week}: #{away_team.abbr} @#{home_team.abbr} #{start_time.strftime('%m/%d/%Y %I:%M%p')}"
   end
