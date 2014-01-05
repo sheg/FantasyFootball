@@ -2,12 +2,12 @@ require 'httparty'
 
 module ApiHelper
   include HTTParty
-  base_uri('http://api.nfldata.apiphany.com/trial/JSON/')
+  base_uri('http://api.nfldata.apiphany.com/developer/JSON/')
 
   def api_init
     #@api_key = '2C057E71-1881-4F05-AE33-016AB738B116'
     #@api_key = '843FF8C4-A9F2-4220-97B4-3AED45A33300'
-    @api_key = 'C2D37843-334D-4298-A10E-FB1485AAAB4E'
+    @api_key = '9847E97D-FF9D-48BA-878C-C7DB4FBE3174' # developer
 
     @base_folder = File.join(Rails.root, 'lib', 'json_data')
     @my_folder = ''
