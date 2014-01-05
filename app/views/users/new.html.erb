@@ -31,13 +31,19 @@
             <span class="error-message password-mismatch"> Passwords do not match </span>
         </div>
 
-        <% if signed_in? %>
+        <div class="registration-name">
+          <div class="name1">
             <%= f.label :first_name, "First Name" %>
             <%= f.text_field :first_name %>
-
+          </div>
+          <div class="name2">
             <%= f.label :last_name, "Last Name" %>
             <%= f.text_field :last_name %>
+          </div>
+        </div>
 
+
+        <% if signed_in? %>
             <%= f.label :address, "Address" %>
             <%= f.text_field :address %>
 

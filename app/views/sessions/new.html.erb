@@ -8,8 +8,15 @@
 
         <%= f.label :password %>
         <%= f.password_field :password %>
-        <%= f.submit "Sign In", class: "btn btn-large btn-primary" %>
+
+        <label for="remember_me"> Remember Me:
+          <%= check_box_tag :remember_me, 1, params[:remember_me] %>
+        </label>
+
+
+        <%= f.submit "Sign In", class: "btn btn-large btn-primary actions" %>
     <% end %>
+
     <p> New User? <%= link_to "Sign Up Now!", signup_path %> </p>
   </div>
 </div>

@@ -1,19 +1,27 @@
-<h1> League Schedule</h1>
+<%= render "shared/league_header" %>
+
+<h1>League Schedule</h1>
 <h2><%= @league.name %></h2>
 
 <% if @league.available_teams == 0 %>
+    <label for="user_email" style="font-size: 17px">Team Schedule:
+    <%= collection_select(:user, :email, @league.users, :id, :email, {}, { class: 'user-combobox' }) %>
+    </label>
+
     <%= render 'shared/schedule_weekbar' %>
 
     <table class="table table-responsive table-condensed schedule-table">
       <th>Week</th>
       <th>Home Team</th>
       <th>Away Team</th>
+      <th>Result</th>
       <tbody>
       <% @league.games.each do |game| %>
           <tr class="schedule-games game-<%= game.week %>">
             <%= content_tag(:td, game.week) %>
-            <%= content_tag(:td, game.home_team.name, class: highlight_my_team(@my_team, game.home_team)) %>
-            <%= content_tag(:td, game.away_team.name, class: highlight_my_team(@my_team, game.away_team)) %>
+            <%= content_tag(:td, game.home_team.name, class: highlight_my_team(@user_team, game.home_team)) %>
+            <%= content_tag(:td, game.away_team.name, class: highlight_my_team(@user_team, game.away_team)) %>
+            <td>13.22 - 24.24</td>
           </tr>
       <% end %>
       </tbody>
