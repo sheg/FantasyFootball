@@ -5,4 +5,19 @@ class NflSeason < ActiveRecord::Base
   def self.[](s)
     NflSeason.find_by(year: s)
   end
+
+  def get_full_season_name(season_type_id)
+    "#{year}#{NflSeason.get_season_type_name(season_type_id)}"
+  end
+
+  def self.get_season_type_name(season_type_id)
+    case season_type_id
+      when 1, nil
+        "REG"
+      when 2
+        "PRE"
+      when 3
+        "POST"
+    end
+  end
 end

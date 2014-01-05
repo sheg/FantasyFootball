@@ -14,11 +14,14 @@ class NflGameStatMap < ActiveRecord::Base
   has_one :position, class_name: NflPosition, through: :game_player
   has_one :season, class_name: NflSeason, through: :game
 
-  scope :for_season_week, ->(s, w) { joins(:season).where(nfl_seasons: { year: s }, nfl_games: { week: w }) }
+  scope :find_player, -> (p) { joins(:game_player).where(game_players_nfl_game_stat_maps: { nfl_player_id: p } ) }
+  scope :find_year, -> (y) { joins(:season).where(nfl_seasons: { year: y } ) }
+  scope :find_year_week, ->(y, w) { joins(:season).where(nfl_seasons: { year: y }, nfl_games: { week: w }) }
+  scope :find_games, -> (g) { joins(:game_player).where(nfl_game_players: { nfl_game_id: g }) }
 
-  def attributes
-    super.merge('stat_type_name' => self.stat_type_name)
-  end
+  #def attributes
+  #  super.merge('stat_type_name' => self.stat_type_name)
+  #end
 
   def stat_type_name
     stat_type.name

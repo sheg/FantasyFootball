@@ -13,10 +13,14 @@ class NflPlayer < ActiveRecord::Base
     "#{first_name} #{last_name}"
   end
 
-  def attributes
-    super.merge(
-      news: self.news.to_a,
-      injuries: self.injuries.to_a
-    )
-  end
+  #def attributes
+  #  super.merge(
+  #    news: self.news.to_a,
+  #    injuries: self.injuries.to_a
+  #  )
+  #end
+
+  scope :find_position, -> (p) { uniq.joins(game_players: [ :position, :team ]).where(nfl_positions: { abbr: p }) }
+  scope :find_team, -> (t) { uniq.joins(game_players: [ :position, :team ]).where(nfl_teams: { abbr: t }) }
+  scope :sort_last_name, -> { order(:last_name) }
 end

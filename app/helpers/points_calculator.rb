@@ -18,7 +18,10 @@ class PointsCalculator
     points = 0.0
 
     @rules.each { |rule|
-      stat = stats.find { |item| item.stat_type_id == rule.stat_type_id }
+      stat = stats[rule.stat_type_id]
+      next unless stat
+
+      stat = stat.first
       if stat and stat.value > 0
         match = true
         if (rule.min_range > 0 || rule.max_range > 0)
@@ -31,21 +34,90 @@ class PointsCalculator
         calc = rule.fixed_points
         calc = (stat.value * rule.multiplier).round(4) unless calc > 0
 
-        puts "#{stat.stat_type.name}: fixed #{rule.fixed_points} || #{stat.value} * #{rule.multiplier} = #{calc}"
+        #puts "#{stat.stat_type.name}: fixed #{rule.fixed_points} || #{stat.value} * #{rule.multiplier} = #{calc}"
 
         points += calc
         points = points.round(4)
       end
     }
-    points
+    BigDecimal(points.round(4), 4)
   end
   private :do_calculation
 
   def get_stats(game_players)
-    stats = NflGameStatMap.includes({ :game => [:home_team, :away_team] })
-      .where(nfl_game_player_id: game_players).where("value > 0")
+    stats = NflGameStatMap.includes(game: [:home_team, :away_team, :season])
+      .where(nfl_game_player_id: game_players).where('value > 0')
       .order('nfl_games.week').group_by{ |s| s.game }
   end
+
+  def update_game_player_points_for_games(game_ids)
+    start = Time.now
+
+    game_players = NflGamePlayer.unscoped.find_games(game_ids)
+    game_players = game_players.readonly(false).to_a
+
+    stats = NflGameStatMap.unscoped.find_games(game_ids)
+    stats = stats.where('value > 0').to_a.group_by{ |s| s.nfl_game_player_id }
+
+    puts "Update Points for Games: Loaded Stats Time taken: #{Time.now - start}"
+
+    do_update(game_players, stats)
+  end
+
+  def update_game_player_points(player_id = nil, year = nil, week = nil)
+    start = Time.now
+
+    season = year ? NflSeason.find_by(year: year) : NflLoader.new.current_season
+
+    game_players = NflGamePlayer.unscoped
+    if week
+      game_players = game_players.find_year_week(season.year, week)
+    else
+      game_players = game_players.find_year(season.year)
+    end
+    if player_id
+      game_players = game_players.where(nfl_player_id: player_id)
+    end
+    game_players = game_players.readonly(false).to_a
+
+    stats = NflGameStatMap.unscoped
+    if week
+      stats = stats.find_year_week(season.year, week)
+    else
+      stats = stats.find_year(season.year)
+    end
+    if player_id
+      stats = stats.find_player(player_id)
+    end
+    stats = stats.where('value > 0').to_a.group_by{ |s| s.nfl_game_player_id }
+
+    puts "Update Points #{season.year}: Loaded Stats Time taken: #{Time.now - start}"
+
+    do_update(game_players, stats)
+  end
+
+  def do_update(game_players, stats)
+    start = Time.now
+
+    NflGamePlayer.transaction do
+      game_players.each { |game_player|
+        value = stats[game_player.id]
+        next unless value
+
+        value = value.group_by{ |s| s.stat_type_id }
+
+        game_player.points = do_calculation(value)
+
+        if game_player.changed?
+          #puts "#{game_player.id} --- Points #{game_player.points}"
+          game_player.save
+        end
+      }
+    end
+
+    puts "Update Points: Calculation Time taken: #{Time.now - start}"
+  end
+  private :do_update
 
   def get_player_game_data(player_id, year = nil, week = nil)
     all_stats = Array.new
@@ -56,12 +128,14 @@ class PointsCalculator
     game_players = game_players.includes(:game).where(nfl_games: { week: week }) if week
     game_players = game_players.to_ary
 
-    puts game_players.count
+    #puts game_players.count
 
     stats = get_stats(game_players)
 
     stats.each { |key, value|
-      puts key.description
+      value = value.group_by{ |s| s.stat_type_id }
+
+      #puts key.description
       data = PlayerGameData.new
       data.game_player = game_players.find(nfl_game_id: key.id).first
       data.player = data.game_player.player

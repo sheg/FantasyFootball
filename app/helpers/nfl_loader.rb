@@ -13,20 +13,10 @@ class NflLoader
     season = NflSeason.find_or_create_by(year: data['data'])
   end
 
-  def get_season_type_name(season_type_id)
-    case season_type_id
-      when 1, nil
-        "REG"
-      when 2
-        "PRE"
-      when 3
-        "POST"
-    end
-  end
-
   def current_week
     data = load_json_data('/CurrentWeek', 'current_week.json', 86400)
     week = data['data']
+    week.to_i
   end
 
   def get_team(abbr)
@@ -71,7 +61,7 @@ class NflLoader
   end
 
   def get_weekly_data(api_method, cache_filename, season, week, season_type_id, cache_timeout = 0)
-    season_type_name = get_season_type_name(season_type_id)
+    season_type_name = NflSeason.get_season_type_name(season_type_id)
     api_season = "#{season}#{season_type_name}"
     cache_root_folder = season.to_s
     cache_root_folder += "/#{season_type_name}" if season_type_id.to_i > 1

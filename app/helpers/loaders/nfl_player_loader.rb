@@ -163,6 +163,10 @@ module Loaders
         sql_array.each { |sql|
           begin
             NflGameStatMap.connection.execute(sql)
+            puts "Week #{week}: SQL time taken: #{Time.now - get_start}"
+
+            load_defense_stats(season, week, season_type_id, cache_timeout)
+            PointsCalculator.new.update_game_player_points_for_games($nfl_games.values.map{|g| g.id})
           rescue Exception => e
             puts e.message[0,400]
             puts e.backtrace.join("\n   ")
@@ -171,10 +175,6 @@ module Loaders
           end
         }
       end
-
-      puts "Week #{week}: SQL time taken: #{Time.now - get_start}"
-
-      load_defense_stats(season, week, season_type_id, cache_timeout)
     end
     private :load_items
 
@@ -190,7 +190,9 @@ module Loaders
         Thread.exclusive {
           item = items.pop
         }
-        player = process_player_stats(season, item) if item
+        NflPlayer.transaction do
+          player = process_player_stats(season, item) if item
+        end
       end
 
       ActiveRecord::Base.connection.close   # Release any DB connections used by the current thread
@@ -232,7 +234,7 @@ module Loaders
       stat_types = get_stat_types
 
       stat_types.each { |stat_type|
-        next unless (item[stat_type.name])
+        next unless (item[stat_type.name] and item[stat_type.name].to_d > 0)
         $player_stat_sql.push "(#{game_player.id}, #{stat_type.id}, #{item[stat_type.name]})"
       }
 
@@ -261,53 +263,67 @@ module Loaders
       items = get_defense_stats(year, week, season_type_id, cache_timeout)
       stat_types = get_stat_types
 
-      items.each do |item|
-        player = NflPlayer.find_by!(external_player_id: "DST_#{item['Team']}")
-        nfl_game = get_nfl_game item['GameKey']
-        next unless nfl_game
+      NflPlayer.transaction do
+        items.each do |item|
+          player = NflPlayer.find_by!(external_player_id: "DST_#{item['Team']}")
+          nfl_game = get_nfl_game item['GameKey']
+          next unless nfl_game
 
-        team = get_team(item['Team'])
-        position = get_position('DST')
+          team = get_team(item['Team'])
+          position = get_position('DST')
 
-        game_player = update_game_player(nfl_game, player, team, position)
+          game_player = update_game_player(nfl_game, player, team, position)
 
-        stat_types.each { |stat_type|
-          next unless (item[stat_type.name])
-          $player_stat_sql.push "(#{game_player.id}, #{stat_type.id}, #{item[stat_type.name]})"
-        }
+          stat_types.each { |stat_type|
+            next unless (item[stat_type.name])
+            $player_stat_sql.push "(#{game_player.id}, #{stat_type.id}, #{item[stat_type.name]})"
+          }
+        end
       end
     end
 
     def load_current
       super(30)
+      #load_current_player_stats_thread_test
     end
 
     def load_current_player_stats_thread_test
       season = current_season
       week = current_week
+      season_type_id = 1
 
-      game = NflGame.find_by(season_id: season.id, week: week)
-      game_player = NflGamePlayer.find_by(nfl_game_id: game.id)
-      test = NflGameStatMap.where(nfl_game_player_id: game_player.id).first
+      if(week > 17)
+        week -= 17
+        season_type_id = 3
+      end
 
-      t1 = Thread.new { load_items(season, week, 1) }
+      game = NflGame.find_by(season_id: season.id, season_type_id: season_type_id, week: week)
+      test = NflGameStatMap.includes(:game).where(nfl_games: { id: game.id }).first
+
+      t1 = Thread.new { load_items(season, week, season_type_id) }
 
       if test
         test.value = 666
         test.save
 
+        game_player = NflGamePlayer.find_by(id: test.nfl_game_player_id)
+        game_player.points = 0
+        game_player.save
+
         threads = Array.new
-        for i in 1..5 do
+        for i in 1..3 do
           threads.push Thread.new {
             Thread.exclusive {
               NflSeasonTeamPlayer
               NflGameStatMap
             }
 
-            for i in 1..20 do
-              test = NflGameStatMap.where(nfl_game_player_id: game_player.id).first
+            for i in 1..10 do
+              test = NflGameStatMap.where(nfl_game_player_id: test.nfl_game_player_id).first
+              game_player = NflGamePlayer.find_by(id: test.nfl_game_player_id)
               puts test.inspect
-              sleep(0.4)
+              puts game_player.inspect
+              sleep(0.2)
             end
           }
         end

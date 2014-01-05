@@ -15,7 +15,7 @@ namespace :ff do
     desc "Fill database with game scores"
     task load_scores: :environment do
       puts 'Loading NFL game scores'
-      Loaders::NflGameLoader.new.load_game_scores
+      Loaders::NflGameLoader.new.load_current
     end
 
     desc "Fill database with players"
