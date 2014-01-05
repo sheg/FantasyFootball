@@ -30,5 +30,7 @@ class AddNflGameCols < ActiveRecord::Migration
 
     rename_column :nfl_games, :posession, :possession
     rename_column :nfl_games, :yardline, :yard_line
+
+    add_column :nfl_games, :season_id, :integer
   end
 end

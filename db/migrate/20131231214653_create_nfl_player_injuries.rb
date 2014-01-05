@@ -1,6 +1,6 @@
 class CreateNflPlayerInjuries < ActiveRecord::Migration
   def change
-    drop_table :nfl_player_injuries if table_exists? :nfl_player_injuries
+    #drop_table :nfl_player_injuries if table_exists? :nfl_player_injuries
 
     create_table :nfl_player_injuries do |t|
       t.integer :nfl_player_id
@@ -11,6 +11,8 @@ class CreateNflPlayerInjuries < ActiveRecord::Migration
       t.string :practice_description
       t.string :status
       t.integer :week
+      t.integer :season_id
+      t.integer :season_type_id
 
       t.timestamps
     end

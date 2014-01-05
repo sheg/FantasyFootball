@@ -10,17 +10,18 @@ class NflGame < ActiveRecord::Base
     items = NflGame.find_by(external_game_id: s)
   end
 
-  def attributes
-    super.merge('description' => self.description)
-  end
+  #def attributes
+  #  super.merge('description' => description)
+  #end
 
   def description
-    "Week #{week}: #{away_team.abbr} @#{home_team.abbr} #{start_time.strftime('%m/%d/%Y %I:%M%p')}"
+    "Week #{week}: #{away_team.abbr} @#{home_team.abbr} #{start_time.strftime('%m/%d/%Y %I:%M%p')}" if home_team
   end
 
   def self.by_week
     find :all, order: :week
   end
 
+  scope :for_season, -> (s) { includes(:season).where(nfl_seasons: { year: s }) }
   scope :with_teams, -> { includes(:home_team, :away_team) }
 end
