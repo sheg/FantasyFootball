@@ -13,6 +13,7 @@ class NflGamePlayer < ActiveRecord::Base
   scope :find_year, -> (y) { joins(:season).where(nfl_seasons: { year: y } ) }
   scope :find_year_week, -> (y, w) { joins(:season, :game).where(nfl_seasons: { year: y }, nfl_games: { week: w } ) }
   scope :find_games, -> (g) { where(nfl_game_id: g) }
+  scope :find_season_type, -> (st) { joins(:game).where(nfl_games: { season_type_id: st }) }
 
   #def attributes
   #  super.merge('position_abbr' => position_abbr)

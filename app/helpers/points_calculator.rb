@@ -5,6 +5,10 @@ class PointsCalculator
     attr_accessor :game
     attr_accessor :game_stats
     attr_accessor :points
+
+    def find_season_type(season_type_id)
+      self.find { |d| d.game.season_type_id == season_type_id }
+    end
   end
 
   def initialize(league_id = nil)
