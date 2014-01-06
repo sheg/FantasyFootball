@@ -72,6 +72,8 @@ module Loaders
     private :load_player
 
     def create_player(item, season, team = nil)
+      return unless item
+
       position = get_position(item['FantasyPosition'])
       return unless position
 
@@ -117,27 +119,35 @@ module Loaders
     private :get_items
 
     def load_items(season, week, season_type_id, cache_timeout = 0)
+      NflPlayer.transaction do
+        do_load_items(season, week, season_type_id, cache_timeout)
+      end
+    end
+
+    def do_load_items(season, week, season_type_id, cache_timeout = 0)
       get_start = Time.now
       items = get_items(season.year, week, season_type_id, cache_timeout)
 
+      $process_players = nil
       $nfl_games = Hash.new
       $player_stat_sql = Array.new
 
-      threads = Array.new
-      for i in 1..3
-        t = Thread.new { thread_process_player_stats(season, items) }
-        t["name"] = i
-        threads.push(t)
-      end
+      #threads = Array.new
+      #for i in 1..3
+      #  t = Thread.new { thread_process_player_stats(season, items) }
+      #  t["name"] = i
+      #  threads.push(t)
+      #end
+      #
+      #threads.each do |t|
+      #  t.join
+      #end
 
-      threads.each do |t|
-        t.join
-      end
+      thread_process_player_stats(season, items)
 
       puts "Week #{week}: loading time taken: #{Time.now - get_start}"
 
       get_start = Time.now
-      NflGameStatMap.transaction do
         sql_array = Array.new
 
         if($nfl_games.count > 0)
@@ -173,7 +183,6 @@ module Loaders
           puts e.backtrace.join("\n   ")
           raise ActiveRecord::Rollback
         end
-      end
     end
     private :load_items
 
@@ -182,6 +191,11 @@ module Loaders
         # Gets around issue error in autoload activerecord objects
         NflSeasonTeamPlayer
         NflPlayer
+
+        unless $process_players
+          ids = items.map{ |item| item['PlayerID'].to_s }
+          $process_players = Hash[NflPlayer.where(external_player_id: ids).map{ |p| [p.external_player_id, p]}]
+        end
       }
 
       while items.count > 0
@@ -189,9 +203,7 @@ module Loaders
         Thread.exclusive {
           item = items.pop
         }
-        NflPlayer.transaction do
-          player = process_player_stats(season, item) if item
-        end
+        player = process_player_stats(season, item) if item
       end
 
       ActiveRecord::Base.connection.close   # Release any DB connections used by the current thread
@@ -199,10 +211,11 @@ module Loaders
     private :thread_process_player_stats
 
     def process_player_stats(season, item)
-      position = get_position(item['Position'])
+      position = get_position(item['FantasyPosition'])
       return unless position
 
-      player = NflPlayer.find_by(external_player_id: item['PlayerID'])
+      #player = NflPlayer.find_by(external_player_id: item['PlayerID'])
+      player = $process_players[item['PlayerID'].to_s]
       unless player
         puts "Player not found in DB ExternalID: #{item['PlayerID']}, Team: #{item['Team']}, Name: #{item['Name']}... retrying"
 
@@ -222,7 +235,7 @@ module Loaders
       end
       return unless player
 
-      nfl_game = get_nfl_game item['GameKey']
+      nfl_game = get_nfl_game(item['GameKey'])
       return unless nfl_game
 
       team = get_team(item['Team'])
@@ -262,24 +275,23 @@ module Loaders
       items = get_defense_stats(year, week, season_type_id, cache_timeout)
       stat_types = get_stat_types
 
-      NflPlayer.transaction do
-        items.each do |item|
-          player = NflPlayer.find_by!(external_player_id: "DST_#{item['Team']}")
-          nfl_game = get_nfl_game item['GameKey']
-          next unless nfl_game
+      items.each do |item|
+        player = NflPlayer.find_by!(external_player_id: "DST_#{item['Team']}")
+        nfl_game = get_nfl_game item['GameKey']
+        next unless nfl_game
 
-          team = get_team(item['Team'])
-          position = get_position('DST')
+        team = get_team(item['Team'])
+        position = get_position('DST')
 
-          game_player = update_game_player(nfl_game, player, team, position)
+        game_player = update_game_player(nfl_game, player, team, position)
 
-          stat_types.each { |stat_type|
-            next unless (item[stat_type.name])
-            $player_stat_sql.push "(#{game_player.id}, #{stat_type.id}, #{item[stat_type.name]})"
-          }
-        end
+        stat_types.each { |stat_type|
+          next unless (item[stat_type.name])
+          $player_stat_sql.push "(#{game_player.id}, #{stat_type.id}, #{item[stat_type.name]})"
+        }
       end
     end
+    private :load_defense_stats
 
     def load_current
       super(30)
@@ -296,19 +308,20 @@ module Loaders
         season_type_id = 3
       end
 
-      game = NflGame.find_by(season_id: season.id, season_type_id: season_type_id, week: week)
-      test = NflGameStatMap.includes(:game).where(nfl_games: { id: game.id }).first
-
-      t1 = Thread.new { load_items(season, week, season_type_id) }
-
+      game = NflGame.where(season_id: season.id, season_type_id: season_type_id, week: week).order(:start_time).first
+      test = NflGameStatMap.includes(:game).where(nfl_games: { id: game.id }).order(:nfl_game_player_id).first
       if test
         test.value = 666
         test.save
 
         game_player = NflGamePlayer.find_by(id: test.nfl_game_player_id)
-        game_player.points = 0
+        game_player.points = -1
         game_player.save
+      end
 
+      t1 = Thread.new { load_items(season, week, season_type_id) }
+
+      if test
         threads = Array.new
         for i in 1..3 do
           threads.push Thread.new {
@@ -318,11 +331,11 @@ module Loaders
             }
 
             for i in 1..10 do
-              test = NflGameStatMap.where(nfl_game_player_id: test.nfl_game_player_id).first
+              test = NflGameStatMap.includes(:game).where(nfl_games: { id: game.id }).order(:nfl_game_player_id).first
               game_player = NflGamePlayer.find_by(id: test.nfl_game_player_id)
               puts test.inspect
               puts game_player.inspect
-              sleep(0.2)
+              sleep(0.3)
             end
           }
         end

@@ -13,6 +13,10 @@ class NflPlayer < ActiveRecord::Base
     "#{first_name} #{last_name}"
   end
 
+  def self.[](s)
+    NflPlayer.find_by(external_player_id: s)
+  end
+
   #def attributes
   #  super.merge(
   #    news: self.news.to_a,

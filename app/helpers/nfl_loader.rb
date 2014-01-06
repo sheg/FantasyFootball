@@ -24,11 +24,11 @@ class NflLoader
     unless $nfl_teams
       Thread.exclusive {
         unless $nfl_teams
-          $nfl_teams = NflTeam.all.to_ary
+          $nfl_teams = Hash[NflTeam.all.map { |x| [x.abbr, x] }]
         end
       }
     end
-    team = $nfl_teams.find { |i| i.abbr == abbr }
+    team = $nfl_teams[abbr]
     puts "Team not found in DB: #{abbr}" unless team
     team
   end
@@ -38,11 +38,11 @@ class NflLoader
     unless $nfl_positions
       Thread.exclusive {
         unless $nfl_positions
-          $nfl_positions = NflPosition.all.to_ary
+          $nfl_positions = Hash[NflPosition.all.map { |x| [x.abbr, x] }]
         end
       }
     end
-    position = $nfl_positions.find { |i| i.abbr == abbr }
+    position = $nfl_positions[abbr]
     # puts "Position not found in DB: #{abbr}" unless position
     position
   end

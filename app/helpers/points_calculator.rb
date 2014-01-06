@@ -54,6 +54,32 @@ class PointsCalculator
       .order('nfl_games.week').group_by{ |s| s.game }
   end
 
+  def get_stats(player_id, season, week)
+    stats = NflGameStatMap.unscoped
+    if week
+      stats = stats.find_year_week(season.year, week)
+    else
+      stats = stats.find_year(season.year)
+    end
+    if player_id
+      stats = stats.find_player(player_id)
+    end
+    stats = stats.where('value > 0').to_a.group_by{ |s| s.nfl_game_player_id }
+  end
+
+  def get_game_players(player_id, season, week)
+    game_players = NflGamePlayer.unscoped
+    if week
+      game_players = game_players.find_year_week(season.year, week)
+    else
+      game_players = game_players.find_year(season.year)
+    end
+    if player_id
+      game_players = game_players.where(nfl_player_id: player_id)
+    end
+    game_players = game_players.readonly(false)
+  end
+
   def update_game_player_points_for_games(game_ids)
     start = Time.now
 
@@ -73,27 +99,30 @@ class PointsCalculator
 
     season = year ? NflSeason.find_by(year: year) : NflLoader.new.current_season
 
-    game_players = NflGamePlayer.unscoped
-    if week
-      game_players = game_players.find_year_week(season.year, week)
-    else
-      game_players = game_players.find_year(season.year)
-    end
-    if player_id
-      game_players = game_players.where(nfl_player_id: player_id)
-    end
-    game_players = game_players.readonly(false).to_a
+    game_players = get_game_players(player_id, season, week).to_a
+    stats = get_game_players(player_id, season, week)
 
-    stats = NflGameStatMap.unscoped
-    if week
-      stats = stats.find_year_week(season.year, week)
-    else
-      stats = stats.find_year(season.year)
-    end
-    if player_id
-      stats = stats.find_player(player_id)
-    end
-    stats = stats.where('value > 0').to_a.group_by{ |s| s.nfl_game_player_id }
+    #game_players = NflGamePlayer.unscoped
+    #if week
+    #  game_players = game_players.find_year_week(season.year, week)
+    #else
+    #  game_players = game_players.find_year(season.year)
+    #end
+    #if player_id
+    #  game_players = game_players.where(nfl_player_id: player_id)
+    #end
+    #game_players = game_players.readonly(false).to_a
+    #
+    #stats = NflGameStatMap.unscoped
+    #if week
+    #  stats = stats.find_year_week(season.year, week)
+    #else
+    #  stats = stats.find_year(season.year)
+    #end
+    #if player_id
+    #  stats = stats.find_player(player_id)
+    #end
+    #stats = stats.where('value > 0').to_a.group_by{ |s| s.nfl_game_player_id }
 
     puts "Update Points #{season.year}: Loaded Stats Time taken: #{Time.now - start}"
 
@@ -128,26 +157,27 @@ class PointsCalculator
 
     season = year ? NflSeason.find_by(year: year) : NflLoader.new.current_season
 
-    game_players = NflGamePlayer.includes(player: [ :news, :injuries ]).joins(:season).where(nfl_seasons: { id: season.id }, nfl_player_id: player_id)
-    game_players = game_players.includes(:game).where(nfl_games: { week: week }) if week
-    game_players = game_players.to_ary
+    game_players = get_game_players(player_id, season, week).includes(:game, player: [ :news, :injuries ]).to_a
+    #game_players = NflGamePlayer.includes(:game, player: [ :news, :injuries ]).joins(:season).where(nfl_seasons: { id: season.id }, nfl_player_id: player_id)
+    #game_players = game_players.where(nfl_games: { week: week }) if week
+    #game_players = game_players.to_ary
 
-    #puts game_players.count
+    games = Hash[game_players.map{|gp| [gp.game, gp]}]
+    puts games.count
 
-    stats = get_stats(game_players)
+    #stats = get_stats(game_players)
+    stats = get_game_players(player_id, season, week)
 
-    stats.each { |key, value|
-      value = value.group_by{ |s| s.stat_type_id }
-
-      #puts key.description
+    games.each { |key, value|
       data = PlayerGameData.new
-      data.game_player = game_players.find(nfl_game_id: key.id).first
+      data.game_player = game_players.find{ |gp| gp.nfl_game_id == key.id }
       data.player = data.game_player.player
       data.game = key
       data.game_stats = value
-      data.points = do_calculation(value)
+      data.points = data.game_player.points
       all_stats.push(data)
     }
+
     all_stats
   end
 
