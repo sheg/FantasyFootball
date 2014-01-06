@@ -10,8 +10,8 @@ class NflGamePlayer < ActiveRecord::Base
   default_scope { joins(:position, :season).includes(:position, :season) }
   scope :find_position, -> (p) { where(nfl_positions: { abbr: p }) }
   scope :find_player, -> (p) { includes(:player).where(nfl_player_id: p) }
-  scope :find_year, -> (y) { joins(:season).where(nfl_seasons: { year: y } ) }
-  scope :find_year_week, -> (y, w) { joins(:season, :game).where(nfl_seasons: { year: y }, nfl_games: { week: w } ) }
+  scope :find_year, -> (y, st) { joins(:season, :game).where(nfl_seasons: { year: y }, nfl_games: { season_type_id: st }) }
+  scope :find_year_week, -> (y, st, w) { joins(:season, :game).where(nfl_seasons: { year: y }, nfl_games: { week: w, season_type_id: st } ) }
   scope :find_games, -> (g) { where(nfl_game_id: g) }
   scope :find_season_type, -> (st) { joins(:game).where(nfl_games: { season_type_id: st }) }
 

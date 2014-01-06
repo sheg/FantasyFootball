@@ -1,6 +1,7 @@
 class League < ActiveRecord::Base
   include LeaguesHelper
 
+  has_one :league_type
   has_many :teams
   has_many :games
   has_many :users, :through => :teams

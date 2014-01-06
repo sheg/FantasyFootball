@@ -6,6 +6,23 @@
 #   cities = City.create([{ name: 'Chicago' }, { name: 'Copenhagen' }])
 #   Mayor.create(name: 'Emanuel', city: cities.first)
 
+league_types = [
+    { name: 'Normal', starting_slots_json:'[ ["QB"], ["RB"], ["RB"], ["WR"], ["WR"], ["WR"], ["TE"], ["K"], ["DST"] ]',
+        position_limits_json: '[]' },
+    { name: 'Flex 9', starting_slots_json: '[ ["QB"], ["RB"], ["RB"], ["RB","WR","TE"], ["WR"], ["WR"], ["TE"], ["K"], ["DST"] ]',
+        position_limits_json: '[]' },
+    { name: 'Flex 10', starting_slots_json: '[ ["QB"], ["RB"], ["RB"], ["RB","WR","TE"], ["WR"], ["WR"], ["WR"], ["TE"], ["K"], ["DST"] ]',
+        position_limits_json: '[]' },
+    { name: 'Super Flex', starting_slots_json: '[ ["QB"], ["QB","RB"], ["RB"], ["RB","WR"], ["WR"], ["WR"], ["WR","TE"], ["TE"], ["K"], ["DST"] ]',
+        position_limits_json: '[]' },
+]
+league_types.each do |data|
+  item = LeagueType.find_or_create_by(name: data[:name])
+  item.starting_slots_json = data[:starting_slots_json]
+  item.position_limits_json = data[:position_limits_json]
+  item.save
+end
+
 positions = [
   { abbr: "QB", name: 'Quarterback' },
   { abbr: "RB", name: 'Running Back' },
@@ -105,3 +122,4 @@ rules.each do |data|
   rule.fixed_points = data[:fixed_points]
   rule.save
 end
+

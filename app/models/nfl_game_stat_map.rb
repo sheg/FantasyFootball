@@ -15,8 +15,8 @@ class NflGameStatMap < ActiveRecord::Base
   has_one :season, class_name: NflSeason, through: :game
 
   scope :find_player, -> (p) { joins(:game_player).where(game_players_nfl_game_stat_maps: { nfl_player_id: p } ) }
-  scope :find_year, -> (y) { joins(:season).where(nfl_seasons: { year: y } ) }
-  scope :find_year_week, ->(y, w) { joins(:season).where(nfl_seasons: { year: y }, nfl_games: { week: w }) }
+  scope :find_year, -> (y, st) { joins(:season, :game).where(nfl_seasons: { year: y }, nfl_games: { season_type_id: st }) }
+  scope :find_year_week, -> (y, st, w) { joins(:season, :game).where(nfl_seasons: { year: y }, nfl_games: { week: w, season_type_id: st } ) }
   scope :find_games, -> (g) { joins(:game_player).where(nfl_game_players: { nfl_game_id: g }) }
 
   #def attributes

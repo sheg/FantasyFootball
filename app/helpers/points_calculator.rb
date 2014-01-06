@@ -47,12 +47,12 @@ class PointsCalculator
   end
   private :do_calculation
 
-  def get_stats(player_id, season, week)
+  def get_stats(player_id, season, season_type_id, week)
     stats = NflGameStatMap.unscoped
     if week
-      stats = stats.find_year_week(season.year, week)
+      stats = stats.find_year_week(season.year, season_type_id, week)
     else
-      stats = stats.find_year(season.year)
+      stats = stats.find_year(season.year, season_type_id)
     end
     if player_id
       stats = stats.find_player(player_id)
@@ -60,12 +60,12 @@ class PointsCalculator
     stats = stats.where('value > 0').to_a.group_by{ |s| s.nfl_game_player_id }
   end
 
-  def get_game_players(player_id, season, week)
+  def get_game_players(player_id, season, season_type_id, week)
     game_players = NflGamePlayer.unscoped
     if week
-      game_players = game_players.find_year_week(season.year, week)
+      game_players = game_players.find_year_week(season.year, season_type_id, week)
     else
-      game_players = game_players.find_year(season.year)
+      game_players = game_players.find_year(season.year, season_type_id)
     end
     if player_id
       game_players = game_players.where(nfl_player_id: player_id)
@@ -121,51 +121,47 @@ class PointsCalculator
   end
   private :do_update
 
-  def get_nfl_player_game_data(player_id, year = nil, week = nil)
+  def get_nfl_player_game_data(player_id, year = nil, season_type_id = nil, week = nil)
     all_stats = Array.new
 
     season = year ? NflSeason.find_by(year: year) : NflLoader.new.current_season
+    season_type_id = 1 unless season_type_id
 
-    game_players = get_game_players(player_id, season, week).includes(:game, player: [ :news, :injuries ]).to_a
+    game_players = get_game_players(player_id, season, season_type_id, week).includes(:game, player: [ :news, :injuries ]).to_a
 
     games = Hash[game_players.map{|gp| [gp.game, gp]}]
     games = game_players.group_by{ |gp| gp.game }
-    stats = get_game_players(player_id, season, week)
+    stats = get_stats(player_id, season, season_type_id, week)
 
-    games.each { |key, value|
-      puts value.count
-      data = PlayerGameData.new
-      data.game_player = game_players.find{ |gp| gp.nfl_game_id == key.id }
-      data.player = data.game_player.player
-      data.game = key
-      data.game_stats = value
-      data.points = data.game_player.points
-      all_stats.push(data)
+    games.each { |game, game_players_for_game|
+      game_players_for_game.each { |game_player|
+        game_player_stats = stats[game_player.id]
+
+        if game_player_stats
+          game_player_stats = game_player_stats
+        else
+          game_player_stats = []
+        end
+
+        data = PlayerGameData.new
+        data.game_player = game_player
+        data.player = data.game_player.player
+        data.game = game
+        data.game_stats = game_player_stats
+        data.points = data.game_player.points
+        all_stats.push(data)
+      }
     }
 
     all_stats
   end
 
-  def get_nfl_team_game_data(team_id, year = nil, week = nil)
-    all_stats = Array.new
+  def get_nfl_game_data(game_id)
+    game = NflGame.includes(:game_players, :season).find(game_id)
+    return unless game
 
-    season = year ? NflSeason.find_by(year: year) : NflLoader.new.current_season
-
-    game_players = get_game_players(player_id, season, week).includes(:game, player: [ :news, :injuries ]).to_a
-    games = Hash[game_players.map{|gp| [gp.game, gp]}]
-    stats = get_game_players(player_id, season, week)
-
-    games.each { |key, value|
-      data = PlayerGameData.new
-      data.game_player = game_players.find{ |gp| gp.nfl_game_id == key.id }
-      data.player = data.game_player.player
-      data.game = key
-      data.game_stats = value
-      data.points = data.game_player.points
-      all_stats.push(data)
-    }
-
-    all_stats
+    player_ids = game.game_players.map{ |p| p.nfl_player_id }
+    get_nfl_player_game_data(player_ids, game.season.year, game.season_type_id, game.week)
   end
 
   def test_threads
