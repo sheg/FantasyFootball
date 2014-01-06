@@ -31,4 +31,8 @@ class NflGame < ActiveRecord::Base
     with_teams.joins('INNER JOIN nfl_teams t on (t.id = home_team_id or t.id = away_team_id)')
       .where('t.abbr = ?', t).order(:season_type_id, :week)
   }
+
+  scope :season_games, -> { where(season_type_id: 1) }
+  scope :preseason_games, -> { where(season_type_id: 2) }
+  scope :postseason_games, -> { where(season_type_id: 3) }
 end

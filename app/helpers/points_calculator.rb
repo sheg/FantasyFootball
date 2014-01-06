@@ -121,7 +121,32 @@ class PointsCalculator
   end
   private :do_update
 
-  def get_player_game_data(player_id, year = nil, week = nil)
+  def get_nfl_player_game_data(player_id, year = nil, week = nil)
+    all_stats = Array.new
+
+    season = year ? NflSeason.find_by(year: year) : NflLoader.new.current_season
+
+    game_players = get_game_players(player_id, season, week).includes(:game, player: [ :news, :injuries ]).to_a
+
+    games = Hash[game_players.map{|gp| [gp.game, gp]}]
+    games = game_players.group_by{ |gp| gp.game }
+    stats = get_game_players(player_id, season, week)
+
+    games.each { |key, value|
+      puts value.count
+      data = PlayerGameData.new
+      data.game_player = game_players.find{ |gp| gp.nfl_game_id == key.id }
+      data.player = data.game_player.player
+      data.game = key
+      data.game_stats = value
+      data.points = data.game_player.points
+      all_stats.push(data)
+    }
+
+    all_stats
+  end
+
+  def get_nfl_team_game_data(team_id, year = nil, week = nil)
     all_stats = Array.new
 
     season = year ? NflSeason.find_by(year: year) : NflLoader.new.current_season
@@ -153,7 +178,7 @@ class PointsCalculator
           NflGameStatMap
         }
         player_id = Thread.current.thread_variable_get(:player_id)
-        results.push get_player_game_data(player_id, 2013).first
+        results.push get_nfl_player_game_data(player_id, 2013).first
         ActiveRecord::Base.connection.close   # Release any DB connections used by the current thread
       }
       t.thread_variable_set(:player_id, i)
