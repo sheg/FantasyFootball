@@ -2,12 +2,12 @@ module Loaders
   class NflPlayerLoader < NflLoader
     def get_nfl_game(external_game_id)
       # Cache NFLGames to minimize DB hits
-      nfl_game = $nfl_games[external_game_id]
+      nfl_game = @nfl_games[external_game_id]
       Thread.exclusive {
-        nfl_game = $nfl_games[external_game_id]
+        nfl_game = @nfl_games[external_game_id]
         unless(nfl_game)
           nfl_game = NflGame.find_by!(external_game_id: external_game_id)
-          $nfl_games[external_game_id] = nfl_game
+          @nfl_games[external_game_id] = nfl_game
         end
       }
       puts "Game not found in DB ExternalID: #{external_game_id}" unless nfl_game
@@ -128,9 +128,9 @@ module Loaders
       get_start = Time.now
       items = get_items(season.year, week, season_type_id, cache_timeout)
 
-      $process_players = nil
-      $nfl_games = Hash.new
-      $player_stat_sql = Array.new
+      @process_players = nil
+      @nfl_games = Hash.new
+      @player_stat_sql = Array.new
 
       #threads = Array.new
       #for i in 1..3
@@ -150,8 +150,8 @@ module Loaders
       get_start = Time.now
         sql_array = Array.new
 
-        if($nfl_games.count > 0)
-          game_ids = $nfl_games.values.map { |v| v.id }.join(',')
+        if(@nfl_games.count > 0)
+          game_ids = @nfl_games.values.map { |v| v.id }.join(',')
           sql_array.push "
             delete
             from nfl_game_stat_maps
@@ -164,8 +164,8 @@ module Loaders
           "
         end
 
-        while $player_stat_sql.size > 0 do
-          statements = $player_stat_sql.slice!(0, 100000)
+        while @player_stat_sql.size > 0 do
+          statements = @player_stat_sql.slice!(0, 100000)
           inserts = statements.join(",\n    ")
           sql_array.push "INSERT INTO nfl_game_stat_maps (nfl_game_player_id, stat_type_id, value) VALUES #{inserts};"
         end
@@ -177,7 +177,7 @@ module Loaders
           puts "Week #{week}: SQL time taken: #{Time.now - get_start}"
 
           load_defense_stats(season, week, season_type_id, cache_timeout)
-          PointsCalculator.new.update_game_player_points_for_games($nfl_games.values.map{|g| g.id})
+          PointsCalculator.new.update_game_player_points_for_games(@nfl_games.values.map{|g| g.id})
         rescue Exception => e
           puts e.message[0,400]
           puts e.backtrace.join("\n   ")
@@ -192,9 +192,9 @@ module Loaders
         NflSeasonTeamPlayer
         NflPlayer
 
-        unless $process_players
+        unless @process_players
           ids = items.map{ |item| item['PlayerID'].to_s }
-          $process_players = Hash[NflPlayer.where(external_player_id: ids).map{ |p| [p.external_player_id, p]}]
+          @process_players = Hash[NflPlayer.where(external_player_id: ids).map{ |p| [p.external_player_id, p]}]
         end
       }
 
@@ -215,7 +215,7 @@ module Loaders
       return unless position
 
       #player = NflPlayer.find_by(external_player_id: item['PlayerID'])
-      player = $process_players[item['PlayerID'].to_s]
+      player = @process_players[item['PlayerID'].to_s]
       unless player
         puts "Player not found in DB ExternalID: #{item['PlayerID']}, Team: #{item['Team']}, Name: #{item['Name']}... retrying"
 
@@ -247,7 +247,7 @@ module Loaders
 
       stat_types.each { |stat_type|
         next unless (item[stat_type.name] and item[stat_type.name].to_d > 0)
-        $player_stat_sql.push "(#{game_player.id}, #{stat_type.id}, #{item[stat_type.name]})"
+        @player_stat_sql.push "(#{game_player.id}, #{stat_type.id}, #{item[stat_type.name]})"
       }
 
       player
@@ -287,7 +287,7 @@ module Loaders
 
         stat_types.each { |stat_type|
           next unless (item[stat_type.name])
-          $player_stat_sql.push "(#{game_player.id}, #{stat_type.id}, #{item[stat_type.name]})"
+          @player_stat_sql.push "(#{game_player.id}, #{stat_type.id}, #{item[stat_type.name]})"
         }
       end
     end

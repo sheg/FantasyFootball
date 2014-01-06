@@ -36,23 +36,16 @@ class PointsCalculator
 
         # Use fixed points amount first, if not set then use multiplier
         calc = rule.fixed_points
-        calc = (stat.value * rule.multiplier).round(4) unless calc > 0
+        calc = (stat.value * rule.multiplier) unless calc > 0
 
         #puts "#{stat.stat_type.name}: fixed #{rule.fixed_points} || #{stat.value} * #{rule.multiplier} = #{calc}"
 
         points += calc
-        points = points.round(4)
       end
     }
-    BigDecimal(points.round(4), 4)
+    BigDecimal(points.round(4), 12)
   end
   private :do_calculation
-
-  def get_stats(game_players)
-    stats = NflGameStatMap.includes(game: [:home_team, :away_team, :season])
-      .where(nfl_game_player_id: game_players).where('value > 0')
-      .order('nfl_games.week').group_by{ |s| s.game }
-  end
 
   def get_stats(player_id, season, week)
     stats = NflGameStatMap.unscoped
@@ -100,29 +93,7 @@ class PointsCalculator
     season = year ? NflSeason.find_by(year: year) : NflLoader.new.current_season
 
     game_players = get_game_players(player_id, season, week).to_a
-    stats = get_game_players(player_id, season, week)
-
-    #game_players = NflGamePlayer.unscoped
-    #if week
-    #  game_players = game_players.find_year_week(season.year, week)
-    #else
-    #  game_players = game_players.find_year(season.year)
-    #end
-    #if player_id
-    #  game_players = game_players.where(nfl_player_id: player_id)
-    #end
-    #game_players = game_players.readonly(false).to_a
-    #
-    #stats = NflGameStatMap.unscoped
-    #if week
-    #  stats = stats.find_year_week(season.year, week)
-    #else
-    #  stats = stats.find_year(season.year)
-    #end
-    #if player_id
-    #  stats = stats.find_player(player_id)
-    #end
-    #stats = stats.where('value > 0').to_a.group_by{ |s| s.nfl_game_player_id }
+    stats = get_stats(player_id, season, week)
 
     puts "Update Points #{season.year}: Loaded Stats Time taken: #{Time.now - start}"
 
@@ -132,21 +103,19 @@ class PointsCalculator
   def do_update(game_players, stats)
     start = Time.now
 
-    NflGamePlayer.transaction do
-      game_players.each { |game_player|
-        value = stats[game_player.id]
-        next unless value
+    game_players.each { |game_player|
+      value = stats[game_player.id]
+      next unless value
 
-        value = value.group_by{ |s| s.stat_type_id }
+      value = value.group_by{ |s| s.stat_type_id }
 
-        game_player.points = do_calculation(value)
+      game_player.points = do_calculation(value)
 
-        if game_player.changed?
-          #puts "#{game_player.id} --- Points #{game_player.points}"
-          game_player.save
-        end
-      }
-    end
+      if game_player.changed?
+        puts "#{game_player.id} --- Points #{game_player.points}"
+        game_player.save
+      end
+    }
 
     puts "Update Points: Calculation Time taken: #{Time.now - start}"
   end
@@ -158,14 +127,7 @@ class PointsCalculator
     season = year ? NflSeason.find_by(year: year) : NflLoader.new.current_season
 
     game_players = get_game_players(player_id, season, week).includes(:game, player: [ :news, :injuries ]).to_a
-    #game_players = NflGamePlayer.includes(:game, player: [ :news, :injuries ]).joins(:season).where(nfl_seasons: { id: season.id }, nfl_player_id: player_id)
-    #game_players = game_players.where(nfl_games: { week: week }) if week
-    #game_players = game_players.to_ary
-
     games = Hash[game_players.map{|gp| [gp.game, gp]}]
-    puts games.count
-
-    #stats = get_stats(game_players)
     stats = get_game_players(player_id, season, week)
 
     games.each { |key, value|

@@ -21,43 +21,43 @@ class NflLoader
 
   def get_team(abbr)
     # Cache NFLTeams to minimize DB hits
-    unless $nfl_teams
+    unless @nfl_teams
       Thread.exclusive {
-        unless $nfl_teams
-          $nfl_teams = Hash[NflTeam.all.map { |x| [x.abbr, x] }]
+        unless @nfl_teams
+          @nfl_teams = Hash[NflTeam.all.map { |x| [x.abbr, x] }]
         end
       }
     end
-    team = $nfl_teams[abbr]
+    team = @nfl_teams[abbr]
     puts "Team not found in DB: #{abbr}" unless team
     team
   end
 
   def get_position(abbr)
     # Cache NFLPositions to minimize DB hits
-    unless $nfl_positions
+    unless @nfl_positions
       Thread.exclusive {
-        unless $nfl_positions
-          $nfl_positions = Hash[NflPosition.all.map { |x| [x.abbr, x] }]
+        unless @nfl_positions
+          @nfl_positions = Hash[NflPosition.all.map { |x| [x.abbr, x] }]
         end
       }
     end
-    position = $nfl_positions[abbr]
+    position = @nfl_positions[abbr]
     # puts "Position not found in DB: #{abbr}" unless position
     position
   end
 
   def get_stat_types
     # Cache StatTypes to minimize DB hits
-    unless $stat_types
+    unless @stat_types
       Thread.exclusive {
-        unless $stat_types
-          $stat_types = StatType.all.to_ary
+        unless @stat_types
+          @stat_types = StatType.all.to_ary
         end
       }
     end
 
-    $stat_types
+    @stat_types
   end
 
   def get_weekly_data(api_method, cache_filename, season, week, season_type_id, cache_timeout = 0)
