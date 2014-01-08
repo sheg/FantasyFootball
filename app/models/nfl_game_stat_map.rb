@@ -19,9 +19,11 @@ class NflGameStatMap < ActiveRecord::Base
   scope :find_year_week, -> (y, st, w) { joins(:season, :game).where(nfl_seasons: { year: y }, nfl_games: { week: w, season_type_id: st } ) }
   scope :find_games, -> (g) { joins(:game_player).where(nfl_game_players: { nfl_game_id: g }) }
 
-  #def attributes
-  #  super.merge('stat_type_name' => self.stat_type_name)
-  #end
+  def attributes
+    value = super
+    value = value.merge('stat_type_name' => self.stat_type_name) if association(:stat_type).loaded?
+    value
+  end
 
   def stat_type_name
     stat_type.name

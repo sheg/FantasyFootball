@@ -15,9 +15,11 @@ class NflGamePlayer < ActiveRecord::Base
   scope :find_games, -> (g) { where(nfl_game_id: g) }
   scope :find_season_type, -> (st) { joins(:game).where(nfl_games: { season_type_id: st }) }
 
-  #def attributes
-  #  super.merge('position_abbr' => position_abbr)
-  #end
+  def attributes
+    value = super
+    value = value.merge('position_abbr' => position_abbr) if association(:position).loaded?
+    value
+  end
 
   def position_abbr
     position.abbr

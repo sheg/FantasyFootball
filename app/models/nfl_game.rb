@@ -11,12 +11,21 @@ class NflGame < ActiveRecord::Base
     items = NflGame.find_by(external_game_id: s)
   end
 
-  #def attributes
-  #  super.merge('description' => description)
-  #end
+  def attributes
+    value = super
+    value = value.merge('description' => description) if association(:home_team).loaded?
+    value
+  end
 
   def description
-    "Season #{season.get_full_season_name(season_type_id)} Week #{week}: #{away_team.abbr} @#{home_team.abbr} #{start_time.strftime('%m/%d/%Y %I:%M%p')}" if home_team
+    desc = ''
+    if home_team
+      desc += "Season #{season.get_full_season_name(season_type_id)}"
+      desc += " Week #{week}: #{away_team.abbr} @#{home_team.abbr}"
+      desc += " #{start_time.strftime('%m/%d/%Y %I:%M%p')}"
+      desc += "  [#{away_team.abbr} #{away_score} -- #{home_team.abbr} #{home_score} -- #{quarter} #{}]"
+    end
+    desc
   end
 
   def self.sort_by_week
