@@ -7,5 +7,9 @@ class AddLeagueDetailColumns < ActiveRecord::Migration
     add_column :leagues, :playoff_weeks, :integer, null: false, default: 3
     add_column :leagues, :teams_in_playoffs, :integer, null: false, default: 6
     add_column :leagues, :must_be_full, :boolean, null: false, default: true
+    add_column :leagues, :max_roster_adjustments, :integer, null: false, default: 9999999
+    add_column :leagues, :draft_dollars, :integer, null: false, default: 0
+    add_column :leagues, :draft_pick_time, :integer, null: false, default: 120
+    add_column :leagues, :draft_unique_players, :boolean, null: false, default: true
   end
 end

@@ -6,6 +6,7 @@
 #   cities = City.create([{ name: 'Chicago' }, { name: 'Copenhagen' }])
 #   Mayor.create(name: 'Emanuel', city: cities.first)
 
+puts 'Seeding LeagueTypes'
 league_types = [
     { name: 'Normal', starting_slots_json:'[ ["QB"], ["RB"], ["RB"], ["WR"], ["WR"], ["WR"], ["TE"], ["K"], ["DST"] ]',
         position_limits_json: '[]' },
@@ -23,6 +24,7 @@ league_types.each do |data|
   item.save
 end
 
+puts 'Seeding Positions'
 positions = [
   { abbr: "QB", name: 'Quarterback' },
   { abbr: "RB", name: 'Running Back' },
@@ -37,6 +39,7 @@ positions.each do |data|
   position.save
 end
 
+puts 'Seeding StatTypes'
 stat_types = [
   { name: "PassingAttempts", group: 'Passing', abbr: 'Att', display_name: 'Passing Attempts' },
   { name: "PassingCompletions", group: 'Passing', abbr: 'Comp', display_name: 'Passing Completions' },
@@ -88,6 +91,31 @@ stat_types.each do |data|
   stat_type.save
 end
 
+=begin
+puts 'Seeding PositionStats'
+position_stats = [
+    { position_id: NflPosition['QB'], stat_type_id: StatType['PassingAttempts'].id, sort_order: 10 },
+    { position_id: NflPosition['QB'], stat_type_id: StatType['PassingYards'].id, sort_order: 20 },
+    { position_id: NflPosition['QB'], stat_type_id: StatType['PassingInterceptions'].id, sort_order: 30 },
+    { position_id: NflPosition['RB'], stat_type_id: StatType[''].id, sort_order: 10 },
+    { position_id: NflPosition['RB'], stat_type_id: StatType[''].id, sort_order: 20 },
+    { position_id: NflPosition['WR'], stat_type_id: StatType[''].id, sort_order: 10 },
+    { position_id: NflPosition['WR'], stat_type_id: StatType[''].id, sort_order: 20 },
+    { position_id: NflPosition['TE'], stat_type_id: StatType[''].id, sort_order: 10 },
+    { position_id: NflPosition['TE'], stat_type_id: StatType[''].id, sort_order: 20 },
+    { position_id: NflPosition['K'], stat_type_id: StatType[''].id, sort_order: 10 },
+    { position_id: NflPosition['K'], stat_type_id: StatType[''].id, sort_order: 20 },
+    { position_id: NflPosition['DST'], stat_type_id: StatType[''].id, sort_order: 10 },
+    { position_id: NflPosition['DST'], stat_type_id: StatType[''].id, sort_order: 20 },
+]
+position_stats.each do |data|
+  item = NflPositionStat.find_or_create_by(nfl_position_id: data[:position_id], stat_type_id: data[:stat_type_id])
+  item.sort_order = data[:sort_order]
+  item.save
+end
+=end
+
+puts 'Seeding LeaguePointRules'
 rules = [
   { league_id: nil, stat_type_id: StatType.find_by(name: 'FieldGoalsMade').id, multiplier: 3 },
   { league_id: nil, stat_type_id: StatType.find_by(name: 'FumblesLost').id, multiplier: -2 },
@@ -123,3 +151,59 @@ rules.each do |data|
   rule.save
 end
 
+puts 'Seeding PayoutTypes'
+payout_types = [
+    { name: 'standing', display_name: 'Final League Standing' },
+    { name: 'points', display_name: 'Final Points Rank' },
+    { name: 'weekly_points', display_name: 'Weekly Points Rank' },
+]
+payout_types.each do |data|
+  item = PayoutType.find_or_create_by(name: data[:name])
+  item.display_name = data[:display_name]
+  item.save
+end
+
+puts 'Seeding PayoutStructures'
+payout_structures = [
+    { name: 'standings', display_name: 'Team Standings Structure',
+        values: [
+            { payout_type: 'standing', rank: 1, percent: 0.5, display_name: 'Final Winner' },
+            { payout_type: 'standing', rank: 2, percent: 0.3, display_name: 'Final Runner-Up' },
+            { payout_type: 'standing', rank: 3, percent: 0.1, display_name: 'Semi-Final Runner-Up 1' },
+            { payout_type: 'standing', rank: 4, percent: 0.1, display_name: 'Semi-Final Runner-Up 2' },
+        ]
+    },
+    { name: 'standings_and_points', display_name: 'Team Standings and Top Points Structure',
+        values: [
+            { payout_type: 'standing', rank: 1, percent: 0.4, display_name: 'Final Winner' },
+            { payout_type: 'standing', rank: 2, percent: 0.2, display_name: 'Final Runner-Up' },
+            { payout_type: 'standing', rank: 3, percent: 0.05, display_name: 'Semi-Final Runner-Up 1' },
+            { payout_type: 'standing', rank: 4, percent: 0.05, display_name: 'Semi-Final Runner-Up 2' },
+            { payout_type: 'points', rank: 1, percent: 0.2, display_name: 'Overall Points Leader' },
+            { payout_type: 'points', rank: 2, percent: 0.1, display_name: 'Overall Points Runner-Up' },
+        ]
+    },
+    { name: 'points_only', display_name: 'Top Points Structure',
+        values: [
+            { payout_type: 'points', rank: 1, percent: 0.5, display_name: 'Overall Points Leader' },
+            { payout_type: 'points', rank: 2, percent: 0.3, display_name: 'Overall Points Runner-Up' },
+            { payout_type: 'points', rank: 3, percent: 0.2, display_name: 'Overall Points Third Place' },
+        ]
+    },
+]
+payout_structures.each do |data|
+  item = PayoutStructure.find_or_create_by(name: data[:name])
+  item.display_name = data[:display_name]
+  item.save
+
+  item.payouts.destroy_all
+  data[:values].each do |value|
+    payout = PayoutStructurePayout.new
+    payout.payout_structure_id = item.id
+    payout.payout_type_id = PayoutType.find_by!(name: value[:payout_type]).id
+    payout.rank = value[:rank]
+    payout.percent = value[:percent]
+    payout.display_name = value[:display_name]
+    payout.save
+  end
+end

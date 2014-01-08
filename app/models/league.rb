@@ -5,9 +5,9 @@ class League < ActiveRecord::Base
   has_many :teams
   has_many :games
   has_many :users, :through => :teams
+  has_many :payouts, class_name: LeaguePayout
 
   validates :name, :uniqueness => { :case_sensitive => false }
-  #scope :rotting, -> { where(rotting: true) }
 
   scope :full, -> { where('size = teams_count') }
   scope :open, -> { where('size != teams_count') }

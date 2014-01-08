@@ -25,7 +25,7 @@ module Loaders
 
         player.save
 
-        seasonEntry = NflSeasonTeamPlayer.find_or_create_by(season_id: season.id, team_id: team.id, player_id: player.id, position_id: position.id)
+        seasonEntry = NflSeasonTeamPlayer.find_or_create_by(season_id: season.id, team_id: team.id, player_id: player.id, nfl_position_id: position.id)
         seasonEntry.player_number = 0
 
         puts "NFL SeasonTeamPlayer data updated #{player.full_name}, position #{position.abbr}, team #{team.abbr}" if seasonEntry.changed?
@@ -102,7 +102,7 @@ module Loaders
 
       team = get_team(item['Team']) unless team
 
-      seasonEntry = NflSeasonTeamPlayer.find_or_create_by(season_id: season.id, team_id: team.id, player_id: player.id, position_id: position.id)
+      seasonEntry = NflSeasonTeamPlayer.find_or_create_by(season_id: season.id, team_id: team.id, player_id: player.id, nfl_position_id: position.id)
       seasonEntry.player_number = item['Number']
 
       puts "NFL SeasonTeamPlayer data updated #{player.full_name}, position #{position.abbr}, team #{team.abbr}" if seasonEntry.changed?
