@@ -38,50 +38,57 @@ positions.each do |data|
   position.name = data[:name]
   position.save
 end
+@positions = Hash[NflPosition.all.map{ |p| [p.abbr, p]}]
 
 puts 'Seeding StatTypes'
 stat_types = [
   { name: "PassingAttempts", group: 'Passing', abbr: 'Att', display_name: 'Passing Attempts' },
   { name: "PassingCompletions", group: 'Passing', abbr: 'Comp', display_name: 'Passing Completions' },
-  { name: "PassingCompletionPercentage", group: 'Passing', abbr: 'Pct', display_name: 'Passing Completion %' },
+  { name: "PassingCompletionPercentage", group: 'Passing', abbr: 'Cmp%', display_name: 'Passing Completion %' },
   { name: "PassingYards", group: 'Passing', abbr: 'Yds', display_name: 'Passing Yards' },
-  { name: "PassingYardsPerAttempt", group: 'Passing', abbr: 'AvgA', display_name: 'Passing Yards Per Attempt' },
-  { name: "PassingYardsPerCompletion", group: 'Passing', abbr: 'AvgC', display_name: 'Passing Yards Per Completion' },
+  { name: "PassingYardsPerAttempt", group: 'Passing', abbr: 'Yd/A', display_name: 'Passing Yards Per Attempt' },
+  { name: "PassingYardsPerCompletion", group: 'Passing', abbr: 'Yd/C', display_name: 'Passing Yards Per Completion' },
   { name: "PassingTouchdowns", group: 'Passing', abbr: 'TD', display_name: 'Passing Touchdowns' },
   { name: "PassingInterceptions", group: 'Passing', abbr: 'Int', display_name: 'Passing Interceptions' },
-  { name: "PassingRating", group: 'Passing', abbr: 'Rate', display_name: 'Passing Rating' },
-  { name: "PassingSacks", group: 'Passing', abbr: 'Sac', display_name: 'Passing Sacks' },
-  { name: "PassingSackYards", group: 'Passing', abbr: 'Yds', display_name: 'Passing Sack Yards' },
+  { name: "PassingRating", group: 'Passing', abbr: 'Rating', display_name: 'Passing Rating' },
+  { name: "PassingSacks", group: 'Passing', abbr: 'Sack', display_name: 'Passing Sacks' },
+  { name: "PassingSackYards", group: 'Passing', abbr: 'SackYds', display_name: 'Passing Sack Yards' },
   { name: "TwoPointConversionPasses", group: 'Passing', abbr: '2Pt', display_name: 'Passing Two Point Conversions' },
-  { name: "PassingLong", group: 'Passing', abbr: 'Lg', display_name: 'Passing Longest' },
-  { name: "ReceivingTargets", group: 'Receiving', abbr: 'Att', display_name: 'Targets' },
-  { name: "Receptions", group: 'Receiving', abbr: 'Rec', display_name: 'Receptions' },
-  { name: "ReceptionPercentage", group: 'Receiving', abbr: 'Pct', display_name: 'Reception %' },
+  { name: "PassingLong", group: 'Passing', abbr: 'Long', display_name: 'Passing Longest' },
+  { name: "ReceivingTargets", group: 'Receiving', abbr: 'Tgt', display_name: 'Targets' },
+  { name: "Receptions", group: 'Receiving', abbr: 'Rcp', display_name: 'Receptions' },
+  { name: "ReceptionPercentage", group: 'Receiving', abbr: 'Rcp%', display_name: 'Reception %' },
   { name: "ReceivingYards", group: 'Receiving', abbr: 'Yds', display_name: 'Yards' },
-  { name: "ReceivingYardsPerTarget", group: 'Receiving', abbr: 'AvgT', display_name: 'Yards Per Target' },
-  { name: "ReceivingYardsPerReception", group: 'Receiving', abbr: 'AvgR', display_name: 'Yards Per Reception' },
+  { name: "ReceivingYardsPerTarget", group: 'Receiving', abbr: 'Yd/T', display_name: 'Yards Per Target' },
+  { name: "ReceivingYardsPerReception", group: 'Receiving', abbr: 'Yd/R', display_name: 'Yards Per Reception' },
   { name: "ReceivingTouchdowns", group: 'Receiving', abbr: 'TD', display_name: 'Touchdowns' },
-  { name: "ReceivingLong", group: 'Receiving', abbr: 'Lg', display_name: 'Longest' },
+  { name: "ReceivingLong", group: 'Receiving', abbr: 'Long', display_name: 'Longest' },
   { name: "TwoPointConversionReceptions", group: 'Receiving', abbr: '2Pt', display_name: 'Two Point Conversions' },
   { name: "RushingAttempts", group: 'Rushing', abbr: 'Att', display_name: 'Attempts' },
   { name: "RushingYards", group: 'Rushing', abbr: 'Yds', display_name: 'Yards' },
-  { name: "RushingYardsPerAttempt", group: 'Rushing', abbr: 'Avg', display_name: 'Yards Per Attempt' },
+  { name: "RushingYardsPerAttempt", group: 'Rushing', abbr: 'Yd/A', display_name: 'Yards Per Attempt' },
   { name: "RushingTouchdowns", group: 'Rushing', abbr: 'TD', display_name: 'Touchdowns' },
-  { name: "RushingLong", group: 'Rushing', abbr: 'Lg', display_name: 'Longest' },
+  { name: "RushingLong", group: 'Rushing', abbr: 'Long', display_name: 'Longest' },
   { name: "TwoPointConversionRuns", group: 'Rushing', abbr: '2Pt', display_name: 'Two Point Conversions' },
   { name: "FumblesLost", group: 'Fumbles', abbr: 'Fum', display_name: 'Lost' },
-  { name: "FumblesRecovered", group: 'Fumbles', abbr: 'Rec', display_name: 'Recovered' },
-  { name: "FumbleReturnYards", group: 'Fumbles', abbr: 'Yds', display_name: 'Return Yards' },
-  { name: "FumbleReturnTouchdowns", group: 'Fumbles', abbr: 'TD', display_name: 'Return Touchdowns' },
-  { name: "Interceptions", group: 'Defense', abbr: '', display_name: 'Interceptions' },
-  { name: "InterceptionReturnYards", group: 'Defense', abbr: 'Yds', display_name: 'Interception Return Yards' },
-  { name: "InterceptionReturnTouchdowns", group: 'Defense', abbr: 'TD', display_name: 'Interception Return Touchdowns' },
-  { name: "Sacks", group: 'Defense', abbr: '', display_name: 'Sacks' },
-  { name: "Safeties", group: 'Defense', abbr: '', display_name: 'Safeties' },
-  { name: "DefensiveTouchdowns", group: 'Defense', abbr: '', display_name: 'Touchdowns' },
-  { name: "PointsAllowed", group: 'Defense', abbr: 'PA', display_name: 'Points Allowed' },
+  { name: "FumblesRecovered", group: 'Fumbles', abbr: 'FRec', display_name: 'Recovered' },
+  { name: "FumbleReturnYards", group: 'Fumbles', abbr: 'FRetYds', display_name: 'Return Yards' },
+  { name: "FumbleReturnTouchdowns", group: 'Fumbles', abbr: 'FRetTD', display_name: 'Return Touchdowns' },
+  { name: "Interceptions", group: 'Defense', abbr: 'Int', display_name: 'Interceptions' },
+  { name: "InterceptionReturnYards", group: 'Defense', abbr: 'IntRetYds', display_name: 'Interception Return Yards' },
+  { name: "InterceptionReturnTouchdowns", group: 'Defense', abbr: 'IntRetTD', display_name: 'Interception Return Touchdowns' },
+  { name: "Sacks", group: 'Defense', abbr: 'Sack', display_name: 'Sacks' },
+  { name: "Safeties", group: 'Defense', abbr: 'Sft', display_name: 'Safeties' },
+  { name: "DefensiveTouchdowns", group: 'Defense', abbr: 'TD', display_name: 'Touchdowns' },
+  { name: "PointsAllowed", group: 'Defense', abbr: 'PtAll', display_name: 'Points Allowed' },
+  { name: "OpponentOffensiveYards", group: 'Defense', abbr: 'YdsAll', display_name: 'Yards Allowed' },
+  { name: "KickReturnTouchdowns", group: 'Defense', abbr: 'KickRTD', display_name: 'Kick Return Touchdowns' },
+  { name: "BlockedKicks", group: 'Defense', abbr: 'Blocked', display_name: 'Blocked Kicks' },
   { name: "ExtraPointsMade", group: 'Scoring', abbr: 'XP', display_name: 'Extra Points' },
-  { name: "FieldGoalsMade", group: 'Field Goals', abbr: 'FG', display_name: 'Field Goals' },
+  { name: "FieldGoalsMade", group: 'Scoring', abbr: 'FG', display_name: 'Field Goals' },
+  { name: "FieldGoalsAttempted", group: 'Scoring', abbr: 'FGA', display_name: 'Field Goals Attempted' },
+  { name: "FieldGoalPercentage", group: 'Scoring', abbr: 'FG%', display_name: 'Field Goals %' },
+  { name: "FieldGoalsLongestMade", group: 'Scoring', abbr: 'FGLong', display_name: 'Field Goals Longest' },
 ]
 stat_types.each do |data|
   stat_type = StatType.find_or_create_by(name: data[:name])
@@ -90,62 +97,113 @@ stat_types.each do |data|
   stat_type.display_name = data[:display_name]
   stat_type.save
 end
+@stat_types = Hash[StatType.all.map{ |s| [s.name, s]}]
 
-=begin
 puts 'Seeding PositionStats'
 position_stats = [
-    { position_id: NflPosition['QB'], stat_type_id: StatType['PassingAttempts'].id, sort_order: 10 },
-    { position_id: NflPosition['QB'], stat_type_id: StatType['PassingYards'].id, sort_order: 20 },
-    { position_id: NflPosition['QB'], stat_type_id: StatType['PassingInterceptions'].id, sort_order: 30 },
-    { position_id: NflPosition['RB'], stat_type_id: StatType[''].id, sort_order: 10 },
-    { position_id: NflPosition['RB'], stat_type_id: StatType[''].id, sort_order: 20 },
-    { position_id: NflPosition['WR'], stat_type_id: StatType[''].id, sort_order: 10 },
-    { position_id: NflPosition['WR'], stat_type_id: StatType[''].id, sort_order: 20 },
-    { position_id: NflPosition['TE'], stat_type_id: StatType[''].id, sort_order: 10 },
-    { position_id: NflPosition['TE'], stat_type_id: StatType[''].id, sort_order: 20 },
-    { position_id: NflPosition['K'], stat_type_id: StatType[''].id, sort_order: 10 },
-    { position_id: NflPosition['K'], stat_type_id: StatType[''].id, sort_order: 20 },
-    { position_id: NflPosition['DST'], stat_type_id: StatType[''].id, sort_order: 10 },
-    { position_id: NflPosition['DST'], stat_type_id: StatType[''].id, sort_order: 20 },
+    { position: 'QB', stat_type: 'PassingAttempts', sort_order: 10 },
+    { position: 'QB', stat_type: 'PassingCompletions', sort_order: 20 },
+    { position: 'QB', stat_type: 'PassingYards', sort_order: 30 },
+    { position: 'QB', stat_type: 'PassingTouchdowns', sort_order: 40 },
+    { position: 'QB', stat_type: 'PassingInterceptions', sort_order: 50 },
+    { position: 'QB', stat_type: 'RushingAttempts', sort_order: 60 },
+    { position: 'QB', stat_type: 'RushingYards', sort_order: 70 },
+    { position: 'QB', stat_type: 'RushingTouchdowns', sort_order: 80 },
+    { position: 'QB', stat_type: 'FumblesLost', sort_order: 90 },
+
+    { position: 'RB', stat_type: 'RushingAttempts', sort_order: 10 },
+    { position: 'RB', stat_type: 'RushingYards', sort_order: 20 },
+    { position: 'RB', stat_type: 'RushingYardsPerAttempt', sort_order: 30 },
+    { position: 'RB', stat_type: 'RushingTouchdowns', sort_order: 40 },
+    { position: 'RB', stat_type: 'ReceivingTargets', sort_order: 50 },
+    { position: 'RB', stat_type: 'Receptions', sort_order: 60 },
+    { position: 'RB', stat_type: 'ReceivingYards', sort_order: 70 },
+    { position: 'RB', stat_type: 'ReceivingTouchdowns', sort_order: 80 },
+    { position: 'RB', stat_type: 'FumblesLost', sort_order: 90 },
+
+    { position: 'WR', stat_type: 'RushingYards', sort_order: 10 },
+    { position: 'WR', stat_type: 'RushingTouchdowns', sort_order: 20 },
+    { position: 'WR', stat_type: 'ReceivingTargets', sort_order: 30 },
+    { position: 'WR', stat_type: 'Receptions', sort_order: 40 },
+    { position: 'WR', stat_type: 'ReceivingYards', sort_order: 50 },
+    { position: 'WR', stat_type: 'ReceivingYardsPerReception', sort_order: 60 },
+    { position: 'WR', stat_type: 'ReceivingTouchdowns', sort_order: 70 },
+    { position: 'WR', stat_type: 'FumblesLost', sort_order: 80 },
+
+    { position: 'TE', stat_type: 'ReceivingTargets', sort_order: 30 },
+    { position: 'TE', stat_type: 'Receptions', sort_order: 40 },
+    { position: 'TE', stat_type: 'ReceivingYards', sort_order: 50 },
+    { position: 'TE', stat_type: 'ReceivingYardsPerReception', sort_order: 60 },
+    { position: 'TE', stat_type: 'ReceivingTouchdowns', sort_order: 70 },
+    { position: 'TE', stat_type: 'FumblesLost', sort_order: 80 },
+
+    { position: 'K', stat_type: 'FieldGoalsAttempted', sort_order: 10 },
+    { position: 'K', stat_type: 'FieldGoalsMade', sort_order: 20 },
+    { position: 'K', stat_type: 'FieldGoalPercentage', sort_order: 30 },
+    { position: 'K', stat_type: 'FieldGoalsLongestMade', sort_order: 40 },
+    { position: 'K', stat_type: 'ExtraPointsMade', sort_order: 50 },
+
+    { position: 'DST', stat_type: 'DefensiveTouchdowns', sort_order: 10 },
+    { position: 'DST', stat_type: 'Interceptions', sort_order: 20 },
+    { position: 'DST', stat_type: 'KickReturnTouchdowns', sort_order: 30 },
+    { position: 'DST', stat_type: 'FumblesRecovered', sort_order: 40 },
+    { position: 'DST', stat_type: 'Sacks', sort_order: 50 },
+    { position: 'DST', stat_type: 'Safeties', sort_order: 60 },
+    { position: 'DST', stat_type: 'BlockedKicks', sort_order: 70 },
+    { position: 'DST', stat_type: 'PointsAllowed', sort_order: 80 },
+    { position: 'DST', stat_type: 'OpponentOffensiveYards', sort_order: 90 },
+
+    # I am assuming this is games played - would need this for non weekly breakdown views
+    #{ position: '?', stat_type: 'Played', sort_order: 10 },
 ]
+puts @stat_types["PassingAttempts"]
 position_stats.each do |data|
-  item = NflPositionStat.find_or_create_by(nfl_position_id: data[:position_id], stat_type_id: data[:stat_type_id])
+  position = @positions[data[:position]]
+  stat_type = @stat_types[data[:stat_type]]
+
+  item = NflPositionStat.find_or_create_by(nfl_position_id: position.id, stat_type_id: stat_type.id)
   item.sort_order = data[:sort_order]
   item.save
 end
-=end
 
 puts 'Seeding LeaguePointRules'
 rules = [
-  { league_id: nil, stat_type_id: StatType.find_by(name: 'FieldGoalsMade').id, multiplier: 3 },
-  { league_id: nil, stat_type_id: StatType.find_by(name: 'FumblesLost').id, multiplier: -2 },
-  { league_id: nil, stat_type_id: StatType.find_by(name: 'TwoPointConversionPasses').id, multiplier: 2 },
-  { league_id: nil, stat_type_id: StatType.find_by(name: 'PassingInterceptions').id, multiplier: -2 },
-  { league_id: nil, stat_type_id: StatType.find_by(name: 'PassingTouchdowns').id, multiplier: 6 },
-  { league_id: nil, stat_type_id: StatType.find_by(name: 'PassingYards').id, multiplier: 0.04 },
-  { league_id: nil, stat_type_id: StatType.find_by(name: 'TwoPointConversionReceptions').id, multiplier: 2 },
-  { league_id: nil, stat_type_id: StatType.find_by(name: 'ReceivingTouchdowns').id, multiplier: 6 },
-  { league_id: nil, stat_type_id: StatType.find_by(name: 'ReceivingYards').id, multiplier: 0.1 },
-  { league_id: nil, stat_type_id: StatType.find_by(name: 'TwoPointConversionRuns').id, multiplier: 2 },
-  { league_id: nil, stat_type_id: StatType.find_by(name: 'RushingTouchdowns').id, multiplier: 6 },
-  { league_id: nil, stat_type_id: StatType.find_by(name: 'RushingYards').id, multiplier: 0.1 },
-  { league_id: nil, stat_type_id: StatType.find_by(name: 'ExtraPointsMade').id, multiplier: 1 },
-  { league_id: nil, stat_type_id: StatType.find_by(name: 'FumblesRecovered').id, multiplier: 2 },
-  { league_id: nil, stat_type_id: StatType.find_by(name: 'DefensiveTouchdowns').id, multiplier: 6 },
-  { league_id: nil, stat_type_id: StatType.find_by(name: 'Interceptions').id, multiplier: 2 },
-  { league_id: nil, stat_type_id: StatType.find_by(name: 'Sacks').id, multiplier: 1 },
-  { league_id: nil, stat_type_id: StatType.find_by(name: 'PointsAllowed').id, min_range: 0, max_range: 6, fixed_points: 8 },
-  { league_id: nil, stat_type_id: StatType.find_by(name: 'PointsAllowed').id, min_range: 7, max_range: 13, fixed_points: 6 },
-  { league_id: nil, stat_type_id: StatType.find_by(name: 'PointsAllowed').id, min_range: 14, max_range: 20, fixed_points: 4 },
-  { league_id: nil, stat_type_id: StatType.find_by(name: 'PointsAllowed').id, min_range: 21, max_range: 27, fixed_points: 2 },
+  { league_id: nil, stat_type: 'FieldGoalsMade', multiplier: 3 },
+  { league_id: nil, stat_type: 'FumblesLost', multiplier: -2 },
+  { league_id: nil, stat_type: 'TwoPointConversionPasses', multiplier: 2 },
+  { league_id: nil, stat_type: 'PassingInterceptions', multiplier: -2 },
+  { league_id: nil, stat_type: 'PassingTouchdowns', multiplier: 6 },
+  { league_id: nil, stat_type: 'PassingYards', multiplier: 0.04 },
+  { league_id: nil, stat_type: 'TwoPointConversionReceptions', multiplier: 2 },
+  { league_id: nil, stat_type: 'ReceivingTouchdowns', multiplier: 6 },
+  { league_id: nil, stat_type: 'ReceivingYards', multiplier: 0.1 },
+  { league_id: nil, stat_type: 'TwoPointConversionRuns', multiplier: 2 },
+  { league_id: nil, stat_type: 'RushingTouchdowns', multiplier: 6 },
+  { league_id: nil, stat_type: 'RushingYards', multiplier: 0.1 },
+  { league_id: nil, stat_type: 'ExtraPointsMade', multiplier: 1 },
+  { league_id: nil, stat_type: 'FumblesRecovered', multiplier: 2 },
+  { league_id: nil, stat_type: 'DefensiveTouchdowns', multiplier: 6 },
+  { league_id: nil, stat_type: 'Interceptions', multiplier: 2 },
+  { league_id: nil, stat_type: 'Sacks', multiplier: 1 },
+  { league_id: nil, stat_type: 'PointsAllowed', min_range: 0, max_range: 6, fixed_points: 8 },
+  { league_id: nil, stat_type: 'PointsAllowed', min_range: 7, max_range: 13, fixed_points: 6 },
+  { league_id: nil, stat_type: 'PointsAllowed', min_range: 14, max_range: 20, fixed_points: 4 },
+  { league_id: nil, stat_type: 'PointsAllowed', min_range: 21, max_range: 27, fixed_points: 2 },
+  { league_id: nil, stat_type: 'OpponentOffensiveYards', min_range: 0, max_range: 49, fixed_points: 12 },
+  { league_id: nil, stat_type: 'OpponentOffensiveYards', min_range: 50, max_range: 99, fixed_points: 10 },
+  { league_id: nil, stat_type: 'OpponentOffensiveYards', min_range: 100, max_range: 149, fixed_points: 8 },
+  { league_id: nil, stat_type: 'OpponentOffensiveYards', min_range: 150, max_range: 199, fixed_points: 6 },
+  { league_id: nil, stat_type: 'OpponentOffensiveYards', min_range: 200, max_range: 249, fixed_points: 4 },
+  { league_id: nil, stat_type: 'OpponentOffensiveYards', min_range: 250, max_range: 299, fixed_points: 2 },
 ]
 rules.each do |data|
   data[:multiplier] = 0 unless data[:multiplier]
   data[:min_range] = 0 unless data[:min_range]
   data[:max_range] = 0 unless data[:max_range]
   data[:fixed_points] = 0 unless data[:fixed_points]
+  stat_type = @stat_types[data[:stat_type]]
 
-  rule = LeaguePointRule.find_or_create_by(stat_type_id: data[:stat_type_id], min_range: data[:min_range], max_range: data[:max_range])
+  rule = LeaguePointRule.find_or_create_by(stat_type_id: stat_type.id, min_range: data[:min_range], max_range: data[:max_range])
   rule.multiplier = data[:multiplier]
   rule.fixed_points = data[:fixed_points]
   rule.save

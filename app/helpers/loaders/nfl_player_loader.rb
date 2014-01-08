@@ -147,7 +147,9 @@ module Loaders
 
       puts "Week #{week}: loading time taken: #{Time.now - get_start}"
 
-      get_start = Time.now
+      begin
+        load_defense_stats(season, week, season_type_id, cache_timeout)
+
         sql_array = Array.new
 
         if(@nfl_games.count > 0)
@@ -170,19 +172,18 @@ module Loaders
           sql_array.push "INSERT INTO nfl_game_stat_maps (nfl_game_player_id, stat_type_id, value) VALUES #{inserts};"
         end
 
-        begin
-          sql_array.each { |sql|
-            NflGameStatMap.connection.execute(sql)
-          }
-          puts "Week #{week}: SQL time taken: #{Time.now - get_start}"
+        get_start = Time.now
+        sql_array.each { |sql|
+          NflGameStatMap.connection.execute(sql)
+        }
+        puts "Week #{week}: SQL time taken: #{Time.now - get_start}"
 
-          load_defense_stats(season, week, season_type_id, cache_timeout)
-          PointsCalculator.new.update_game_player_points_for_games(@nfl_games.values.map{|g| g.id})
-        rescue Exception => e
-          puts e.message[0,400]
-          puts e.backtrace.join("\n   ")
-          raise ActiveRecord::Rollback
-        end
+        PointsCalculator.new.update_game_player_points_for_games(@nfl_games.values.map{|g| g.id})
+      rescue Exception => e
+        puts e.message[0,400]
+        puts e.backtrace.join("\n   ")
+        raise ActiveRecord::Rollback
+      end
     end
     private :load_items
 
@@ -266,7 +267,8 @@ module Loaders
     end
 
     def get_defense_stats(season, week, season_type_id, cache_timeout = 0)
-      get_weekly_data('FantasyDefenseByGame', 'stats_defense.json', season, week, season_type_id, cache_timeout)
+      #get_weekly_data('FantasyDefenseByGame', 'stats_defense.json', season, week, season_type_id, cache_timeout)
+      get_weekly_data('TeamGameStats', 'team_game_stats.json', season, week, season_type_id, cache_timeout)
     end
     private :get_defense_stats
 

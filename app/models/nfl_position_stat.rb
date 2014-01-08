@@ -5,5 +5,5 @@ class NflPositionStat < ActiveRecord::Base
   belongs_to :nfl_position
   belongs_to :stat_type
 
-  default_scope { sort { |a,b| a.sort_order <=> b.sort_order } }
+  default_scope { order(:sort_order) }
 end

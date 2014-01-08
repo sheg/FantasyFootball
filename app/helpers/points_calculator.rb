@@ -87,13 +87,14 @@ class PointsCalculator
     do_update(game_players, stats)
   end
 
-  def update_game_player_points(player_id = nil, year = nil, week = nil)
+  def update_game_player_points(player_id = nil, year = nil, season_type_id = nil, week = nil)
     start = Time.now
 
     season = year ? NflSeason.find_by(year: year) : NflLoader.new.current_season
+    season_type_id = 1 unless season_type_id
 
-    game_players = get_game_players(player_id, season, week).to_a
-    stats = get_stats(player_id, season, week)
+    game_players = get_game_players(player_id, season, season_type_id, week).to_a
+    stats = get_stats(player_id, season, season_type_id, week)
 
     puts "Update Points #{season.year}: Loaded Stats Time taken: #{Time.now - start}"
 
@@ -112,7 +113,7 @@ class PointsCalculator
       game_player.points = do_calculation(value)
 
       if game_player.changed?
-        puts "#{game_player.id} --- Points #{game_player.points}"
+        puts "#{game_player.id} --- PlayerID #{game_player.nfl_player_id} --- Points #{game_player.points}"
         game_player.save
       end
     }
