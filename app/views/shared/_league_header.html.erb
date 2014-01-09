@@ -1,9 +1,9 @@
 <div class="navbar league-nav">
   <div class="navbar-inner">
     <ul class="nav">
-      <li><%= link_to "My Team", league_team_url(:league_id => 1, :team_id => 1) %></li>
+      <li><%= link_to "My Team", "#" %></li>
       <li><%= link_to "Live Scoring", "#" %></li>
-      <li><%= link_to "Standings", "#" %></li>
+      <li><%= link_to "Standings", league_standings_path %></li>
       <li><%= link_to "League Schedule", league_schedule_path %></li>
       <li><%= link_to "Free Agency", "#" %></li>
       <li><%= link_to "Trades", "#" %></li>
