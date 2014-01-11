@@ -30,8 +30,9 @@ class LeaguesController < ApplicationController
     redirect_to action: 'index' #for now...
   end
 
-  def team
-    @league = League.includes(:users).find_by(id: params[:league_id])
-    @my_team = @league.users.find(current_user.id).inspect
+  def standings
+    @league = League.includes(:users).find_by(id: params[:id])
+    @teams = @league.teams
+    @user_team = Team.find_by(user_id: current_user.id, league_id: @league.id)
   end
 end

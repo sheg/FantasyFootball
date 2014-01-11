@@ -7,7 +7,7 @@ FantasyFootball::Application.routes.draw do
 
   match "/join_league", to: "leagues#join", via: "get", as:"join_league"
   match "/leagues/:id/schedule", to: "leagues#schedule", via: "get", as: "league_schedule"
-  match "/leagues/:league_id/team/:team_id", to: "leagues#team", via: "get", as: "league_team"
+  match "/leagues/:id/standings", to: "leagues#standings", via: "get", as: "league_standings"
 
 
   resources :sessions, only: [:new, :create, :destroy]
