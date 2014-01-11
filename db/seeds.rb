@@ -121,13 +121,13 @@ position_stats = [
     { position: 'RB', stat_type: 'ReceivingTouchdowns', sort_order: 80 },
     { position: 'RB', stat_type: 'FumblesLost', sort_order: 90 },
 
-    { position: 'WR', stat_type: 'RushingYards', sort_order: 10 },
-    { position: 'WR', stat_type: 'RushingTouchdowns', sort_order: 20 },
     { position: 'WR', stat_type: 'ReceivingTargets', sort_order: 30 },
     { position: 'WR', stat_type: 'Receptions', sort_order: 40 },
     { position: 'WR', stat_type: 'ReceivingYards', sort_order: 50 },
     { position: 'WR', stat_type: 'ReceivingYardsPerReception', sort_order: 60 },
     { position: 'WR', stat_type: 'ReceivingTouchdowns', sort_order: 70 },
+    { position: 'WR', stat_type: 'RushingYards', sort_order: 73 },
+    { position: 'WR', stat_type: 'RushingTouchdowns', sort_order: 75 },
     { position: 'WR', stat_type: 'FumblesLost', sort_order: 80 },
 
     { position: 'TE', stat_type: 'ReceivingTargets', sort_order: 30 },
@@ -156,7 +156,6 @@ position_stats = [
     # I am assuming this is games played - would need this for non weekly breakdown views
     #{ position: '?', stat_type: 'Played', sort_order: 10 },
 ]
-puts @stat_types["PassingAttempts"]
 position_stats.each do |data|
   position = @positions[data[:position]]
   stat_type = @stat_types[data[:stat_type]]
@@ -214,6 +213,8 @@ payout_types = [
     { name: 'standing', display_name: 'Final League Standing' },
     { name: 'points', display_name: 'Final Points Rank' },
     { name: 'weekly_points', display_name: 'Weekly Points Rank' },
+    { name: 'perfect_jackpot', display_name: 'Perfect Season' },
+    { name: 'multi_league', display_name: 'Multi League Tournament' },
 ]
 payout_types.each do |data|
   item = PayoutType.find_or_create_by(name: data[:name])
@@ -223,12 +224,11 @@ end
 
 puts 'Seeding PayoutStructures'
 payout_structures = [
-    { name: 'standings', display_name: 'Team Standings Structure',
+    { name: 'standings', display_name: 'Traditional',
         values: [
-            { payout_type: 'standing', rank: 1, percent: 0.5, display_name: 'Final Winner' },
-            { payout_type: 'standing', rank: 2, percent: 0.3, display_name: 'Final Runner-Up' },
-            { payout_type: 'standing', rank: 3, percent: 0.1, display_name: 'Semi-Final Runner-Up 1' },
-            { payout_type: 'standing', rank: 4, percent: 0.1, display_name: 'Semi-Final Runner-Up 2' },
+            { payout_type: 'standing', rank: 1, percent: 0.68, display_name: 'Final Winner' },
+            { payout_type: 'standing', rank: 2, percent: 0.16, display_name: 'Final Runner-Up' },
+            { payout_type: 'points', rank: 1, percent: 0.16, display_name: 'Overall Points Leader' },
         ]
     },
     { name: 'standings_and_points', display_name: 'Team Standings and Top Points Structure',
@@ -247,6 +247,19 @@ payout_structures = [
             { payout_type: 'points', rank: 2, percent: 0.3, display_name: 'Overall Points Runner-Up' },
             { payout_type: 'points', rank: 3, percent: 0.2, display_name: 'Overall Points Third Place' },
         ]
+    },
+    { name: 'child_league', display_name: 'Satellite into Tournament',
+      values: [
+          { payout_type: 'standing', rank: 1, percent: 0.1, display_name: 'Satellite Winner' },
+          { payout_type: 'multi_league', rank: 1, percent: 0.9, display_name: 'Carryover into Master' },
+      ]
+    },
+    { name: 'master_league', display_name: 'Tournament',
+      values: [
+          { payout_type: 'points', rank: 1, percent: 0.5, display_name: 'Overall Points Leader' },
+          { payout_type: 'points', rank: 2, percent: 0.3, display_name: 'Overall Points Runner-Up' },
+          { payout_type: 'points', rank: 3, percent: 0.2, display_name: 'Overall Points Third Place' },
+      ]
     },
 ]
 payout_structures.each do |data|

@@ -22,7 +22,7 @@ class NflGame < ActiveRecord::Base
     if home_team
       desc += "Season #{season.get_full_season_name(season_type_id)}"
       desc += " Week #{week}: #{away_team.abbr} @#{home_team.abbr}"
-      desc += " #{start_time.strftime('%m/%d/%Y %I:%M%p')}"
+      desc += " #{start_time.strftime('%m/%d/%Y %I:%M%p')}" if start_time
       desc += "  [#{away_team.abbr} #{away_score} -- #{home_team.abbr} #{home_score} -- #{quarter} #{}]"
     end
     desc
