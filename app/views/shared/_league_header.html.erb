@@ -3,8 +3,8 @@
     <ul class="nav">
       <li><%= link_to "My Team", "#" %></li>
       <li><%= link_to "Live Scoring", "#" %></li>
-      <li><%= link_to "Standings", league_standings_path %></li>
-      <li><%= link_to "League Schedule", league_schedule_path %></li>
+      <li><%= link_to "Standings", league_standings_path(@league) %></li>
+      <li><%= link_to "Schedule", league_schedule_path(@league) %></li>
       <li><%= link_to "Free Agency", "#" %></li>
       <li><%= link_to "Trades", "#" %></li>
       <li><%= link_to "Stat Central", "#" %></li>

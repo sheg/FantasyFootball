@@ -13,7 +13,7 @@
   <th>PA</th>
   <th>Streak</th>
     <tbody>
-    <% @teams.each do |team| %>
+    <% @league.teams.each do |team| %>
         <tr>
             <%= content_tag(:td, link_to(team.name, '#', class: highlight_my_team(@user_team, team))) %>
             <td><%= [1,2,3,4,5].sample %></td>

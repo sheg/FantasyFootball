@@ -1,16 +1,15 @@
 FantasyFootball::Application.routes.draw do
   root "fantasy_football#home"
 
-  resources :leagues, only: [:index, :show, :new, :create] do
-    get :team, on: :member
-  end
-
+  resources :leagues, param: :league_id, only: [:index, :show, :new, :create]
   match "/join_league", to: "leagues#join", via: "get", as:"join_league"
-  match "/leagues/:id/schedule", to: "leagues#schedule", via: "get", as: "league_schedule"
-  match "/leagues/:id/standings", to: "leagues#standings", via: "get", as: "league_standings"
 
+  match "/leagues/:league_id/standings", to: "leagues#standings", via: "get", as: "league_standings"
+  match "/leagues/:league_id/schedule", to: "schedules#index", via: "get", as: "league_schedule"
 
-  resources :sessions, only: [:new, :create, :destroy]
+  match "/leagues/schedule/:team_id", to: "schedules#show", via: "get", as: "team_schedule"
+
+  resources :sessions, only: [:new, :create, :destroy], path_names: { new: 'signin', destroy: 'signout' }
   match "/signin", to: "sessions#new", via: "get"
   match "/signout", to: "sessions#destroy", via: "delete"
 

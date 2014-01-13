@@ -2,15 +2,14 @@ class LeaguesController < ApplicationController
   before_action :signed_in_user, except: [:index]
 
   def index
-    @leagues = League.all.includes(:teams)
+    @leagues = League.all_leagues
     @user_leagues = current_user.leagues if signed_in?
   end
 
   def show
-    @league = League.includes(:users).find_by(id: params[:id])
+    @league = League.includes(:users).find_by(id: params[:league_id])
     redirect_to action: 'index' unless @league
-
-    @user_team = Team.find_by(user_id: current_user.id, league_id: @league.id)
+    @user_team = Team.find_by(user_id: current_user, league_id: @league)
   end
 
   def new
@@ -19,20 +18,13 @@ class LeaguesController < ApplicationController
   def create
   end
 
-  def schedule
-    @league = League.includes(games: [:home_team, :away_team]).find_by(id: params[:id])
-    redirect_to action: 'index' unless @league
-
-    @user_team = Team.find_by(user_id: current_user.id, league_id: @league.id)
-  end
-
   def join
     redirect_to action: 'index' #for now...
   end
 
   def standings
-    @league = League.includes(:users).find_by(id: params[:id])
-    @teams = @league.teams
-    @user_team = Team.find_by(user_id: current_user.id, league_id: @league.id)
+    @league = League.find_by(id: params[:league_id])
+    redirect_to action: 'index' unless @league
+    @user_team = Team.find_by(user_id: current_user, league_id: @league)
   end
 end

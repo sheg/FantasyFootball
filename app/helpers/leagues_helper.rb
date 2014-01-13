@@ -1,9 +1,33 @@
 module LeaguesHelper
 
+  #def current_league?(league)
+  #  league == current_league
+  #end
+
+  #def current_league
+  #  if params[:team_id]
+  #    team = Team.find_by(id: params[:team_id])
+  #    redirect_to(leagues_url, notice: "Could not find a league with team_id #{params[:team_id]}") unless team
+  #    @current_league = team.league
+  #  elsif params[:league_id]
+  #    league = League.includes(games: [:home_team, :away_team]).find_by(id: params[:league_id])
+  #    redirect_to(leagues_url, notice: "Could not find a league with team_id #{params[:team_id]}") unless league
+  #    @current_league ||= league
+  #  else
+  #    redirect_to(leagues_url, notice: "Can't find current league - no parameters supplied")
+  #  end
+  #end
+
   def create_test_league(league_size = 0, open_teams = 0)
     league_name = Faker::Company.catch_phrase
     league_size = [10, 12].sample if league_size == 0
-    new_league = League.create!(name: league_name, size: league_size)
+    league_type = [1, 2, 3].sample
+    entry = [25.00, 50.00, 100.00, 150.00].sample
+
+    new_league = League.create!(name: league_name, size: league_size,
+                                league_type_id: league_type, entry_amount: entry,
+                                fee_percent: 0.20)
+
     (new_league.size - open_teams).times do
       user_email = "#{Random.rand(100000)}.#{Faker::Internet.email}"
       new_user = User.create!(email: user_email, password: "a"*6, password_confirmation: "a"*6)
@@ -60,4 +84,3 @@ module LeaguesHelper
     weeks
   end
 end
-
