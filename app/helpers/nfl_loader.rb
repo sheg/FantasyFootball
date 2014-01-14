@@ -60,13 +60,16 @@ class NflLoader
     @stat_types
   end
 
-  def get_weekly_data(api_method, cache_filename, season, week, season_type_id, cache_timeout = 0)
+  def get_weekly_data(api_method, cache_filename, season, week, season_type_id, cache_timeout = 0, extra = nil)
     season_type_name = NflSeason.get_season_type_name(season_type_id)
     api_season = "#{season}#{season_type_name}"
     cache_root_folder = season.to_s
     cache_root_folder += "/#{season_type_name}" if season_type_id.to_i > 1
 
-    load_json_data("/#{api_method}/#{api_season}/#{week}", "#{cache_root_folder}/weeks/#{week}/#{cache_filename}", cache_timeout)
+    api_call = "/#{api_method}/#{api_season}/#{week}"
+    api_call += "/#{extra}" if extra
+
+    load_json_data(api_call, "#{cache_root_folder}/weeks/#{week}/#{cache_filename}", cache_timeout)
   end
   private :get_weekly_data
 

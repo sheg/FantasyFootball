@@ -73,14 +73,19 @@ class PointsCalculator
     game_players = game_players.readonly(false)
   end
 
-  def update_game_player_points_for_games(game_ids)
+  def update_game_player_points_for_games(games)
     start = Time.now
+    game = games.first
 
-    game_players = NflGamePlayer.unscoped.find_games(game_ids)
-    game_players = game_players.readonly(false).to_a
+    #game_players = NflGamePlayer.unscoped.find_games(game_ids)
+    #game_players = game_players.readonly(false).to_a
+    game_players = get_game_players(nil, game.season, game.season_type_id, game.week).to_a
+    puts "Game Players: #{game_players.count}"
 
-    stats = NflGameStatMap.unscoped.find_games(game_ids)
-    stats = stats.where('value > 0').to_a.group_by{ |s| s.nfl_game_player_id }
+    #stats = NflGameStatMap.unscoped.find_games(game_ids)
+    #stats = stats.where('value > 0').to_a.group_by{ |s| s.nfl_game_player_id }
+    stats = get_stats(nil, game.season, game.season_type_id, game.week)
+    puts "Stats: #{stats.count}"
 
     puts "Update Points for Games: Loaded Stats Time taken: #{Time.now - start}"
 
