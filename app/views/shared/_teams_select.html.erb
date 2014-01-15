@@ -1,0 +1,12 @@
+<div class="user-combobox">
+  <label for="team_id" style="font-size: 17px">Team Schedule:
+    <% values = @league.teams.map { |team| [team.name, team.id] }%>
+    <% unless params[:team_id] %>
+        <% options = options_for_select(values.push("All"), selected: 'All') %>
+    <% else %>
+        <% options = options_for_select(values.push("All"), selected: params[:team_id]) %>
+    <% end %>
+
+    <%= select(:team, :id, options) %>
+  </label>
+</div>

@@ -8,9 +8,14 @@ class SchedulesController < ApplicationController
   end
 
   def show
-    @league = Team.find_by(params[:team_id]).league
-    @teams = @league.teams
+    @team = Team.find_by(id: params[:team_id])
+    @league = @team.league
     @games = Game.where("home_team_id = #{params[:team_id]} OR away_team_id = #{params[:team_id]}")
     @user_team = Team.find_by(user_id: current_user, league_id: @league)
+
+    respond_to do |format|
+      format.json { render json: @team }
+      format.html
+    end
   end
 end

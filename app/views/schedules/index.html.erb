@@ -4,10 +4,7 @@
 <h2><%= @league.name %></h2>
 
 <% if @league.available_teams == 0 %>
-    <label for="user_email" style="font-size: 17px">Team Schedule:
-      <%= collection_select(:user, :email, @league.users, :id, :email, {}, { class: 'user-combobox' }) %>
-    </label>
-
+    <%= render "shared/teams_select" %>
     <%= render 'shared/schedule_weekbar' %>
 
     <table class="table table-responsive table-condensed schedule-table">

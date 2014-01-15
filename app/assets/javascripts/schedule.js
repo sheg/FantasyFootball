@@ -12,8 +12,31 @@ $(function() {
         }
     });
 
+    $("#team_id").on('change', function() {
+        var selected_option = $(this).val();
+        var endpoint = "/leagues/schedule/";
+        var url = endpoint + selected_option;
+        if(selected_option == "0") {
+            console.log("cheese")
+        } else {
+            $.ajax(url, {
+                success: function(response) {
+                    var team_id = response["id"];
+                    window.location.href = endpoint + team_id;
+                    console.log(team_id);
+
+                },
+                error: function(response) {
+                    console.log(response);
+                }
+            });
+        }
+    });
+
     //hard code default week for now, should be 'current week'
-    $('.week-bar button')[5].click();
+    if(window.location.pathname.match(/\/leagues\/\d+\/schedule/)) {
+        $('.week-bar button')[5].click();
+    }
 });
 
 function get_button_week(button) {
