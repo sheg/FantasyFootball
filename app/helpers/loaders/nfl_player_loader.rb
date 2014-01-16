@@ -3,13 +3,15 @@ module Loaders
     def get_nfl_game(external_game_id)
       # Cache NFLGames to minimize DB hits
       nfl_game = @nfl_games[external_game_id]
-      Thread.exclusive {
-        nfl_game = @nfl_games[external_game_id]
-        unless(nfl_game)
-          nfl_game = NflGame.find_by!(external_game_id: external_game_id)
-          @nfl_games[external_game_id] = nfl_game
-        end
-      }
+      unless(nfl_game)
+        Thread.exclusive {
+          nfl_game = @nfl_games[external_game_id]
+          unless(nfl_game)
+            nfl_game = NflGame.find_by!(external_game_id: external_game_id)
+            @nfl_games[external_game_id] = nfl_game
+          end
+        }
+      end
       puts "Game not found in DB ExternalID: #{external_game_id}" unless nfl_game
       nfl_game
     end
@@ -114,24 +116,65 @@ module Loaders
     private :create_player
 
     def get_items(season, week, season_type_id, cache_timeout = 0)
-      get_weekly_data('PlayerGameStatsByWeek', 'stats.json', season, week, season_type_id, cache_timeout)
+      #items = get_weekly_data('PlayerGameStatsByWeek', 'stats.json', season, week, season_type_id, cache_timeout)
+      #puts items.count
+      #return items
+
+      teams = NflTeam.where.not(abbr: 'BYE').to_a
+      items = []
+
+      threads = Array.new
+      for i in 1..20
+        t = Thread.new {
+          while teams.count > 0 do
+            team = nil
+            Thread.exclusive {
+              NflSeasonTeamPlayer; NflPlayer;
+              team = teams.pop if teams.count > 0
+            }
+            break unless team
+
+            loaded = get_weekly_data('PlayerGameStatsByTeam', "stats/#{team.abbr}.json", season, week, season_type_id, cache_timeout, team.abbr)
+            items += loaded
+          end
+        }
+        t["name"] = i
+        threads.push(t)
+      end
+
+      threads.each do |t|
+        t.join
+      end
+
+      return items
     end
     private :get_items
 
     def load_items(season, week, season_type_id, cache_timeout = 0)
-      NflPlayer.transaction do
-        do_load_items(season, week, season_type_id, cache_timeout)
+      NflGamePlayer.transaction do
+        begin
+          do_load_items(season, week, season_type_id, cache_timeout)
+        rescue Exception => e
+          puts e.message[0,400]
+          puts e.backtrace.join("\n   ")
+          raise ActiveRecord::Rollback
+        end
       end
     end
 
     def do_load_items(season, week, season_type_id, cache_timeout = 0)
       get_start = Time.now
       items = get_items(season.year, week, season_type_id, cache_timeout)
+      puts "Week #{week}: API+JSON loading time taken: #{Time.now - get_start}"
 
       @process_players = nil
       @nfl_games = Hash.new
       @player_stat_sql = Array.new
 
+      get_start = Time.now
+
+      # Since we are in a big transaction, threads do not work properly... the game player data does not show up within
+      #   the scope of the running transaction so for now cannot use threading here
       #threads = Array.new
       #for i in 1..3
       #  t = Thread.new { thread_process_player_stats(season, items) }
@@ -145,45 +188,39 @@ module Loaders
 
       thread_process_player_stats(season, items)
 
-      puts "Week #{week}: loading time taken: #{Time.now - get_start}"
+      puts "Week #{week}: player processing time taken: #{Time.now - get_start}"
 
-      begin
-        load_defense_stats(season, week, season_type_id, cache_timeout)
+      load_defense_stats(season, week, season_type_id, cache_timeout)
 
-        sql_array = Array.new
+      sql_array = Array.new
 
-        if(@nfl_games.count > 0)
-          game_ids = @nfl_games.values.map { |v| v.id }.join(',')
-          sql_array.push "
-            delete
-            from nfl_game_stat_maps
-            where nfl_game_player_id in (
-              select gp.id
-              from nfl_game_players gp
-                inner join nfl_games g on gp.nfl_game_id = g.id
-              where g.id in (#{game_ids})
-            )
-          "
-        end
-
-        while @player_stat_sql.size > 0 do
-          statements = @player_stat_sql.slice!(0, 100000)
-          inserts = statements.join(",\n    ")
-          sql_array.push "INSERT INTO nfl_game_stat_maps (nfl_game_player_id, stat_type_id, value) VALUES #{inserts};"
-        end
-
-        get_start = Time.now
-        sql_array.each { |sql|
-          NflGameStatMap.connection.execute(sql)
-        }
-        puts "Week #{week}: SQL time taken: #{Time.now - get_start}"
-
-        PointsCalculator.new.update_game_player_points_for_games(@nfl_games.values.map{|g| g.id})
-      rescue Exception => e
-        puts e.message[0,400]
-        puts e.backtrace.join("\n   ")
-        raise ActiveRecord::Rollback
+      if(@nfl_games.count > 0)
+        game_ids = @nfl_games.values.map { |v| v.id }.join(',')
+        sql_array.push "
+          delete
+          from nfl_game_stat_maps
+          where nfl_game_player_id in (
+            select gp.id
+            from nfl_game_players gp
+              inner join nfl_games g on gp.nfl_game_id = g.id
+            where g.id in (#{game_ids})
+          )
+        "
       end
+
+      while @player_stat_sql.size > 0 do
+        statements = @player_stat_sql.slice!(0, 100000)
+        inserts = statements.join(",\n    ")
+        sql_array.push "INSERT INTO nfl_game_stat_maps (nfl_game_player_id, stat_type_id, value) VALUES #{inserts};"
+      end
+
+      get_start = Time.now
+      sql_array.each { |sql|
+        NflGameStatMap.connection.execute(sql)
+      }
+      puts "Week #{week}: stat SQL time taken: #{Time.now - get_start}"
+
+      PointsCalculator.new.update_game_player_points_for_games(@nfl_games.values)
     end
     private :load_items
 
@@ -279,7 +316,7 @@ module Loaders
 
       items.each do |item|
         player = NflPlayer.find_by!(external_player_id: "DST_#{item['Team']}")
-        nfl_game = get_nfl_game item['GameKey']
+        nfl_game = get_nfl_game(item['GameKey'])
         next unless nfl_game
 
         team = get_team(item['Team'])
