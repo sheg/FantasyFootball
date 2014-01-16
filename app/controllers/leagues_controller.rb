@@ -27,4 +27,11 @@ class LeaguesController < ApplicationController
     redirect_to action: 'index' unless @league
     @user_team = Team.find_by(user_id: current_user, league_id: @league)
   end
+
+  def schedule
+    @league = League.includes(games: [:home_team, :away_team]).find_by(id: params[:league_id])
+    redirect_to(leagues_url, notice: "Selected League not found") unless @league
+
+    @user_team = Team.find_by(user_id: current_user, league_id: @league)
+  end
 end

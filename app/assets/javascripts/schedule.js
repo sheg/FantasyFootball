@@ -1,44 +1,63 @@
-$(function() {
-    $('.week-bar').on('click', 'button', function() {
-        var $this = $(this)
-        $this.closest('.week-bar').find('button').removeClass('highlight');
-        $this.addClass('highlight');
-        var selected_week = $(".game-" + get_button_week($this));
-        selected_week.addClass('enable');
-        if($('.schedule-games').hasClass('enable')) {
-            $('.schedule-games').hide();
-            $('.enable').show();
-            $('.schedule-games').removeClass('enable');
-        }
-    });
+var dynamic_schedule = {
 
-    $("#team_id").on('change', function() {
-        var selected_option = $(this).val();
-        var endpoint = "/leagues/schedule/";
-        var url = endpoint + selected_option;
-        if(selected_option == "0") {
-            console.log("cheese")
-        } else {
-            $.ajax(url, {
-                success: function(response) {
-                    var team_id = response["id"];
-                    window.location.href = endpoint + team_id;
-                    console.log(team_id);
+  init: function() {
+    $('.week-bar').on('click', 'button', this.selectAndHighlightButton);
+    $("#team_id").on('change', this.chooseSchedule);
+  },
 
-                },
-                error: function(response) {
-                    console.log(response);
-                }
-            });
-        }
-    });
+  selectAndHighlightButton: function() {
+    var $this = $(this);
+    var schedule_games = $('.schedule-games');
+    $this.closest('.week-bar').find('button').removeClass('highlight');
+    $this.addClass('highlight');
+    var selected_week = $(".game-" + get_button_week($this));
+    selected_week.addClass('enable');
 
-    //hard code default week for now, should be 'current week'
-    if(window.location.pathname.match(/\/leagues\/\d+\/schedule/)) {
-        $('.week-bar button')[5].click();
+    if(schedule_games.hasClass('enable')) {
+      schedule_games.hide();
+      $('.enable').show();
+      schedule_games.removeClass('enable');
     }
-});
 
-function get_button_week(button) {
-  return button.text().match(/\d+/)[0];
-};
+    function get_button_week(button) {
+      return button.text().match(/\d+/)[0];
+    }
+  },
+
+  chooseSchedule: function() {
+    var $this = $(this);
+    var last_option = $this.find("option").last().val();
+    var selected_option = $this.val();
+    var endpoint = "/leagues/schedule/";
+    var all_url = endpoint + last_option;
+    var selected_url = endpoint + selected_option;
+    if(selected_option == "All") {
+      $.ajax(all_url, {
+        success: function(response) {
+          var league_id = response["league_id"];
+          window.location.href = "/leagues/"+league_id+"/schedule";
+        }
+      });
+    } else {
+        $.ajax(selected_url, {
+          success: function(response) {
+            var team_id = response["id"];
+            window.location.href = endpoint + team_id;
+          }
+        });
+      }
+  }
+}
+
+$(function() {
+  dynamic_schedule.init();
+
+  //hard code default week for now, should be 'current week'
+  if(is_all_schedule_path(window.location.pathname)) {
+    $('.week-bar button')[5].click();
+  }
+
+  function is_all_schedule_path(path) {
+    return path.match(/\/leagues\/\d+\/schedule/);
+  }
+});

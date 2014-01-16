@@ -1,8 +1,13 @@
 <%= render "shared/league_header" %>
 
-<h2><%= @league.name %></h2>
-
-<h1> <%= @team.name %> </h1>
+<div class="panel">
+  <h1><%= @league.name %></h1>
+  <div class="panel-body well-sm center">
+    <p><%= @team.name %></p>
+    <p><%= "#{@team.user.first_name} #{@team.user.last_name}" %></p>
+    <p><%= @team.user.email %></p>
+  </div>
+</div>
 
 <% if @league.available_teams == 0 %>
     <%= render "shared/teams_select" %>
