@@ -7,8 +7,8 @@ class SchedulesController < ApplicationController
     @user_team = Team.includes([:user, :league]).find_by(user_id: current_user, league_id: @league)
 
     respond_to do |format|
-      format.json { render json: @team }
       format.html
+      format.json { render json: @league }
     end
   end
 end

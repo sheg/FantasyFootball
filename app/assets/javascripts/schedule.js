@@ -1,5 +1,4 @@
 var dynamic_schedule = {
-
   init: function() {
     $('.week-bar').on('click', 'button', this.selectAndHighlightButton);
     $("#team_id").on('change', this.chooseSchedule);
@@ -33,19 +32,14 @@ var dynamic_schedule = {
     var selected_url = endpoint + selected_option;
     if(selected_option == "All") {
       $.ajax(all_url, {
+        dataType: 'json',
+        contentType: 'application/json',
         success: function(response) {
-          var league_id = response["league_id"];
+          var league_id = response["id"];
           window.location.href = "/leagues/"+league_id+"/schedule";
         }
       });
-    } else {
-        $.ajax(selected_url, {
-          success: function(response) {
-            var team_id = response["id"];
-            window.location.href = endpoint + team_id;
-          }
-        });
-      }
+    } else { window.location.href = selected_url; }
   }
 }
 
