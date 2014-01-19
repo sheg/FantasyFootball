@@ -4,7 +4,7 @@
 <h2><%= @league.name %></h2>
 
 <% if @league.available_teams == 0 %>
-    <%= render "shared/teams_select" %>
+    <%= link_to("Team Schedules", schedule_team_path(@league.teams.first), class: "btn btn-info user-combobox") %>
     <%= render 'shared/schedule_weekbar' %>
 
     <table class="table table-responsive table-condensed schedule-table">
