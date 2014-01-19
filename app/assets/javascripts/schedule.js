@@ -40,23 +40,23 @@ var dynamic_schedule = {
         }
       });
     } else {
-      $(".team-games tr").hide();
-      $.ajax(selected_url, {
-        dataType: 'json',
-        contentType: 'appication/json',
-        success: function(response) {
-          console.log(response);
-          $.each(response, function(index, game) {
-            var $tr = $('<tr>').append(
-              $('<td>').html(game["week"]),
-              $('<td>').html(game["home_team"]["name"]),
-              $('<td>').html(game["away_team"]["name"]),
-              $('<td>').html("128.11 - 120.42"));
-            $(".team-games").append($tr);
-          });
-        }
-      });
-//      window.location.href = selected_url;
+//      $(".team-games tr").hide();
+//      $.ajax(selected_url, {
+//        dataType: 'json',
+//        contentType: 'appication/json',
+//        success: function(response) {
+//          console.log(response);
+//          $.each(response, function(index, game) {
+//            var $tr = $('<tr>').append(
+//              $('<td>').html(game["week"]),
+//              $('<td>').html(game["home_team"]["name"]),
+//              $('<td>').html(game["away_team"]["name"]),
+//              $('<td>').html("128.11 - 120.42"));
+//            $(".team-games").append($tr);
+//          });
+//        }
+//      });
+      window.location.href = selected_url;
     }
   }
 }

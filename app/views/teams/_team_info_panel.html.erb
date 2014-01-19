@@ -1,0 +1,10 @@
+<% if @team %>
+    <div class="panel">
+      <h1><%= @league.name %></h1>
+      <div class="panel-body well-sm center">
+        <p><%= @team.name %></p>
+        <p><%= "#{@team.user.first_name} #{@team.user.last_name}" %></p>
+        <p><%= @team.user.email %></p>
+      </div>
+    </div>
+<% end %>

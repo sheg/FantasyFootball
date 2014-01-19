@@ -1,15 +1,7 @@
 <%= render "shared/league_header" %>
 
-<!--<div class="panel">-->
-  <!--<h1><%= @league.name %></h1>-->
-  <!--<div class="panel-body well-sm center">-->
-    <!--<p><%= @team.name %></p>-->
-    <!--<p><%= "#{@team.user.first_name} #{@team.user.last_name}" %></p>-->
-    <!--<p><%= @team.user.email %></p>-->
-  <!--</div>-->
-<!--</div>-->
-
 <% if @league.available_teams == 0 %>
+    <%= render "team_info_panel" %>
     <%= render "shared/teams_select" %>
 
     <table class="table table-responsive table-condensed schedule-table">
@@ -23,7 +15,7 @@
             <%= content_tag(:td, game.week) %>
             <%= content_tag(:td, game.home_team.name, class: highlight_my_team(@user_team, game.home_team)) %>
             <%= content_tag(:td, game.away_team.name, class: highlight_my_team(@user_team, game.away_team)) %>
-            <td>13.22 - 24.24</td>
+            <td><%= "#{game.home_score} - #{game.away_score}"%></td>
           </tr>
       <% end %>
       </tbody>
@@ -31,18 +23,3 @@
 <% else %>
     <h3 class="center highlight">League not full yet... only <%= @league.available_teams %> slots to go!</h3>
 <% end %>
-
-
-<!--
-<% @games.each do |game| %>
-    <tr>
-      <%= content_tag(:td, game.week) %>
-    <%= content_tag(:td, game.home_team.name, class: highlight_my_team(@user_team, game.home_team)) %>
-    <%= content_tag(:td, game.away_team.name, class: highlight_my_team(@user_team, game.away_team)) %>
-      <td>13.22 - 24.24</td>
-    </tr>
-<% end %>
-//-->
-
-
-
