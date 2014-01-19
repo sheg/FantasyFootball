@@ -3,6 +3,7 @@ class TeamsController < ApplicationController
 
   def show
     @user_team = Team.includes([:user, :league]).find_by(user_id: current_user, league_id: @league)
+    redirect_to(leagues_path, notice: "You are not part of this league") unless @user_team
   end
 
   def schedule
