@@ -1,6 +1,6 @@
 class LeaguesController < ApplicationController
   before_action :signed_in_user, except: [:index]
-  before_action :user_team, except: [:index]
+  before_action :user_team, except: [:index, :new, :create, :join]
 
   def index
     @leagues = League.all_leagues
@@ -37,6 +37,6 @@ class LeaguesController < ApplicationController
     redirect_to(leagues_path, notice: "Selected League not found") unless @league
 
     @user_team = Team.find_by(user_id: current_user, league_id: @league)
-    redirect_to(leagues_path, notice: "You are not part of this league!") unless @user_team
+    redirect_to(leagues_path, notice: "You are not part of the chosen league!") unless @user_team
   end
 end
