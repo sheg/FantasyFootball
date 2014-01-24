@@ -11,8 +11,8 @@ namespace :ff do
       for week_index in 1..8 do
         games_in_week = Game.where(week: week_index)
         games_in_week.each do |game|
-          game.update(home_score: Random.rand(150.00).round(2))
-          game.update(away_score: Random.rand(150.00).round(2))
+          game.update(home_score: Random.rand(150.00).round(2),
+                      away_score: Random.rand(150.00).round(2))
         end
       end
     end
