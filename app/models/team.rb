@@ -1,4 +1,6 @@
 class Team < ActiveRecord::Base
+  include TeamHelper
+
   belongs_to :league, :counter_cache => true
   belongs_to :user
 
@@ -9,5 +11,6 @@ class Team < ActiveRecord::Base
 
   def try_set_league_schedule
     self.league.set_schedule
+    self.league.set_draft_order
   end
 end

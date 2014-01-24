@@ -24,6 +24,19 @@ league_types.each do |data|
   item.save
 end
 
+puts 'Seeding Activity Types'
+activity_types = [
+    { name: "draft", display_name: 'Draft' },
+    { name: "add", display_name: 'Add' },
+    { name: "drop", display_name: 'Drop' },
+    { name: "trade", display_name: 'Trade' },
+]
+activity_types.each do |data|
+  item = ActivityType.find_or_create_by(name: data[:name])
+  item.display_name = data[:display_name]
+  item.save
+end
+
 puts 'Seeding Positions'
 positions = [
   { abbr: "QB", name: 'Quarterback' },

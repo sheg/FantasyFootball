@@ -14,6 +14,28 @@ module LeaguesHelper
     League.find(new_league.id)
   end
 
+  def test_draft()
+    set_draft_order
+    team = self.get_current_draft_team
+    while(team)
+      slots = self.league_type.get_starting_slots
+      round = self.get_current_draft_round
+      slot = (round - 1) % slots.count
+      position = slots[slot].shuffle.first
+      players = NflPlayer.find_position(position).to_a.shuffle
+
+      begin
+        team.draft_player(players.first.id)
+        puts "DraftOrder #{team.draft_order}: Team #{team.name} drafted position #{position}: #{players.first.full_name}"
+      rescue Exception => e
+        puts "DraftOrder #{team.draft_order}: Team #{team.name} failed to draft position #{position}: #{players.first.full_name}"
+        puts "   #{e.message}"
+      end
+
+      team = self.get_current_draft_team
+    end
+  end
+
   def set_schedule
     return unless self.teams.count == self.size
     return if Game.where(league_id: self.id).count > 0
@@ -58,6 +80,53 @@ module LeaguesHelper
       weeks.push (weeks[remaining_week_index]).reverse
     end
     weeks
+  end
+
+  def set_draft_order
+    return unless self.teams.count == self.size
+    return if self.teams.first.draft_order
+
+    order = (1..self.size).to_a.shuffle
+    self.teams.each_with_index { |team, i|
+      team.draft_order = order[i]
+      team.save
+    }
+  end
+
+  def get_draft_order()
+    draft_teams = self.teams.order(:draft_order).to_a
+    order = []
+
+    self.roster_count.times do
+      order += draft_teams
+      draft_teams = draft_teams.reverse
+    end
+
+    order
+  end
+
+  def get_current_draft_team()
+    transactions = draft_transactions.to_a
+    order = get_draft_order
+    team = nil
+
+    if(transactions.count < order.count)
+      team = order[transactions.count]
+    end
+
+    return team
+  end
+
+  def get_current_draft_pick_decimal()
+    return "#{get_current_draft_round}.#{get_current_draft_round_pick}"
+  end
+
+  def get_current_draft_round()
+    return (draft_transactions.count / self.size).floor + 1
+  end
+
+  def get_current_draft_round_pick()
+    return (draft_transactions.count % self.size) + 1
   end
 end
 

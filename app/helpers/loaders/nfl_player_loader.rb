@@ -325,7 +325,7 @@ module Loaders
         game_player = update_game_player(nfl_game, player, team, position)
 
         stat_types.each { |stat_type|
-          next unless (item[stat_type.name])
+          next unless (item[stat_type.name] and item[stat_type.name].to_d > 0)
           @player_stat_sql.push "(#{game_player.id}, #{stat_type.id}, #{item[stat_type.name]})"
         }
       end
