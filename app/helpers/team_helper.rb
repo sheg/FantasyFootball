@@ -1,5 +1,8 @@
 module TeamHelper
 
+  # Need to allow for a way to see roster for a given week
+  #   Use a date to limit the transaction records to pull.  Date should be something like the following Monday given an NFL week
+  #   i.e. Find the date of a game in week 1, then find the following Monday and that date represents the date for transactions done during week 1
   def get_current_roster
     player_ids = TeamTransaction.includes(:nfl_player).get_player_ids_for_league_team(self.league_id, self.id)
     players = NflPlayer.where(id: player_ids).to_a
