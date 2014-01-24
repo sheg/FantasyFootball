@@ -19,21 +19,16 @@ module TeamHelper
     end
   end
 
-  def draft_player(player_id)
+  def draft_player(player_id, do_catchup = true)
+    current_draft_info = League::DraftInfo.new
+
     if(self.league.draft_pick_time > 0)
-      current_team = self.league.get_current_draft_team
-      last_pick = TeamTransaction.get_latest_pick_time(self.league_id)
-      last_pick = Time.now.utc unless last_pick
-      next_pick = last_pick + self.league.draft_pick_time
-      now = Time.now.utc
+      self.league.catchup_draft if do_catchup
+      current_draft_info = self.league.get_current_draft_info
 
-      if(current_team.id != self.id)
-        raise "Team #{self.name} cannot draft, current pick is #{current_team.name}, #{(next_pick - now).round(0)} seconds left to pick"
+      if(current_draft_info.current_team.id != self.id)
+        raise "Team #{self.name} cannot draft, current pick is #{current_draft_info.current_team.name}, #{current_draft_info.time_left} seconds left to pick"
       end
-
-      #if(now < next_pick)
-      #  raise "Too soon to make draft pick, wait another #{(next_pick - now).round(0)} seconds"
-      #end
     end
 
     check_player_taken(player_id)
@@ -44,8 +39,8 @@ module TeamHelper
         nfl_player_id: player_id,
         transaction_date: Time.now.utc,
         activity_type_id: ActivityType.DRAFT.id,
-        draft_round: self.league.get_current_draft_round,
-        draft_pick: self.league.get_current_draft_round_pick
+        draft_round: current_draft_info.draft_round,
+        draft_pick: current_draft_info.draft_round_pick
     )
   end
 

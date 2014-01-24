@@ -1,5 +1,22 @@
 module LeaguesHelper
 
+  class DraftInfo
+    attr_accessor :current_team,
+                  :draft_round,
+                  :draft_round_pick,
+                  :last_pick_time,
+                  :next_pick_time
+
+    def draft_pick_decimal
+      return "#{draft_round}.#{draft_round_pick}"
+    end
+
+    def time_left
+      return (next_pick_time.to_time - Time.now.utc).round(0)
+    end
+  end
+
+
   def create_test_league(league_size = 0, open_teams = 0)
     league_name = Faker::Company.catch_phrase
     league_size = [10, 12].sample if league_size == 0
@@ -16,24 +33,51 @@ module LeaguesHelper
 
   def test_draft()
     set_draft_order
-    team = self.get_current_draft_team
-    while(team)
-      slots = self.league_type.get_starting_slots
-      round = self.get_current_draft_round
-      slot = (round - 1) % slots.count
-      position = slots[slot].shuffle.first
-      players = NflPlayer.find_position(position).to_a.shuffle
 
+    catchup_draft
+    while(true)
+      pick = auto_draft_player
+      break unless pick
+    end
+  end
+
+  def catchup_draft
+    current_draft_info = self.get_current_draft_info
+    while(current_draft_info.time_left < 0)
+      self.auto_draft_player(current_draft_info)
+      current_draft_info = self.get_current_draft_info
+    end
+  end
+
+  def auto_draft_player(draft_info = nil)
+    draft_info = self.get_current_draft_info unless draft_info
+    return nil unless draft_info
+
+    slots = self.league_type.get_starting_slots
+    round = draft_info.draft_round
+    slot = (round - 1) % slots.count
+    position = slots[slot].shuffle.first
+    players = NflPlayer.find_position(position).to_a
+    pick = nil
+
+    while(true)
       begin
-        team.draft_player(players.first.id)
-        puts "DraftOrder #{team.draft_order}: Team #{team.name} drafted position #{position}: #{players.first.full_name}"
+        players = players.shuffle
+        pick = draft_info.current_team.draft_player(players.first.id, false)
+        # Adjust the transaction date in case this draft was made after time expired for that pick
+        if(draft_info.time_left < 0)
+          pick.transaction_date = draft_info.next_pick_time
+          pick.save
+        end
+        puts "DraftOrder #{draft_info.current_team.draft_order}: Team #{draft_info.current_team.name} drafted position #{position}: #{players.first.full_name}"
+        break
       rescue Exception => e
-        puts "DraftOrder #{team.draft_order}: Team #{team.name} failed to draft position #{position}: #{players.first.full_name}"
+        puts "DraftOrder #{draft_info.current_team.draft_order}: Team #{draft_info.current_team.name} failed to draft position #{position}: #{players.first.full_name}"
         puts "   #{e.message}"
       end
-
-      team = self.get_current_draft_team
     end
+
+    return pick
   end
 
   def set_schedule
@@ -105,28 +149,23 @@ module LeaguesHelper
     order
   end
 
-  def get_current_draft_team()
+  def get_current_draft_info()
     transactions = draft_transactions.to_a
     order = get_draft_order
-    team = nil
+    info = nil
 
     if(transactions.count < order.count)
-      team = order[transactions.count]
+      info = DraftInfo.new
+      info.current_team = order[transactions.count]
+      info.draft_round =  (transactions.count / self.size).floor + 1
+      info.draft_round_pick = (transactions.count % self.size) + 1
+      info.last_pick_time = (transactions.max_by { |t| t.transaction_date }).transaction_date
+      info.last_pick_time = DateTime.now.utc unless info.last_pick_time
+      info.next_pick_time = info.last_pick_time + self.draft_pick_time.seconds
     end
 
-    return team
+    return info
   end
 
-  def get_current_draft_pick_decimal()
-    return "#{get_current_draft_round}.#{get_current_draft_round_pick}"
-  end
-
-  def get_current_draft_round()
-    return (draft_transactions.count / self.size).floor + 1
-  end
-
-  def get_current_draft_round_pick()
-    return (draft_transactions.count % self.size) + 1
-  end
 end
 
