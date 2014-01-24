@@ -1,9 +1,14 @@
 class LeagueType < ActiveRecord::Base
   has_many :leagues
 
+  def get_starting_slots
+    @slots = JSON.parse(self.starting_slots_json) unless @slots
+    @slots
+  end
+
   def validate_starting_positions(positions)
     valid = true
-    slots = JSON.parse(self.starting_slots_json)
+    slots = @slots
 
     positions.each { |p|
       found_index = nil

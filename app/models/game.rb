@@ -4,5 +4,4 @@ class Game < ActiveRecord::Base
   belongs_to :league
 
   has_many :player_stats, class_name: NflSeasonTeamPlayer, foreign_key: :game_id
-
 end

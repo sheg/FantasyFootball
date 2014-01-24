@@ -16,5 +16,10 @@ namespace :ff do
         end
       end
     end
+
+    desc "Run draft on specified league_id"
+    task :league_draft, [:league_id] => :environment do |t, args|
+      League.find_by(id: args[:league_id]).test_draft
+    end
   end
 end
