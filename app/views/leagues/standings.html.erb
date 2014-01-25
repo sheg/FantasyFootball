@@ -1,8 +1,6 @@
 <%= render "shared/league_header" %>
-
+<%= render "league_info_heading" %>
 <h1>League Standings</h1>
-
-<h2><%= @league.name.titleize %></h2>
 
 <table class="table table-responsive table-condensed standings-table">
   <th>Team</th>
@@ -13,7 +11,7 @@
   <th>PA</th>
   <th>Streak</th>
     <tbody>
-    <% @teams.each do |team| %>
+    <% @league.teams.each do |team| %>
         <tr>
             <%= content_tag(:td, link_to(team.name, '#', class: highlight_my_team(@user_team, team))) %>
             <td><%= [1,2,3,4,5].sample %></td>

@@ -1,0 +1,7 @@
+<div class="user-combobox">
+  <label for="team_id" style="font-size: 17px">Team:
+    <% values = @league.teams.map { |team| [team.name, team.id] }%>
+    <% options = options_for_select(values.insert(0, "All"), selected: params[:team_id]) %>
+    <%= select(:team, :id, options) %>
+  </label>
+</div>

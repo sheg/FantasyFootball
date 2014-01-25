@@ -13,6 +13,12 @@ class League < ActiveRecord::Base
   scope :full, -> { where('size = teams_count') }
   scope :open, -> { where('size != teams_count') }
 
+  scope :all_leagues, -> { self.all.includes([:teams, :league_type]) }
+
+  def user_part_of_league?(user)
+    user.leagues.include?(self)
+  end
+
   def available_teams
     self.size - self.teams_count
   end

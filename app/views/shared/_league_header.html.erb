@@ -1,10 +1,11 @@
 <div class="navbar league-nav">
   <div class="navbar-inner">
     <ul class="nav">
-      <li><%= link_to "My Team", "#" %></li>
+      <li><%= link_to "Home", league_path(@league) %></li>
+      <li><%= link_to "My Team", team_path(@user_team) %></li>
       <li><%= link_to "Live Scoring", "#" %></li>
-      <li><%= link_to "Standings", league_standings_path %></li>
-      <li><%= link_to "League Schedule", league_schedule_path %></li>
+      <li><%= link_to "Standings", standings_league_path(@league) %></li>
+      <li><%= link_to "Schedule", schedule_league_path(@league) %></li>
       <li><%= link_to "Free Agency", "#" %></li>
       <li><%= link_to "Trades", "#" %></li>
       <li><%= link_to "Stat Central", "#" %></li>

@@ -9,6 +9,7 @@
 #  database: db/development.sqlite3
 #  pool: 5
 #  timeout: 5000
+#  reconnect: true
 
 development:
   adapter: mysql2
@@ -17,11 +18,10 @@ development:
   pool: 30
   username: ff_user
   password: ff_us3r
-  host: 127.0.0.1
-#  host: 192.168.1.2
+#  host: 127.0.0.1
+  host: 192.168.1.2
   post: 3306
   timeout: 20000
-  reconnect: true
 
 # Warning: The database defined as "test" will be erased and
 # re-generated from your development database when you run "rake".

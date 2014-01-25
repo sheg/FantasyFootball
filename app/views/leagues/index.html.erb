@@ -11,11 +11,11 @@
         <% @leagues.each do |league| %>
         <tr>
           <td><%= link_to league.name, league %></td>
-          <td><%= %W{Normal Flex9 Flex10}.sample %></td>
+          <td><%= league.league_type.name %></td>
           <td><%= league.size %></td>
           <td><%= league.available_teams %></td>
-          <td>$100</td>
-          <% if signed_in? && @user_leagues.find { |user_league| user_league.id == league.id } %>
+          <td><%= number_to_currency(league.entry_amount) %></td>
+          <% if signed_in? && league.user_part_of_league?(current_user) %>
             <td class="joined-league">My League!</td>
           <% else %>
             <td><%= link_to "Join", join_league_path, class: "btn btn-success" %></td>
