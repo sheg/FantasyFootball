@@ -49,7 +49,7 @@ module LeaguesHelper
 
   def catchup_draft
     current_draft_info = self.get_current_draft_info
-    while(current_draft_info.time_left < 0)
+    while(current_draft_info and current_draft_info.time_left < 0)
       self.auto_draft_player(current_draft_info)
       current_draft_info = self.get_current_draft_info
     end
@@ -165,8 +165,11 @@ module LeaguesHelper
       info.current_team = order[transactions.count]
       info.draft_round =  (transactions.count / self.size).floor + 1
       info.draft_round_pick = (transactions.count % self.size) + 1
-      info.last_pick_time = (transactions.max_by { |t| t.transaction_date }).transaction_date
+
+      max_transaction = transactions.max_by { |t| t.transaction_date }
+      info.last_pick_time = max_transaction.transaction_date if max_transaction
       info.last_pick_time = DateTime.now.utc unless info.last_pick_time
+
       info.next_pick_time = info.last_pick_time + self.draft_pick_time.seconds
     end
 
