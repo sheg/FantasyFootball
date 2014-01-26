@@ -24,6 +24,6 @@ class League < ActiveRecord::Base
   end
 
   def draft_transactions
-    self.transactions.where(from_team_id: 0).order(:transaction_date)
+    self.transactions.where(activity_type_id: ActivityType.DRAFT.id).order(:transaction_date)
   end
 end
