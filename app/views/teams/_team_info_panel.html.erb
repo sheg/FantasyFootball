@@ -1,10 +1,17 @@
-<% if @team %>
-    <div class="panel">
-      <h1><%= @league.name %></h1>
-      <div class="panel-body well-sm center">
-        <p><%= @team.name %></p>
-        <p><%= "#{@team.user.first_name} #{@team.user.last_name}" %></p>
-        <p><%= @team.user.email %></p>
-      </div>
+<h3>Team Schedules</h3>
+  <div class="container">
+  <% teams = @league.teams.to_a %>
+  <% team_index = teams.find_index(@user_team) %>
+  <% teams.insert(0, teams.delete_at(team_index)) %>
+    <div class="panel panel-default">
+      <% teams.each do |team| %>
+        <div class="panel-body">
+          <%= tag("div", data: { team: team.id, league: team.league_id }, class: "team-panel") %>
+          <%= image_tag("default_team_icon.png", align: 'left') %>
+          <span><%= team.name %></span>
+          <span><%= team.user.email %></span><br/>
+          <span><%= "#{team.user.first_name} #{team.user.last_name}" %></span>
+        </div>
+      <% end %>
     </div>
-<% end %>
+</div>

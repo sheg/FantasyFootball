@@ -2,11 +2,10 @@
 
 <% if @league.available_teams == 0 %>
     <%= render "team_info_panel" %>
-    <%= render "shared/teams_select" %>
-    <%= render 'shared/schedule_type_navigator' %>
 
     <div id="dynamic_team_schedule">
-      <table class="table table-responsive table-condensed schedule-table">
+
+      <table class="table table-responsive table-condensed">
         <th>Week</th>
         <th>Home Team</th>
         <th>Away Team</th>
@@ -22,7 +21,6 @@
         <% end %>
         </tbody>
       </table>
-
     </div>
 <% else %>
     <h3 class="center highlight">League not full yet... only <%= @league.available_teams %> slots to go!</h3>

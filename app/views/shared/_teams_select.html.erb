@@ -1,9 +1,9 @@
-<div class="user-combobox">
-  <label for="team_id" style="font-size: 17px">Team:
+<%= tag("div", data: { league: @league.id }, class: "user-combobox") %>
+<label for="team_id" style="font-size: 17px">Team:
     <%= form_tag(remote: true) do %>
         <% values = @league.teams.map { |team| [team.name, team.id] }%>
         <% options = options_for_select(values) %>
         <%= select(:team, :id, options) %>
     <% end %>
-  </label>
+</label>
 </div>

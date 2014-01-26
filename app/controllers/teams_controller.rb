@@ -20,7 +20,7 @@ class TeamsController < ApplicationController
 
   private
   def find_team_and_league
-    @team = Team.find_by(id: params[:team_id])
+    @team = Team.includes([:league, :user]).find_by(id: params[:team_id])
     @league = @team.league
   end
 

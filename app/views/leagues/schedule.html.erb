@@ -3,10 +3,9 @@
 <h1>League Schedule</h1>
 
 <% if @league.available_teams == 0 %>
-    <%= render 'shared/schedule_type_navigator' %>
     <%= render 'shared/schedule_weekbar' %>
 
-    <table class="table table-responsive table-condensed schedule-table">
+    <table class="table table-responsive table-condensed">
       <th>Home Team</th>
       <th>Away Team</th>
       <th>Result</th>

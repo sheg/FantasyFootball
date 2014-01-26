@@ -1,13 +1,18 @@
 var team_schedule = {
   init: function() {
-    $("#team_id").change(this.chooseSchedule);
+    $(".team-panel").on("click", this.chooseSchedule);
   },
 
   chooseSchedule: function() {
     var $this = $(this);
-    var selected_option = $this.val();
-    $.ajax("/leagues/2/teams/schedule", {
-      data: { 'team_id': selected_option, 'use_json': 'json' },
+    var team_id = $this.data("team")
+    var league_id = $this.data("league");
+    var ajax_url = "/leagues/"+league_id+"/teams/schedule";
+    $(".team-panel").removeClass("highlight");
+    $this.addClass("highlight");
+
+    $.ajax(ajax_url, {
+      data: { 'team_id': team_id, 'use_json': 'json' },
       success: function(response) {
         $("#dynamic_team_schedule").html(response).show();
         new_url = $(this)[0].url.replace(/\&?use_json[^\&]+/, "")
@@ -22,4 +27,8 @@ var team_schedule = {
 
 $(function() {
   team_schedule.init();
+
+  if($(".team-panel").length > 0) {
+    $(".team-panel")[0].click();
+  }
 });
