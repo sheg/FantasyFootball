@@ -233,6 +233,7 @@ module LeaguesHelper
 
       max_transaction = transactions.max_by { |t| t.transaction_date }
       info.last_pick_time = max_transaction.transaction_date if max_transaction
+      info.last_pick_time = self.draft_start_date unless max_transaction
       info.last_pick_time = DateTime.now.utc unless info.last_pick_time
 
       info.next_pick_time = info.last_pick_time + self.draft_pick_time.seconds

@@ -160,7 +160,7 @@ class PointsCalculator
       game_player = player_hash[player]
       if(game_player)
         data.game_player = game_player[0]
-        data.game = NflGame.new
+        data.game = data.game_player.game
         data.game_stats = stats[data.game_player.id]
         data.team = data.game_player.team
         data.position = data.game_player.position
