@@ -14,4 +14,14 @@ class Team < ActiveRecord::Base
     self.league.set_schedule
     self.league.set_draft_order
   end
+
+  def set_score_for_week(week, score)
+    game = Game.find_by('(home_team_id = ? or away_team_id = ?) and week = ?', id, id, week)
+    if game.home_team_id == id
+      game.home_score = score
+    else
+      game.away_score = score
+    end
+    game.save
+  end
 end

@@ -76,7 +76,7 @@ class PointsCalculator
     if player_id
       game_players = game_players.where(nfl_player_id: player_id)
     end
-    game_players = game_players.readonly(false)
+    game_players = game_players.includes(:game).readonly(false)
   end
 
   def update_game_player_points_for_games(games)
@@ -112,6 +112,7 @@ class PointsCalculator
 
   def do_update(game_players, stats)
     start = Time.now
+    leagues = League.all.to_a
 
     game_players.each { |game_player|
       value = stats[game_player.id]
@@ -124,6 +125,15 @@ class PointsCalculator
       if game_player.changed?
         puts "#{game_player.id} --- PlayerID #{game_player.nfl_player_id} --- Points #{game_player.points}"
         game_player.save
+
+        leagues.each { |league|
+          #league_point = LeaguePlayerPoint.find_or_create_by!(league_id: league.id, player_id: game_player.nfl_player_id, nfl_week: game_player.game.week)
+          #league_point.points = do_calculation(value)
+          #league_point.save
+          100.times do
+            points = do_calculation(value)
+          end
+        }
       end
     }
 
