@@ -120,6 +120,7 @@ module Loaders
       #puts items.count
       #return items
 
+      cache_timeout = 0
       teams = NflTeam.where.not(abbr: 'BYE').to_a
       items = []
 
@@ -157,7 +158,7 @@ module Loaders
         rescue Exception => e
           puts e.message[0,400]
           puts e.backtrace.join("\n   ")
-          raise ActiveRecord::Rollback
+          ActiveRecord::Rollback
         end
       end
     end
