@@ -114,6 +114,9 @@ class PointsCalculator
     start = Time.now
     leagues = League.all.to_a
 
+    @league_points = []
+    @final = []
+
     game_players.each { |game_player|
       value = stats[game_player.id]
       next unless value
@@ -127,17 +130,56 @@ class PointsCalculator
         game_player.save
 
         leagues.each { |league|
+          league_point = LeaguePlayerPoint.new(league_id: league.id, player_id: game_player.nfl_player_id, nfl_week: game_player.game.week)
+          league_point.stats = value
+
+          100.times do
+            @league_points.push league_point
+          end
+
           #league_point = LeaguePlayerPoint.find_or_create_by!(league_id: league.id, player_id: game_player.nfl_player_id, nfl_week: game_player.game.week)
           #league_point.points = do_calculation(value)
           #league_point.save
-          100.times do
-            points = do_calculation(value)
-          end
         }
       end
     }
 
     puts "Update Points: Calculation Time taken: #{Time.now - start}"
+    start = Time.now
+
+    20.times do
+      fork {
+        while @league_points.count > 0
+          item = @league_points.pop
+          if item
+            item.points = do_calculation(item.stats)
+            puts "League #{item.league_id}, Player #{item.player_id}, #{item.points}" if item.points > 0
+          end
+        end
+      }
+    end
+    #threads = Array.new
+    #for i in 1..20 do
+    #  t = Thread.new {
+    #    Thread.exclusive {
+    #      NflSeasonTeamPlayer
+    #      NflGameStatMap
+    #    }
+    #    while @league_points.count > 0
+    #      item = @league_points.pop
+    #      if item
+    #        item.points = do_calculation(item.stats)
+    #        #puts "League #{item.league_id}, Player #{item.player_id}, #{item.points}" if item.points > 0
+    #      end
+    #    end
+    #  }
+    #  threads.push t
+    #end
+    #threads.each do |thread|
+    #  thread.join
+    #end
+
+    puts "Update Points: League player Calculation Time taken: #{Time.now - start}"
   end
   private :do_update
 
