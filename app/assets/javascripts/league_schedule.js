@@ -26,8 +26,8 @@ var league_schedule = {
 $(function() {
   league_schedule.init();
 
-  //hard code default week for now, should use 'current week' ... when we arrive to it
   if ($('.week-bar button').length > 0) {
-    $('.week-bar button')[5].click();
+    var current_week = $('.week-bar').data('week')
+    $('.week-bar button')[current_week - 1].click();
   }
 });
