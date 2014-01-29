@@ -2,9 +2,15 @@ class PointsCalculator
   class PlayerGameData
     attr_accessor :player
     attr_accessor :game_player
+    attr_accessor :team
+    attr_accessor :position
     attr_accessor :game
     attr_accessor :game_stats
     attr_accessor :points
+
+    def initialize
+      self.points = 0.0
+    end
 
     def find_season_type(season_type_id)
       self.find { |d| d.game.season_type_id == season_type_id }
@@ -125,39 +131,39 @@ class PointsCalculator
   end
   private :do_update
 
-  def get_nfl_player_game_data(player_id, year = nil, season_type_id = nil, week = nil)
+  def get_nfl_player_game_data(players, year = nil, season_type_id = nil, week = nil)
     all_stats = Array.new
 
     season = year ? NflSeason.find_by(year: year) : NflLoader.new.current_season
     season_type_id = 1 unless season_type_id
 
-    game_players = get_game_players(player_id, season, season_type_id, week).includes(:game, player: [ :news, :injuries ]).to_a
+    #game_players = get_game_players(players, season, season_type_id, week).includes(:game, player: [ :news, :injuries, :teams, :positions ]).to_a
+    game_players = get_game_players(players, season, season_type_id, week).includes(:game, :player).to_a
+    stats = get_stats(players, season, season_type_id, week)
 
-    games = Hash[game_players.map{|gp| [gp.game, gp]}]
-    games = game_players.group_by{ |gp| gp.game }
-    stats = get_stats(player_id, season, season_type_id, week)
+    player_hash = game_players.group_by{ |gp| gp.player }
 
-    games.each { |game, game_players_for_game|
-      game_players_for_game.each { |game_player|
-        game_player_stats = stats[game_player.id]
+    players.each { |player|
+      data = PlayerGameData.new
+      data.player = player
 
-        if game_player_stats
-          game_player_stats = game_player_stats
-        else
-          game_player_stats = []
-        end
-
-        data = PlayerGameData.new
-        data.game_player = game_player
-        data.player = data.game_player.player
-        data.game = game
-        data.game_stats = game_player_stats
+      game_player = player_hash[player]
+      if(game_player)
+        data.game_player = game_player[0]
+        data.game = data.game_player.game
+        data.game_stats = stats[data.game_player.id]
+        data.team = data.game_player.team
+        data.position = data.game_player.position
         data.points = data.game_player.points
-        all_stats.push(data)
-      }
+      else
+        data.team = data.player.team_for_week(season_type_id, week)
+        data.position = data.player.position_for_week(season_type_id, week)
+      end
+
+      all_stats.push(data)
     }
 
-    all_stats
+    return all_stats
   end
 
   def get_nfl_game_data(game_id)

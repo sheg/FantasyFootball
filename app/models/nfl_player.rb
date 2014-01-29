@@ -27,4 +27,27 @@ class NflPlayer < ActiveRecord::Base
   scope :find_position, -> (p) { uniq.joins(game_players: [ :position, :team ]).where(nfl_positions: { abbr: p }) }
   scope :find_team, -> (t) { uniq.joins(game_players: [ :position, :team ]).where(nfl_teams: { abbr: t }) }
   scope :sort_last_name, -> { order(:last_name) }
+
+  def get_week_order(season_type_id, week)
+    week_order = 0
+    if(season_type_id == 2)
+      week_order = 10
+    else
+      week_order = season_type_id * 100
+    end
+    week_order += week
+  end
+
+  def get_latest_game(season_type_id, week)
+    week_order = get_week_order(season_type_id, week)
+    self.game_players.where('nfl_games.week_order <= ?', week_order).order('nfl_games.week_order desc').first
+  end
+
+  def team_for_week(season_type_id, week)
+    get_latest_game(season_type_id, week).team
+  end
+
+  def position_for_week(season_type_id, week)
+    get_latest_game(season_type_id, week).position
+  end
 end

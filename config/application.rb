@@ -13,6 +13,7 @@ module FantasyFootball
 
     config.assets.precompile += %w(*.png *.jpg *.jpeg *.gif)
     config.middleware.use Rack::Deflater
+    config.beginning_of_week = :sunday
 
   end
 end

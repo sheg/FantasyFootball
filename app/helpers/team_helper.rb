@@ -1,11 +1,13 @@
 module TeamHelper
 
-  # Need to allow for a way to see roster for a given week
-  #   Use a date to limit the transaction records to pull.  Date should be something like the following Monday given an NFL week
-  #   i.e. Find the date of a game in week 1, then find the following Monday and that date represents the date for transactions done during week 1
-  def get_current_roster
-    player_ids = TeamTransaction.includes(:nfl_player).get_player_ids_for_league_team(self.league_id, self.id)
-    players = NflPlayer.where(id: player_ids).to_a
+  def get_league_week_stats(league_week = nil)
+    game = self.league.get_nfl_week_game_from_league_week(league_week)
+    players = self.get_roster(league_week)
+    PointsCalculator.new.get_nfl_player_game_data(players, game.season.year, game.season_type_id, game.week)
+  end
+
+  def get_roster(league_week = nil)
+    players = TeamTransaction.get_players_for_league_team(self.league_id, self.id, league_week)
   end
 
   def check_player_taken(player_id)
@@ -44,6 +46,13 @@ module TeamHelper
     )
   end
 
+  def add_drop_player(add_player_id, drop_player_id)
+    TeamTransaction.transaction do
+      drop_player(drop_player_id)
+      add_player(add_player_id)
+    end
+  end
+
   def add_player(player_id)
     check_player_taken(player_id)
 
@@ -57,9 +66,9 @@ module TeamHelper
   end
 
   def drop_player(player_id)
-    players = TeamTransaction.get_player_ids_for_league_team(self.league_id, self.id).to_a
+    players = TeamTransaction.get_players_for_league_team(self.league_id, self.id).to_a
 
-    unless(players.include?(player_id))
+    unless(players.find { |p| p.id == player_id })
       player = NflPlayer.find_by(id: player_id)
       raise "#{player.full_name} is not on the team"
     end

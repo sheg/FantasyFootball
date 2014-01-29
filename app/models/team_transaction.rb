@@ -15,17 +15,23 @@ class TeamTransaction < ActiveRecord::Base
     TeamTransaction.where(league_id: league_id, from_team_id: 0).maximum(:transaction_date)
   end
 
-  def self.get_player_ids_for_league_team(league_id, team_id)
-    players = []
-    transactions = TeamTransaction.find_league_team(league_id, team_id).to_a
+  def self.get_players_for_league_team(league_id, team_id, league_week = nil)
+    players = Hash.new
+    transactions = TeamTransaction.includes(:nfl_player).find_league_team(league_id, team_id)
+    if league_week
+      week = League.find_by(id: league_id).get_league_week_data_for_week(league_week)
+      transactions = transactions.where("transaction_date < ?", week.end_date)
+    end
+    transactions = transactions.to_a
+
     transactions.each { |t|
       if(t.to_team_id == team_id)         # Add to array any players that went to the given team_id
-        players.push t.nfl_player_id unless players.include?(t.nfl_player_id)
+        players[t.nfl_player_id] = t.nfl_player unless players.include?(t.nfl_player_id)
       elsif(t.from_team_id == team_id)    # Remove from the array any players that left from the given team_id
         players.delete t.nfl_player_id if players.include?(t.nfl_player_id)
       end
     }
-    players
+    players.values
   end
 
   def self.get_players_taken(league_id)

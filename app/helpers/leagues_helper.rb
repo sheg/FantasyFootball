@@ -1,5 +1,18 @@
 module LeaguesHelper
 
+  class WeekData
+    attr_accessor :week_number,
+                  :start_date
+
+    def initialize
+      self.week_number = 0
+    end
+
+    def end_date
+      (start_date + 1.week - 1.day).end_of_day
+    end
+  end
+
   class DraftInfo
     attr_accessor :current_team,
                   :draft_round,
@@ -16,6 +29,58 @@ module LeaguesHelper
     end
   end
 
+  def get_league_week_data_for_week(league_week)
+    week_data = get_league_week_data
+    league_week = week_data.week_number unless league_week
+    week_data.start_date += (league_week - week_data.week_number).weeks
+    week_data.week_number = league_week
+    return week_data
+  end
+
+  def get_league_week_data(date = nil)
+    week = WeekData.new
+    transactions = draft_transactions.to_a
+    order = get_draft_order
+
+    if(transactions.count == order.count)
+      # Use the next upcoming Tuesday as the start of week
+      start_day_of_week = 2
+
+      # Get last draft pick as league start time and add 1 week if it is on start day of week or later
+      max_transaction = transactions.max_by { |t| t.transaction_date }.transaction_date
+      max_transaction += 1.week if max_transaction.wday >= start_day_of_week
+
+      start_week = (max_transaction.beginning_of_week.at_beginning_of_day + start_day_of_week.days).to_date
+      date = DateTime.now unless date
+      date = date.utc.at_beginning_of_day.to_date
+
+      days = (date - start_week).to_i
+      if(days < 0)
+        week.week_number = 0
+        week.start_date = start_week
+      else
+        week.week_number = (days / 7).floor + 1
+        week.start_date = start_week + (week.week_number - 1).weeks
+      end
+    end
+
+    return week
+  end
+
+  def get_nfl_week_game(league_week_data)
+    game = nil
+    # Adding extra weeks to end date in case of missing weeks (i.e. skipped week before super bowl)
+    games = NflGame.where('start_time between ? and ?', league_week_data.start_date + 1.days, league_week_data.end_date + 2.week + 1.days).order(:start_time)
+    if(games.count > 0)
+      game = games.first
+    end
+    return game
+  end
+
+  def get_nfl_week_game_from_league_week(league_week)
+    week_data = get_league_week_data_for_week(league_week)
+    get_nfl_week_game(week_data)
+  end
 
   def create_test_league(league_size = 0, open_teams = 0)
     league_name = Faker::Company.catch_phrase
@@ -54,7 +119,7 @@ module LeaguesHelper
 
   def catchup_draft
     current_draft_info = self.get_current_draft_info
-    while(current_draft_info.time_left < 0)
+    while(current_draft_info and current_draft_info.time_left < 0)
       self.auto_draft_player(current_draft_info)
       current_draft_info = self.get_current_draft_info
     end
@@ -67,23 +132,23 @@ module LeaguesHelper
     slots = self.league_type.get_starting_slots
     round = draft_info.draft_round
     slot = (round - 1) % slots.count
-    position = slots[slot].shuffle.first
+    position = slots[slot].sample
     players = NflPlayer.find_position(position).to_a
     pick = nil
 
     while(true)
       begin
-        players = players.shuffle
-        pick = draft_info.current_team.draft_player(players.first.id, false)
+        player = players.sample
+        pick = draft_info.current_team.draft_player(player.id, false)
         # Adjust the transaction date in case this draft was made after time expired for that pick
         if(draft_info.time_left < 0)
           pick.transaction_date = draft_info.next_pick_time
           pick.save
         end
-        puts "DraftOrder #{draft_info.current_team.draft_order}: Team #{draft_info.current_team.name} drafted position #{position}: #{players.first.full_name}"
+        puts "DraftOrder #{draft_info.current_team.draft_order}: Team #{draft_info.current_team.name} drafted position #{position}: #{player.full_name}"
         break
       rescue Exception => e
-        puts "DraftOrder #{draft_info.current_team.draft_order}: Team #{draft_info.current_team.name} failed to draft position #{position}: #{players.first.full_name}"
+        puts "DraftOrder #{draft_info.current_team.draft_order}: Team #{draft_info.current_team.name} failed to draft position #{position}: #{player.full_name}"
         puts "   #{e.message}"
       end
     end
@@ -170,8 +235,12 @@ module LeaguesHelper
       info.current_team = order[transactions.count]
       info.draft_round =  (transactions.count / self.size).floor + 1
       info.draft_round_pick = (transactions.count % self.size) + 1
-      info.last_pick_time = (transactions.max_by { |t| t.transaction_date }).transaction_date
+
+      max_transaction = transactions.max_by { |t| t.transaction_date }
+      info.last_pick_time = max_transaction.transaction_date if max_transaction
+      info.last_pick_time = self.draft_start_date unless max_transaction
       info.last_pick_time = DateTime.now.utc unless info.last_pick_time
+
       info.next_pick_time = info.last_pick_time + self.draft_pick_time.seconds
     end
 
