@@ -24,18 +24,23 @@ class PointsCalculator
     @rules = @rules.keep_if { |r| r.multiplier > 0 || r.min_range > 0 || r.max_range > 0 }
   end
 
+  def do_calculation_db(season_type_id = nil, week = nil)
+    sql = "CALL UpdateGamePlayerPoints(#{season_type_id}, #{week})"
+    LeaguePlayerPoint.connection.execute(sql)
+
+    sql = "CALL LoadLeaguePlayerPoints(#{season_type_id}, #{week})"
+    LeaguePlayerPoint.connection.execute(sql)
+  end
+
   def do_calculation(stats)
     points = 0.0
-    return points
 
-    return BigDecimal(points.round(4), 12)
     @rules.each { |rule|
       stat = stats[rule.stat_type_id]
       next unless stat
 
       stat = stat.first
       if stat and stat.value > 0
-
         match = true
         if (rule.min_range > 0 || rule.max_range > 0)
           match = false if stat.value < rule.min_range || stat.value > rule.max_range
@@ -86,31 +91,42 @@ class PointsCalculator
     return unless (games and games.length > 0)
 
     start = Time.now
-    game = games.first
+    groups = games.group_by{ |g| { season_type_id: g.season_type_id, week: g.week } }.keys
+    groups.each { |group|
+      do_calculation_db(group[:season_type_id], group[:week])
+    }
+    puts "Update Points for Games: DB Calculation Time taken: #{Time.now - start}"
 
-    game_players = get_game_players(nil, game.season, game.season_type_id, game.week).to_a
-    puts "Game Players: #{game_players.count}"
-
-    stats = get_stats(nil, game.season, game.season_type_id, game.week)
-    puts "Stats: #{stats.count}"
-
-    puts "Update Points for Games: Loaded Stats Time taken: #{Time.now - start}"
-
-    do_update(game_players, stats)
+    #game = games.first
+    #
+    #game_players = get_game_players(nil, game.season, game.season_type_id, game.week).to_a
+    #puts "Game Players: #{game_players.count}"
+    #
+    #stats = get_stats(nil, game.season, game.season_type_id, game.week)
+    #puts "Stats: #{stats.count}"
+    #
+    #puts "Update Points for Games: Loaded Stats Time taken: #{Time.now - start}"
+    #
+    #do_update(game_players, stats)
   end
 
   def update_game_player_points(player_id = nil, year = nil, season_type_id = nil, week = nil)
     start = Time.now
+    do_calculation_db(season_type_id, week)
+    puts "Update Points for Games: DB Calculation Time taken: #{Time.now - start}"
+    return
 
-    season = year ? NflSeason.find_by(year: year) : NflLoader.new.current_season
-    season_type_id = 1 unless season_type_id
-
-    game_players = get_game_players(player_id, season, season_type_id, week).to_a
-    stats = get_stats(player_id, season, season_type_id, week)
-
-    puts "Update Points #{season.year}: Loaded Stats Time taken: #{Time.now - start}"
-
-    do_update(game_players, stats)
+    #start = Time.now
+    #
+    #season = year ? NflSeason.find_by(year: year) : NflLoader.new.current_season
+    #season_type_id = 1 unless season_type_id
+    #
+    #game_players = get_game_players(player_id, season, season_type_id, week).to_a
+    #stats = get_stats(player_id, season, season_type_id, week)
+    #
+    #puts "Update Points #{season.year}: Loaded Stats Time taken: #{Time.now - start}"
+    #
+    #do_update(game_players, stats)
   end
 
   def do_update(game_players, stats)
@@ -131,56 +147,88 @@ class PointsCalculator
       if game_player.changed?
         puts "#{game_player.id} --- PlayerID #{game_player.nfl_player_id} --- Points #{game_player.points}"
         game_player.save
-
-        leagues.each { |league|
-          league_point = LeaguePlayerPoint.new(league_id: league.id, player_id: game_player.nfl_player_id, nfl_week: game_player.game.week)
-          league_point.stats = value
-
-          10.times do
-            @league_points.push league_point
-          end
-
-          #league_point = LeaguePlayerPoint.find_or_create_by!(league_id: league.id, player_id: game_player.nfl_player_id, nfl_week: game_player.game.week)
-          #league_point.points = do_calculation(value)
-          #league_point.save
-        }
       end
+
+      leagues.each { |league|
+        league_point = LeaguePlayerPoint.new(league_id: league.id, player_id: game_player.nfl_player_id, nfl_week: game_player.game.week)
+        league_point.stats = value
+
+        10.times do
+          @league_points.push league_point
+        end
+
+        #league_point = LeaguePlayerPoint.find_or_create_by!(league_id: league.id, player_id: game_player.nfl_player_id, nfl_week: game_player.game.week)
+        #league_point.points = do_calculation(value)
+        #league_point.save
+      }
     }
 
     puts "Update Points: Calculation Time taken: #{Time.now - start}"
     start = Time.now
 
-    #while @league_points.count > 0
-    #  item = @league_points.pop
-    #  if item
-    #    item.points = do_calculation(item.stats)
-    #    #puts "League #{item.league_id}, Player #{item.player_id}, #{item.points}" if item.points > 0
-    #  end
+    puts @league_points.count
+
+    while @league_points.count > 0
+      item = @league_points.pop
+      if item
+        item.points = do_calculation(item.stats)
+        #puts "League #{item.league_id}, Player #{item.player_id}, #{item.points}" if item.points > 0
+        @final.push item
+      end
+    end
+
+    puts "Update Points: League player points calculation Time taken: #{Time.now - start}"
+    start = Time.now
+
+    sql_array = Array.new
+
+    if(@final.count > 0)
+      weeks = @final.group_by{ |p| p.nfl_week }.keys
+
+      sql_array.push "
+          delete
+          from league_player_points
+          where nfl_week in (#{weeks.join(',')})
+        "
+    end
+
+    statements = []
+    while @final.size > 0 do
+      items = @final.slice!(0, 100000)
+      items.each { |item|
+        statements.push "(#{item.league_id}, #{item.nfl_week}, #{item.player_id}, #{item.points})"
+      }
+      inserts = statements.join(",\n    ")
+      sql_array.push "INSERT INTO league_player_points (league_id, nfl_week, player_id, points) VALUES #{inserts};"
+    end
+
+    sql_array.each { |sql|
+      LeaguePlayerPoint.connection.execute(sql)
+    }
+    puts "Update Points: League player SQL Time taken: #{Time.now - start}"
+
+    #threads = Array.new
+    #for i in 1..10 do
+    #  t = Thread.new {
+    #    Thread.exclusive {
+    #      NflSeasonTeamPlayer
+    #      NflGameStatMap
+    #    }
+    #    while @league_points.count > 0
+    #      item = @league_points.pop
+    #      if item
+    #        item.points = do_calculation(item.stats)
+    #        #puts "League #{item.league_id}, Player #{item.player_id}, #{item.points}" if item.points > 0
+    #      end
+    #    end
+    #  }
+    #  threads.push t
+    #end
+    #threads.each do |thread|
+    #  thread.join
     #end
 
-    threads = Array.new
-    for i in 1..10 do
-      t = Thread.new {
-        Thread.exclusive {
-          NflSeasonTeamPlayer
-          NflGameStatMap
-        }
-        while @league_points.count > 0
-          item = @league_points.pop
-          if item
-            #item.points = do_calculation(item.stats)
-            #puts "League #{item.league_id}, Player #{item.player_id}, #{item.points}" if item.points > 0
-          end
-        end
-      }
-      threads.push t
-    end
-    threads.each do |thread|
-      thread.join
-    end
-
-    puts "Update Points: League player Calculation Time taken: #{Time.now - start}"
-    raise "Junk"
+    #raise "Junk"
   end
   private :do_update
 

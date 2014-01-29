@@ -158,7 +158,7 @@ module Loaders
         rescue Exception => e
           puts e.message[0,400]
           puts e.backtrace.join("\n   ")
-          ActiveRecord::Rollback
+          raise ActiveRecord::Rollback
         end
       end
     end
