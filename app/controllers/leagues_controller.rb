@@ -1,6 +1,7 @@
 class LeaguesController < ApplicationController
   before_action :signed_in_user, except: [:index]
   before_action :user_team, except: [:index, :new, :create, :join]
+  before_action :set_current_week, except: [:index] #SANDBOX PURPOSES FOR NOW!
 
   def index
     @leagues = League.all_leagues
@@ -31,6 +32,9 @@ class LeaguesController < ApplicationController
     redirect_to(leagues_path, notice: "Selected League not found") unless @league
   end
 
+  def league_info
+  end
+
   private
 
   def user_team
@@ -42,5 +46,11 @@ class LeaguesController < ApplicationController
 
     @user_team = Team.find_by(user_id: current_user, league_id: @league)
     redirect_to(leagues_path, notice: "You are not part of the this league") unless @user_team
+  end
+
+  #sandbox purposes... for now
+  def set_current_week
+    render text: "Current league is not set" unless @league
+    @current_week = @league.get_league_week_data(2.weeks.from_now).week_number + 1
   end
 end

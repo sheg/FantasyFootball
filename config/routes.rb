@@ -3,8 +3,11 @@ FantasyFootball::Application.routes.draw do
   root "fantasy_football#home"
 
   resources :leagues, param: :league_id, only: [:index, :show, :new, :create] do
-    get :schedule, on: :member
-    get :standings, on: :member
+    member do
+      get :schedule
+      get :standings
+      get :league_info
+    end
     resources :teams, param: :team_id, only: [:show] do
       get :schedule, on: :collection
     end

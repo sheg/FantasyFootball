@@ -1,15 +1,6 @@
 <%= render "shared/league_header" %>
-<%= render "league_info_heading" %>
 
-<table class="table table-responsive table-condensed">
-  <th>Team Name</th>
-  <th>Team Owner</th>
-  <tbody>
-  <% @league.teams.each do |team| %>
-      <tr>
-        <%= content_tag(:td, link_to(team.name, '#', class: highlight_my_team(@user_team, team))) %>
-        <%= content_tag(:td, link_to(team.user.email, '#' )) %>
-      </tr>
-  <% end %>
-  </tbody>
-</table>
+<p><b>Current Week: <%= @current_week %></b></p>
+<p>NFL News</p>
+<p>League News</p>
+<p>Standings</p>

@@ -1,0 +1,20 @@
+<%= render "shared/league_header" %>
+<h1>League Information</h1>
+
+<p><b>Teams</b></p>
+<table class="table table-responsive table-condensed draft-info">
+  <th>Team Name</th>
+  <th>Owner</th>
+  <th>Email</th>
+  <th>Draft Position</th>
+  <tbody>
+  <% @league.teams.each do |team| %>
+    <tr class=<%= highlight_my_team(@user_team, team) %>>
+      <td><%= team.name %></td>
+      <td><%= "#{team.user.last_name}, #{team.user.first_name}" %></td>
+      <td><%= team.user.email %></td>
+      <td><%= team.draft_order %></td>
+    </tr>
+  <% end %>
+  </tbody>
+</table>
