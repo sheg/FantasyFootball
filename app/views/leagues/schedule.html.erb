@@ -2,11 +2,13 @@
 <%= render "league_info_heading" %>
 <h1>League Schedule</h1>
 
-<% if @league.available_teams == 0 %>
-    <%= render "shared/teams_select" %>
-    <%= render 'shared/schedule_weekbar' %>
+<!-- Just for fun, lets set things to 2 weeks from now... guess what, it works. -->
+<% current_week = @league.get_league_week_data(2.weeks.from_now).week_number + 1%>
 
-    <table class="table table-responsive table-condensed schedule-table">
+<% if @league.available_teams == 0 %>
+    <%= render 'shared/schedule_weekbar', week: current_week%>
+
+    <table class="table table-responsive table-condensed">
       <th>Home Team</th>
       <th>Away Team</th>
       <th>Result</th>

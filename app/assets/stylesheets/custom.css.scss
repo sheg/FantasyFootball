@@ -161,8 +161,7 @@ label.required:after{
 }
 
 .league-nav {
-  margin-top: -20px;
-  width: 100%;
+  margin-top: -15px;
 }
 
 .registration-name label {
@@ -191,23 +190,17 @@ label.required:after{
 }
 
 #remember_me {
-  height: 40px;
-  width: 80px;
   margin-bottom: 7px;
 }
 
-.panel-body {
-  margin-left: 22%;
-  margin-right: 22%;
-  min-height: 10px;
-  padding: 7px;
-  margin-bottom: 10px;
-  background-color: whitesmoke;
-  border: 1px solid #e3e3e3;
-  -webkit-border-radius: 4px;
-  -moz-border-radius: 4px;
-  border-radius: 4px;
-  -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.05);
-  -moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.05);
-  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.05);
+.team-panel {
+  width: 375px;
+  margin-bottom: 5px;
+  border: 1px solid #ddd;
+  padding: 10px;
+  display: inline-block;
+}
+
+#dynamic-team-schedule {
+  width: 60%;
 }

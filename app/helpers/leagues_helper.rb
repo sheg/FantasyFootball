@@ -107,7 +107,12 @@ module LeaguesHelper
 
     (new_league.size - open_teams).times do
       user_email = "#{Random.rand(100000)}.#{Faker::Internet.email}"
-      new_user = User.create!(email: user_email, password: "a"*6, password_confirmation: "a"*6)
+      user_first_name = Faker::Name.first_name
+      user_last_name = Faker::Name.last_name
+      new_user = User.create!(email: user_email, first_name: user_first_name,
+                              last_name: user_last_name, password: "a"*6,
+                              password_confirmation: "a"*6)
+
       team_name = "#{Faker::Name.title}--#{Random.rand(1000000)}"
       new_team = Team.create!(name: team_name, user_id: new_user.id, league_id: new_league.id)
       puts "Adding #{new_team.name} to League Name: #{new_league.name} with user #{new_user.email}"
