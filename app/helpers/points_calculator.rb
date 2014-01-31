@@ -7,6 +7,7 @@ class PointsCalculator
     attr_accessor :game
     attr_accessor :game_stats
     attr_accessor :points
+    attr_accessor :league_points
 
     def initialize
       self.points = 0.0
@@ -25,10 +26,13 @@ class PointsCalculator
   end
 
   def do_calculation_db(season_type_id = nil, week = nil)
-    sql = "CALL UpdateGamePlayerPoints(#{season_type_id}, #{week})"
+    sql = "CALL UpdateGamePlayerPoints(#{season_type_id}, #{week});"
     LeaguePlayerPoint.connection.execute(sql)
 
-    sql = "CALL LoadLeaguePlayerPoints(#{season_type_id}, #{week})"
+    sql = "CALL LoadLeaguePlayerPoints(#{season_type_id}, #{week});"
+    LeaguePlayerPoint.connection.execute(sql)
+
+    sql = "CALL UpdateTeamPoints(null, #{season_type_id}, #{week});"
     LeaguePlayerPoint.connection.execute(sql)
   end
 

@@ -37,20 +37,20 @@ module Loaders
       away_team = get_team('BYE')
       nfl_games = NflGame.with_teams.find_season(season.year).where(away_team_id: away_team.id).readonly(false).to_a
 
-      NflGame.transaction do
-      byes.each do |item|
-        home_team = get_team(item['Team'])
+      ActiveRecord::Base.transaction do
+        byes.each do |item|
+          home_team = get_team(item['Team'])
 
-        nfl_game = nfl_games.find { |g| g.home_team_id == home_team.id }
-        nfl_game = NflGame.find_or_create_by!(season_id: season.id, home_team_id: home_team.id, away_team_id: away_team.id) unless nfl_game
+          nfl_game = nfl_games.find { |g| g.home_team_id == home_team.id }
+          nfl_game = NflGame.find_or_create_by!(season_id: season.id, home_team_id: home_team.id, away_team_id: away_team.id) unless nfl_game
 
-        nfl_game.week = item['Week']
-        nfl_game.season_type_id = 1
+          nfl_game.week = item['Week']
+          nfl_game.season_type_id = 1
 
-        puts "Game data updated bye: #{season.year} Week #{nfl_game.week}, #{away_team.abbr} @#{home_team.abbr}" if nfl_game.changed?
+          puts "Game data updated bye: #{season.year} Week #{nfl_game.week}, #{away_team.abbr} @#{home_team.abbr}" if nfl_game.changed?
 
-        nfl_game.save
-      end
+          nfl_game.save
+        end
       end
     end
 
@@ -83,7 +83,7 @@ module Loaders
       games = get_game_scores(season)
       nfl_games = NflGame.with_teams.find_season(season.year).to_a
 
-      NflGame.transaction do
+      ActiveRecord::Base.transaction do
         games.each do |game|
           nfl_game = nfl_games.find { |g| g.external_game_id == game["GameKey"] }
           unless nfl_game

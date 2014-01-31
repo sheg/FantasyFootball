@@ -103,6 +103,8 @@ class CreateLeaguePlayerPoints < ActiveRecord::Migration
   end
 
   def down
+    execute "DROP PROCEDURE IF EXISTS LoadLeaguePlayerPoints;"
+    execute "DROP PROCEDURE IF EXISTS UpdateGamePlayerPoints;"
     drop_table :league_player_points
   end
 end
