@@ -1,6 +1,7 @@
 class PointsCalculator
   class PlayerGameData
     attr_accessor :player
+    attr_accessor :week
     attr_accessor :game_player
     attr_accessor :team
     attr_accessor :position
@@ -242,30 +243,37 @@ class PointsCalculator
     season = year ? NflSeason.find_by(year: year) : NflLoader.new.current_season
     season_type_id = 1 unless season_type_id
 
+    weeks = NflGame.where(season_id: season.id, season_type_id: season_type_id)
+    weeks = weeks.where(week: week) if week
+    weeks = weeks.select("distinct week").map { |g| g.week }.to_a
+
     #game_players = get_game_players(players, season, season_type_id, week).includes(:game, player: [ :news, :injuries, :teams, :positions ]).to_a
-    game_players = get_game_players(players, season, season_type_id, week).includes(:game, :player).to_a
+    game_players = get_game_players(players, season, season_type_id, week).includes(:game, :player, :team, :position).to_a
     stats = get_stats(players, season, season_type_id, week)
 
-    player_hash = game_players.group_by{ |gp| gp.player }
+    player_hash = game_players.group_by{ |gp| [ gp.player, gp.game.week ] }
 
-    players.each { |player|
-      data = PlayerGameData.new
-      data.player = player
+    weeks.each { |data_week|
+      players.each { |player|
+        data = PlayerGameData.new
+        data.player = player
+        data.week = data_week
 
-      game_player = player_hash[player]
-      if(game_player)
-        data.game_player = game_player[0]
-        data.game = data.game_player.game
-        data.game_stats = stats[data.game_player.id]
-        data.team = data.game_player.team
-        data.position = data.game_player.position
-        data.points = data.game_player.points
-      else
-        data.team = data.player.team_for_week(season_type_id, week)
-        data.position = data.player.position_for_week(season_type_id, week)
-      end
+        game_player = player_hash[ [player, data_week] ]
+        if(game_player)
+          data.game_player = game_player[0]
+          data.game = data.game_player.game
+          data.game_stats = stats[data.game_player.id]
+          data.team = data.game_player.team
+          data.position = data.game_player.position
+          data.points = data.game_player.points
+        else
+          data.team = data.player.team_for_week(season_type_id, data_week)
+          data.position = data.player.position_for_week(season_type_id, data_week)
+        end
 
-      all_stats.push(data)
+        all_stats.push(data)
+      }
     }
 
     return all_stats
