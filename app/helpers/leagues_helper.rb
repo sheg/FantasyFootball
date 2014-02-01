@@ -133,7 +133,8 @@ module LeaguesHelper
   def catchup_draft
     current_draft_info = self.get_current_draft_info
     while(current_draft_info and current_draft_info.time_left < 0)
-      self.auto_draft_player(current_draft_info)
+      pick = self.auto_draft_player(current_draft_info)
+      break unless pick
       current_draft_info = self.get_current_draft_info
     end
   end
@@ -149,20 +150,30 @@ module LeaguesHelper
     players = NflPlayer.find_position(position).to_a
     pick = nil
 
-    while(true)
+    @retry_num = 0
+    while(pick.nil?)
       begin
+        break if @retry_num >= 10
+
         player = players.sample
-        pick = draft_info.current_team.draft_player(player.id, false)
+
         # Adjust the transaction date in case this draft was made after time expired for that pick
         if(draft_info.time_left < 0)
-          pick.transaction_date = draft_info.next_pick_time
-          pick.save
+          transaction_date = draft_info.next_pick_time
+        else
+          transaction_date = nil
         end
+        pick = draft_info.current_team.draft_player(player.id, false, transaction_date)
+
         puts "DraftOrder #{draft_info.current_team.draft_order}: Team #{draft_info.current_team.name} drafted position #{position}: #{player.full_name}"
-        break
       rescue Exception => e
-        puts "DraftOrder #{draft_info.current_team.draft_order}: Team #{draft_info.current_team.name} failed to draft position #{position}: #{player.full_name}"
-        puts "   #{e.message}"
+        if e.message.include?("already taken")
+          puts "DraftOrder #{draft_info.current_team.draft_order}: Team #{draft_info.current_team.name} failed to draft position #{position}: #{player.full_name}"
+          puts "   #{e.message}"
+          @retry_num += 1
+        else
+          raise e
+        end
       end
     end
 
