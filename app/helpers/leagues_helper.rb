@@ -29,9 +29,12 @@ module LeaguesHelper
     end
   end
 
-  def get_league_week_data_for_week(league_week)
+  def get_league_week_data_for_week(league_week = nil)
     week_data = get_league_week_data
     league_week = week_data.week_number unless league_week
+
+    return nil if league_week > self.total_weeks or league_week <= 0
+
     week_data.start_date += (league_week - week_data.week_number).weeks
     week_data.week_number = league_week
     return week_data
@@ -79,6 +82,7 @@ module LeaguesHelper
 
   def get_nfl_week_game_from_league_week(league_week)
     week_data = get_league_week_data_for_week(league_week)
+    return unless week_data
     get_nfl_week_game(week_data)
   end
 

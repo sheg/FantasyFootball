@@ -2,6 +2,8 @@ module TeamHelper
 
   def get_league_week_stats(league_week = nil)
     game = self.league.get_nfl_week_game_from_league_week(league_week)
+    return unless game
+
     players = self.get_roster(league_week)
     PointsCalculator.new.get_nfl_player_game_data(players, game.season.year, game.season_type_id, game.week)
   end

@@ -23,6 +23,10 @@ class League < ActiveRecord::Base
     self.size - self.teams_count
   end
 
+  def total_weeks
+    self.weeks + self.playoff_weeks
+  end
+
   def draft_transactions
     self.transactions.where(activity_type_id: ActivityType.DRAFT.id).order(:transaction_date)
   end

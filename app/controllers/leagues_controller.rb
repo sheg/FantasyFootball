@@ -51,6 +51,12 @@ class LeaguesController < ApplicationController
   #sandbox purposes... for now
   def set_current_week
     render text: "Current league is not set" unless @league
-    @current_week = @league.get_league_week_data(2.weeks.from_now).week_number + 1
+    current_week_data = @league.get_league_week_data_for_week()
+
+    if current_week_data
+      @current_week = current_week_data.week_number
+    else
+      @current_week = @league.weeks
+    end
   end
 end
