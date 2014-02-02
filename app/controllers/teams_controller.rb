@@ -29,7 +29,7 @@ class TeamsController < ApplicationController
   end
 
   def find_games_and_user_team
-    fail "no team set..." unless @team
+    render text: "No Team Found..." unless @team
     @games = Game.includes([:home_team, :away_team]).where("home_team_id = #{@team.id} OR away_team_id = #{@team.id}")
     @user_team = Team.includes([:user, :league]).find_by(user_id: current_user, league_id: @league)
   end
