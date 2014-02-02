@@ -120,6 +120,7 @@ module Loaders
       #puts items.count
       #return items
 
+      cache_timeout = 0
       teams = NflTeam.where.not(abbr: 'BYE').to_a
       items = []
 
@@ -151,7 +152,7 @@ module Loaders
     private :get_items
 
     def load_items(season, week, season_type_id, cache_timeout = 0)
-      NflGamePlayer.transaction do
+      ActiveRecord::Base.transaction do
         begin
           do_load_items(season, week, season_type_id, cache_timeout)
         rescue Exception => e

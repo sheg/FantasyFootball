@@ -29,6 +29,19 @@ module LeaguesHelper
     end
   end
 
+  def set_league_week_data
+    return if self.nfl_start_week
+    return if self.available_teams > 0
+    return if draft_transactions.count < self.teams_count * self.roster_count
+
+    data = get_league_week_data_for_week(1)
+    nfl_game = get_nfl_week_game(data)
+    self.nfl_start_week = nfl_game.week
+    self.nfl_start_week += 17 if nfl_game.season_type_id == 3
+    self.start_week_date = data.start_date
+    self.save
+  end
+
   def get_league_week_data_for_week(league_week = nil)
     week_data = get_league_week_data
     league_week = week_data.week_number unless league_week
@@ -82,7 +95,6 @@ module LeaguesHelper
 
   def get_nfl_week_game_from_league_week(league_week)
     week_data = get_league_week_data_for_week(league_week)
-    return unless week_data
     get_nfl_week_game(week_data)
   end
 

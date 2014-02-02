@@ -11,16 +11,18 @@ module Loaders
       year = season.year
       items = get_items(year, week, season_type_id, cache_timeout)
 
-      threads = Array.new
-      for i in 1..3
-        t = Thread.new { thread_process_injuries(season, items) }
-        t["name"] = i
-        threads.push(t)
-      end
+      thread_process_injuries(season, items)
 
-      threads.each do |t|
-        t.join
-      end
+      #threads = Array.new
+      #for i in 1..3
+      #  t = Thread.new { thread_process_injuries(season, items) }
+      #  t["name"] = i
+      #  threads.push(t)
+      #end
+      #
+      #threads.each do |t|
+      #  t.join
+      #end
 
       puts "Injuries: Week #{week}: loading time taken: #{Time.now - get_start}"
     end
@@ -40,7 +42,7 @@ module Loaders
         process_injury(season, item) if item
       end
 
-      ActiveRecord::Base.connection.close   # Release any DB connections used by the current thread
+      # ActiveRecord::Base.connection.close   # Release any DB connections used by the current thread
     end
     private :thread_process_injuries
 

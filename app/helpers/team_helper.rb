@@ -1,11 +1,16 @@
 module TeamHelper
-
   def get_league_week_stats(league_week = nil)
     game = self.league.get_nfl_week_game_from_league_week(league_week)
     return unless game
 
     players = self.get_roster(league_week)
-    PointsCalculator.new.get_nfl_player_game_data(players, game.season.year, game.season_type_id, game.week)
+    data = PointsCalculator.new.get_nfl_player_game_data(players, game.season.year, game.season_type_id, game.week)
+    game_players = data.map { |d| d.game_player }
+    league_points = LeaguePlayerPoint.where(league_id: self.league_id, nfl_game_player_id: game_players).to_a
+    league_points.each { |league_point|
+      data.find { |d| d.game_player and d.game_player.id == league_point.nfl_game_player_id }.league_points = league_point.points
+    }
+    return data
   end
 
   def get_roster(league_week = nil)

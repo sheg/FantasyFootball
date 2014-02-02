@@ -11,6 +11,11 @@ class TeamTransaction < ActiveRecord::Base
     where('league_id = ? and (from_team_id = ? or to_team_id = ?)', l, t, t).order(:transaction_date)
   }
 
+  after_save :try_set_league_week_data
+  def try_set_league_week_data
+    self.league.set_league_week_data
+  end
+
   def self.get_latest_pick_time(league_id)
     TeamTransaction.where(league_id: league_id, from_team_id: 0).maximum(:transaction_date)
   end
