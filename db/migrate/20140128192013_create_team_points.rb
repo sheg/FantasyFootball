@@ -128,6 +128,18 @@ class CreateTeamPoints < ActiveRecord::Migration
         group by t.id, NflWeek, g.season_type_id, g.week
         ;
 
+        update games g
+          inner join team_points tp on g.week = tp.league_week
+        set g.home_score = tp.points
+        where g.home_team_id = tp.team_id
+        ;
+
+        update games g
+          inner join team_points tp on g.week = tp.league_week
+        set g.away_score = tp.points
+        where g.away_team_id = tp.team_id
+        ;
+
         COMMIT;
       END;
     "

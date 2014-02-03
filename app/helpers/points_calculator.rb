@@ -35,6 +35,9 @@ class PointsCalculator
 
     sql = "CALL UpdateTeamPoints(null, #{season_type_id}, #{week});"
     LeaguePlayerPoint.connection.execute(sql)
+
+    sql = "CALL PopulateTeamStandings();"
+    LeaguePlayerPoint.connection.execute(sql)
   end
 
   def do_calculation(stats)
