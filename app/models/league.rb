@@ -23,6 +23,10 @@ class League < ActiveRecord::Base
     self.size - self.teams_count
   end
 
+  def full?
+    self.teams.count == self.size
+  end
+
   def total_weeks
     self.weeks + self.playoff_weeks
   end

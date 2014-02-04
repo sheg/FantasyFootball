@@ -14,6 +14,7 @@ FantasyFootball::Application.routes.draw do
   end
 
   match "/join_league", to: "leagues#join", via: "get", as:"join_league"
+  match "/leave_league", to: "leagues#leave", via: "post", as:"leave_league"
 
   resources :sessions, only: [:new, :create, :destroy], path_names: { new: 'signin', destroy: 'signout' }
   match "/signin", to: "sessions#new", via: "get"

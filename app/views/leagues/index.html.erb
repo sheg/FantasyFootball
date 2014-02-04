@@ -2,7 +2,8 @@
 
 <table class="table table-responsive table-condensed">
     <th>Name</th>
-    <th>Type</th>
+    <th>Format</th>
+    <th>Duration (Weeks)</th>
     <th>Size</th>
     <th>Available</th>
     <th>Entry</th>
@@ -12,13 +13,14 @@
         <tr>
           <td><%= link_to league.name, league %></td>
           <td><%= league.league_type.name %></td>
+          <td><%= league.weeks %></td>
           <td><%= league.size %></td>
           <td><%= league.available_teams %></td>
           <td><%= number_to_currency(league.entry_amount) %></td>
           <% if signed_in? && league.user_part_of_league?(current_user) %>
             <td class="joined-league">My League!</td>
           <% else %>
-            <td><%= link_to "Join", join_league_path, class: "btn btn-success" %></td>
+            <td><%= link_to "Join", join_league_path(league_id: league.id), method: "get", class: "btn btn-success" %></td>
           <% end %>
         </tr>
         <% end %>

@@ -23,14 +23,15 @@ class TeamsController < ApplicationController
   end
 
   private
-  def find_team_and_league
-    @team = Team.includes([:league, :user]).find_by(id: params[:team_id])
-    @league = @team.league
-  end
 
-  def find_games_and_user_team
-    render text: "No Team Found..." unless @team
-    @games = Game.includes([:home_team, :away_team]).where("home_team_id = #{@team.id} OR away_team_id = #{@team.id}")
-    @user_team = Team.includes([:user, :league]).find_by(user_id: current_user, league_id: @league)
-  end
+    def find_team_and_league
+      @team = Team.includes([:league, :user]).find_by(id: params[:team_id])
+      @league = @team.league
+    end
+
+    def find_games_and_user_team
+      render text: "No Team Found..." unless @team
+      @games = Game.includes([:home_team, :away_team]).where("home_team_id = #{@team.id} OR away_team_id = #{@team.id}")
+      @user_team = Team.includes([:user, :league]).find_by(user_id: current_user, league_id: @league)
+    end
 end
