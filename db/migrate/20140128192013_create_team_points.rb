@@ -107,7 +107,7 @@ class CreateTeamPoints < ActiveRecord::Migration
           inner join leagues l on l.id = t.league_id and (lpp.league_id = l.id or lpp.league_id is null)
         where
           (lpp.nfl_week = NflWeek and lpp.season_type_id = SeasonTypeId)
-          and l.nfl_start_week <= adjusted_week
+      		and (l.nfl_start_week <= adjusted_week and (l.weeks + l.playoff_weeks >= adjusted_week))
           and exists (select 1 from league_point_rules where league_id = l.id)
         group by ids.team_id
         ;
@@ -122,7 +122,7 @@ class CreateTeamPoints < ActiveRecord::Migration
         where
           g.season_type_id = SeasonTypeId
           and g.week = NflWeek
-          and l.nfl_start_week <= adjusted_week
+      		and (l.nfl_start_week <= adjusted_week and (l.weeks + l.playoff_weeks >= adjusted_week))
           and not exists (select 1 from league_point_rules where league_id = l.id)
         group by t.id, NflWeek, g.season_type_id, g.week
         ;
@@ -134,7 +134,7 @@ class CreateTeamPoints < ActiveRecord::Migration
           inner join leagues l on l.id = t.league_id
         where
           not exists (select 1 from team_points where team_id = ids.team_id and season_type_id = SeasonTypeid and nfl_week = NflWeek)
-          and l.nfl_start_week <= adjusted_week
+      		and (l.nfl_start_week <= adjusted_week and (l.weeks + l.playoff_weeks >= adjusted_week))
         ;
 
         update games g
