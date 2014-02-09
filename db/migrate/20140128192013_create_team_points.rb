@@ -26,6 +26,7 @@ class CreateTeamPoints < ActiveRecord::Migration
         declare _nfl_player_id, _from_team_id, _to_team_id integer;
         declare no_more_rows boolean;
         declare adjusted_week integer;
+        declare league_week integer;
 
         declare TransCursor cursor for
           select nfl_player_id, from_team_id, to_team_id
@@ -44,7 +45,7 @@ class CreateTeamPoints < ActiveRecord::Migration
         if SeasonTypeId = 3 then set adjusted_week = adjusted_week + 17; end if;
 
         drop table if exists temp_roster_player_ids;
-        create temporary table temp_roster_player_ids (team_id integer, player_id integer);
+        create temporary table temp_roster_player_ids (team_id integer, player_id integer, started bool);
 
         set no_more_rows = false;
         open TransCursor;
@@ -56,7 +57,7 @@ class CreateTeamPoints < ActiveRecord::Migration
           end if;
 
           if _to_team_id > 0 then
-            insert into temp_roster_player_ids (team_id, player_id) select _to_team_id, _nfl_player_id;
+            insert into temp_roster_player_ids (team_id, player_id, started) select _to_team_id, _nfl_player_id, false;
           end if;
 
           if _from_team_id > 0 then
@@ -65,6 +66,21 @@ class CreateTeamPoints < ActiveRecord::Migration
         end loop;
 
         close TransCursor;
+
+        select adjusted_week - l.nfl_start_week + 1 into league_week
+        from leagues l
+          inner join teams t on l.id = t.league_id and t.id = TeamId
+        ;
+
+
+        update temp_roster_player_ids temp, teams t, leagues l, starters s
+        set temp.started = true
+        where
+          temp.team_id = s.team_id and temp.player_id = s.player_id
+          and t.id = temp.team_id and l.id = t.league_id
+          and s.team_id = t.id and s.active = true
+          and s.week = adjusted_week - l.nfl_start_week + 1
+        ;
 
         if ReturnResults then select * from temp_roster_player_ids order by team_id, player_id; end if;
       END;
@@ -107,8 +123,9 @@ class CreateTeamPoints < ActiveRecord::Migration
           inner join leagues l on l.id = t.league_id and (lpp.league_id = l.id or lpp.league_id is null)
         where
           (lpp.nfl_week = NflWeek and lpp.season_type_id = SeasonTypeId)
-      		and (l.nfl_start_week <= adjusted_week and (l.weeks + l.playoff_weeks >= adjusted_week))
+          and (l.nfl_start_week <= adjusted_week and (l.nfl_start_week + l.weeks + l.playoff_weeks > adjusted_week))
           and exists (select 1 from league_point_rules where league_id = l.id)
+          and ids.started = true
         group by ids.team_id
         ;
 
@@ -122,8 +139,9 @@ class CreateTeamPoints < ActiveRecord::Migration
         where
           g.season_type_id = SeasonTypeId
           and g.week = NflWeek
-      		and (l.nfl_start_week <= adjusted_week and (l.weeks + l.playoff_weeks >= adjusted_week))
+          and (l.nfl_start_week <= adjusted_week and (l.nfl_start_week + l.weeks + l.playoff_weeks > adjusted_week))
           and not exists (select 1 from league_point_rules where league_id = l.id)
+          and ids.started = true
         group by t.id, NflWeek, g.season_type_id, g.week
         ;
 
@@ -134,7 +152,7 @@ class CreateTeamPoints < ActiveRecord::Migration
           inner join leagues l on l.id = t.league_id
         where
           not exists (select 1 from team_points where team_id = ids.team_id and season_type_id = SeasonTypeid and nfl_week = NflWeek)
-      		and (l.nfl_start_week <= adjusted_week and (l.weeks + l.playoff_weeks >= adjusted_week))
+          and (l.nfl_start_week <= adjusted_week and (l.nfl_start_week + l.weeks + l.playoff_weeks > adjusted_week))
         ;
 
         update games g

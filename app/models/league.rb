@@ -19,6 +19,21 @@ class League < ActiveRecord::Base
     user.leagues.include?(self)
   end
 
+  def total_weeks
+    self.weeks + self.playoff_weeks
+  end
+
+  def get_nfl_week(league_week)
+    nfl_week = self.nfl_start_week + league_week
+    season_type_id = 1
+    if(nfl_week > 17)
+      season_type_id = 3
+      nfl_week -= 17
+    end
+
+    { season_type_id: season_type_id, week: nfl_week }
+  end
+
   def available_teams
     self.size - self.teams_count
   end
