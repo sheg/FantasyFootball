@@ -152,7 +152,6 @@ module TeamHelper
     players = [players] unless players.is_a?(Array)
     league_week = self.league.get_league_week_data.week_number unless league_week
     league_week = [self.league.total_weeks, league_week].min
-    nfl_week = self.league.get_nfl_week(league_week)
 
     ActiveRecord::Base.transaction do
       begin

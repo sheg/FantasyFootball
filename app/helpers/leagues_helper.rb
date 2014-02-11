@@ -1,5 +1,4 @@
 module LeaguesHelper
-
   class WeekData
     attr_accessor :week_number,
                   :start_date
@@ -51,19 +50,30 @@ module LeaguesHelper
   end
 
   def get_league_week_data(date = nil)
+    start_week = nil
     week = WeekData.new
-    transactions = draft_transactions.to_a
-    order = get_draft_order
 
-    if(transactions.count == order.count)
+    if(self.start_week_date)
+      start_week = self.start_week_date
+    else
+      transactions = draft_transactions.to_a
+      order = get_draft_order
+    end
+
+    if(start_week or transactions.count == order.count)
       # Use the next upcoming Tuesday as the start of week
       start_day_of_week = 2
 
-      # Get last draft pick as league start time and add 1 week if it is on start day of week or later
-      max_transaction = transactions.max_by { |t| t.transaction_date }.transaction_date
-      max_transaction += 1.week if max_transaction.wday >= start_day_of_week
+      unless(start_week)
+        # Get last draft pick as league start time and add 1 week if it is on start day of week or later
+        max_transaction = transactions.max_by { |t| t.transaction_date }.transaction_date
+        max_transaction += 1.week if max_transaction.wday >= start_day_of_week
 
-      start_week = (max_transaction.beginning_of_week.at_beginning_of_day + start_day_of_week.days).to_date
+        start_week = max_transaction
+      end
+
+      start_week = (start_week.beginning_of_week.at_beginning_of_day + start_day_of_week.days).to_date
+
       date = DateTime.now unless date
       date = date.utc.at_beginning_of_day.to_date
 
