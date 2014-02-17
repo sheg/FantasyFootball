@@ -100,17 +100,16 @@ class CreateTeamPoints < ActiveRecord::Migration
         ;
 
         insert into team_points (team_id, league_week, season_type_id, nfl_week, points, created_at, updated_at)
-        select t.id as team_id, adjusted_week - l.nfl_start_week + 1 as league_week, lpp.season_type_id, lpp.nfl_week, sum(lpp.points), utc_timestamp(), utc_timestamp()
-        from league_player_points lpp
-          inner join teams t on lpp.league_id = t.league_id
-          inner join leagues l on l.id = t.league_id
-          inner join temp_roster_player_ids ids on ids.team_id = t.id and ids.player_id = lpp.player_id
+        select ids.team_id as team_id, adjusted_week - l.nfl_start_week + 1 as league_week, SeasonTypeId, NflWeek, coalesce(sum(lpp.points), 0), utc_timestamp(), utc_timestamp()
+        from temp_roster_player_ids ids
+          inner join league_player_points lpp on ids.player_id = lpp.player_id
+          inner join teams t on ids.team_id = t.id
+          inner join leagues l on l.id = t.league_id and (lpp.league_id = l.id or lpp.league_id is null)
         where
-          lpp.nfl_week = NflWeek
-          and lpp.season_type_id = SeasonTypeId
-          and l.nfl_start_week <= adjusted_week
+          (lpp.nfl_week = NflWeek and lpp.season_type_id = SeasonTypeId)
+      		and (l.nfl_start_week <= adjusted_week and (l.weeks + l.playoff_weeks >= adjusted_week))
           and exists (select 1 from league_point_rules where league_id = l.id)
-        group by t.id, NflWeek, lpp.season_type_id, lpp.nfl_week
+        group by ids.team_id
         ;
 
         insert into team_points (team_id, league_week, season_type_id, nfl_week, points, created_at, updated_at)
@@ -123,9 +122,31 @@ class CreateTeamPoints < ActiveRecord::Migration
         where
           g.season_type_id = SeasonTypeId
           and g.week = NflWeek
-          and l.nfl_start_week <= adjusted_week
+      		and (l.nfl_start_week <= adjusted_week and (l.weeks + l.playoff_weeks >= adjusted_week))
           and not exists (select 1 from league_point_rules where league_id = l.id)
         group by t.id, NflWeek, g.season_type_id, g.week
+        ;
+
+        insert into team_points (team_id, league_week, season_type_id, nfl_week, points, created_at, updated_at)
+        select ids.team_id, adjusted_week - l.nfl_start_week + 1 as league_week, SeasonTypeId, NflWeek, 0 as points, utc_timestamp(), utc_timestamp()
+        from (select distinct team_id from temp_roster_player_ids) ids
+          inner join teams t on ids.team_id = t.id
+          inner join leagues l on l.id = t.league_id
+        where
+          not exists (select 1 from team_points where team_id = ids.team_id and season_type_id = SeasonTypeid and nfl_week = NflWeek)
+      		and (l.nfl_start_week <= adjusted_week and (l.weeks + l.playoff_weeks >= adjusted_week))
+        ;
+
+        update games g
+          inner join team_points tp on g.week = tp.league_week
+        set g.home_score = tp.points
+        where g.home_team_id = tp.team_id
+        ;
+
+        update games g
+          inner join team_points tp on g.week = tp.league_week
+        set g.away_score = tp.points
+        where g.away_team_id = tp.team_id
         ;
 
         COMMIT;

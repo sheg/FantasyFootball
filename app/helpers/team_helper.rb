@@ -42,7 +42,7 @@ module TeamHelper
     end
   end
 
-  def draft_player(player_id, do_catchup = true)
+  def draft_player(player_id, do_catchup = true, override_transaction_date = nil)
     current_draft_info = League::DraftInfo.new
 
     if(self.league.draft_pick_time > 0)
@@ -60,7 +60,7 @@ module TeamHelper
         league_id: self.league.id,
         to_team_id: self.id,
         nfl_player_id: player_id,
-        transaction_date: Time.now.utc,
+        transaction_date: (override_transaction_date ? override_transaction_date : Time.now.utc),
         activity_type_id: ActivityType.DRAFT.id,
         draft_round: current_draft_info.draft_round,
         draft_pick: current_draft_info.draft_round_pick

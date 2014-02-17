@@ -16,16 +16,6 @@ class Team < ActiveRecord::Base
     self.league.set_draft_order
   end
 
-  def set_score_for_week(week, score)
-    game = Game.find_by('(home_team_id = ? or away_team_id = ?) and week = ?', self.id, self.id, week)
-    if game.home_team_id == self.id
-      game.home_score = score
-    else
-      game.away_score = score
-    end
-    game.save
-  end
-
   def remove_games
 
     #See league.set_schedule - last filled user leaves, then rejoins. Gotta wipe games so we can re-recreate the schedule for the new guy.
