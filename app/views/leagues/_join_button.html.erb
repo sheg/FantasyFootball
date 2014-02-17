@@ -1,0 +1,9 @@
+<% if signed_in? %>
+  <% if league.user_part_of_league?(current_user) %>
+    <td class="joined-league">My League!</td>
+  <% elsif league.full? %>
+    <td class="full-league">League Full</td>
+  <% else %>
+    <td><%= link_to "Join", join_league_path(league_id: league.id), method: "get", class: "btn btn-success" %></td>
+  <% end %>
+<% end %>

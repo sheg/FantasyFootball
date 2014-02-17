@@ -27,6 +27,14 @@ class League < ActiveRecord::Base
     self.teams.count == self.size
   end
 
+  def started?
+    if full?
+      !self.get_league_week_data_for_week.nil? #TALK TO FUSSY ABOUT THIS
+    else
+      false
+    end
+  end
+
   def total_weeks
     self.weeks + self.playoff_weeks
   end

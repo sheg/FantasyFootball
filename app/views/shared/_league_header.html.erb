@@ -4,27 +4,18 @@
   <li><%= link_to "Live Scoring", "#" %></li>
   <li><%= link_to "Standings", standings_league_path(@league) %></li>
 
-  <li class="dropdown">
-    <a class="dropdown-toggle" data-toggle="dropdown" href="#">
-      Schedules <span class="caret"></span>
-    </a>
-    <ul class="dropdown-menu">
-      <li><%= link_to "League Schedule", schedule_league_path(@league) %></li>
-      <li><%= link_to "Team Schedules", schedule_league_teams_path(@league) %></li>
-    </ul>
-  </li>
+  <%= render "shared/dropdown_menu_item", menu_data: { menu_name: "Schedules",
+                                                       menu_items: [ { item_name: "League Schedule", item_path: schedule_league_path(@league) },
+                                                                     { item_name: "Team Schedule", item_path: schedule_league_teams_path(@league) } ]
+                                                     } %>
 
   <li><%= link_to "Free Agency", "#" %></li>
   <li><%= link_to "Trades", "#" %></li>
   <li><%= link_to "Stat Central", "#" %></li>
 
-  <li class="dropdown">
-    <a class="dropdown-toggle" data-toggle="dropdown" href="#">
-      League Info <span class="caret"></span>
-    </a>
-    <ul class="dropdown-menu">
-      <li><%= link_to "Teams", league_info_league_path(@league) %></li>
-      <li><%= link_to "Rules", "#" %></li>
-    </ul>
-  </li>
+  <%= render "shared/dropdown_menu_item", menu_data: { menu_name: "League Info",
+                                                       menu_items: [ { item_name: "Settings", item_path: "#" },
+                                                                     { item_name: "Teams", item_path: league_info_league_path(@league) },
+                                                                     { item_name: "Rules", item_path: "#" } ]
+                                                     } %>
 </ul>

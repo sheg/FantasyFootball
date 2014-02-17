@@ -103,10 +103,11 @@ module LeaguesHelper
     league_size = [10, 12].sample if league_size == 0
     league_type = [1, 2, 3].sample
     entry = [25.00, 50.00, 100.00, 150.00].sample
+    draft_date = Random.rand(90).days.from_now
 
     new_league = League.create!(name: league_name, size: league_size,
                                 league_type_id: league_type, entry_amount: entry,
-                                fee_percent: 0.20)
+                                fee_percent: 0.20, draft_start_date: draft_date)
 
     (new_league.size - open_teams).times do
       user_email = "#{Random.rand(100000)}.#{Faker::Internet.email}"

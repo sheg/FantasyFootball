@@ -5,4 +5,4 @@
 <p>League News</p>
 <p>Standings</p>
 
-<td><%= link_to "Leave League", leave_league_path, method: "post", class: "btn btn-danger" %></td>
+<td><%= link_to "Leave League", league_team_path(@league, @user_team), method: "delete", class: "btn btn-danger" %></td>

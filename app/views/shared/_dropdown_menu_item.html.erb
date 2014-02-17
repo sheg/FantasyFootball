@@ -1,0 +1,10 @@
+<li class="dropdown">
+  <a class="dropdown-toggle" data-toggle="dropdown" href="#">
+    <%= menu_data[:menu_name] %> <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu">
+    <% menu_data[:menu_items].each do |menu_item| %>
+      <li><%= link_to menu_item[:item_name], menu_item[:item_path] %></li>
+    <% end %>
+  </ul>
+</li>

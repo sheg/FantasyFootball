@@ -28,6 +28,10 @@ $(function() {
 
   if ($('.week-bar button').length > 0) {
     var current_week = $('.week-bar').data('week')
-    $('.week-bar button')[current_week - 1].click();
+    if(current_week >= 1) {
+      $('.week-bar button')[current_week - 1].click();
+    } else {
+      $('.week-bar button')[0].click();
+    }
   }
 });

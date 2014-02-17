@@ -1,11 +1,13 @@
 class TeamsController < ApplicationController
+  include TeamHelper
+
   before_action :find_team_and_league, except: [:schedule]
 
   def show
     @user_team = Team.includes([:user, :league]).find_by(user_id: current_user, league_id: @league)
 
     # Get roster and stats for the team for the given week
-    @data = @user_team.get_league_week_stats()
+    #@data = @user_team.get_league_week_stats()
 
     redirect_to(leagues_path, notice: "You are not part of this league") unless @user_team
   end
@@ -20,6 +22,16 @@ class TeamsController < ApplicationController
       find_games_and_user_team
     end
     render partial: "team_schedule" if params[:use_json]
+  end
+
+  def destroy
+    team = Team.find_by(id: params[:team_id])
+    if team
+      league = team.league
+      leave_league(league, team)
+    else
+      redirect_to(leagues_path, notice: "No Team Selected...")
+    end
   end
 
   private

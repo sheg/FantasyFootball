@@ -8,13 +8,12 @@ FantasyFootball::Application.routes.draw do
       get :standings
       get :league_info
     end
-    resources :teams, param: :team_id, only: [:show] do
+    resources :teams, param: :team_id, only: [:show, :destroy] do
       get :schedule, on: :collection
     end
   end
 
   match "/join_league", to: "leagues#join", via: "get", as:"join_league"
-  match "/leave_league", to: "leagues#leave", via: "post", as:"leave_league"
 
   resources :sessions, only: [:new, :create, :destroy], path_names: { new: 'signin', destroy: 'signout' }
   match "/signin", to: "sessions#new", via: "get"
@@ -22,6 +21,5 @@ FantasyFootball::Application.routes.draw do
 
   resources :users, except: [:index]
   match "/users/email_exists/:email_address", to: "users#email_exists", via: "get", constraints: { :email_address => /[^\/]+/ }
-  match "/users/:id/user_leagues", to: "users#user_leagues", via: "get", as: "user_leagues"
   match "/signup", to: "users#new", via: "get"
 end
