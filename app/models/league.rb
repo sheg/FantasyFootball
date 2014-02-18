@@ -19,10 +19,6 @@ class League < ActiveRecord::Base
     user.leagues.include?(self)
   end
 
-  def total_weeks
-    self.weeks + self.playoff_weeks
-  end
-
   def get_nfl_week(league_week)
     nfl_week = self.nfl_start_week + league_week
     season_type_id = 1
