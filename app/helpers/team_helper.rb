@@ -15,20 +15,34 @@ module TeamHelper
 
   def get_league_week_stats(league_week = nil)
     game = self.league.get_nfl_week_game_from_league_week(league_week)
-    return unless game
+    roster = self.get_roster(league_week)
+    player_ids = roster.map { |r| r[:player_id] }
+    players = NflPlayer.where(id: player_ids).to_a
 
-    players = self.get_roster(league_week)
     data = PointsCalculator.new.get_nfl_player_game_data(players, game.season.year, game.season_type_id, game.week)
     game_players = data.map { |d| d.game_player }
     league_points = LeaguePlayerPoint.where(league_id: self.league_id, nfl_game_player_id: game_players).to_a
     league_points.each { |league_point|
       data.find { |d| d.game_player and d.game_player.id == league_point.nfl_game_player_id }.league_points = league_point.points
     }
+
+    roster.find_all { |r| r[:started] == 1 }.each { |r|
+      data.find { |d| d.player and d.player.id == r[:player_id] }.started = r[:started]
+    }
+
     return data
   end
 
   def get_roster(league_week = nil)
-    players = TeamTransaction.get_players_for_league_team(self.league_id, self.id, league_week)
+    #players = TeamTransaction.get_players_for_league_team(self.league_id, self.id, league_week)
+    nfl_week_game = self.league.get_nfl_week_game_from_league_week(league_week)
+    nfl_week_game = self.league.get_nfl_week_game_from_league_week(self.league.total_weeks) unless nfl_week_game
+
+    results = ActiveRecord::Base.connection.execute("call GetTeamRoster(#{self.id}, #{nfl_week_game.season_type_id}, #{nfl_week_game.week}, true);")
+    roster = results.each(as: :hash, symbolize_keys: true).to_a
+    ActiveRecord::Base.connection.close
+
+    return roster
   end
 
   def check_player_taken(player_id)
@@ -101,6 +115,67 @@ module TeamHelper
         transaction_date: Time.now.utc,
         activity_type_id: ActivityType.DROP.id
     )
+  end
+
+  def add_starters(players, league_week = nil)
+    players = [players] unless players.is_a?(Array)
+    roster = get_roster().map { |r| r[:player_id] }
+    league_week = self.league.get_league_week_data.week_number unless league_week
+    league_week = [self.league.total_weeks, league_week].min
+    nfl_week = self.league.get_nfl_week(league_week)
+
+    puts roster.inspect
+    puts players.inspect
+    ActiveRecord::Base.transaction do
+      begin
+        starters = Starter.where(team_id: self.id, week: league_week, active: true).map { |s| s.player_id }
+        invalid = players - roster
+        if(invalid.count > 0)
+          raise "Cannot start players, not on roster [#{invalid.join(', ')}]"
+        end
+
+        new_starters = players | starters
+        players = NflPlayer.where(id: new_starters).to_a
+
+        positions = []
+        players.each { |player|
+          position = player.position_for_week(nfl_week[:season_type_id], nfl_week[:week])
+          unless position
+            raise "Invalid starter, PlayerId #{player.id}, cannot find position for league week #{league_week}"
+          end
+          positions.push(position.abbr)
+        }
+        unless(self.league.league_type.validate_starting_positions(positions))
+          raise "Invalid starting lineup for league type, starting positions [#{positions.join(', ')}]"
+        end
+
+        new_starters.each { |id|
+          starter = Starter.find_or_create_by(team_id: self.id, week: league_week, player_id: id)
+          starter.active = true
+          starter.save
+        }
+      rescue Exception => e
+        puts e.message[0,400]
+        puts e.backtrace.join("\n   ")
+        raise ActiveRecord::Rollback
+      end
+    end
+  end
+
+  def drop_starters(players, league_week = nil)
+    players = [players] unless players.is_a?(Array)
+    league_week = self.league.get_league_week_data.week_number unless league_week
+    league_week = [self.league.total_weeks, league_week].min
+
+    ActiveRecord::Base.transaction do
+      begin
+        starter = Starter.where(team_id: self.id, week: league_week, player_id: players).destroy_all
+      rescue Exception => e
+        puts e.message[0,400]
+        puts e.backtrace.join("\n   ")
+        raise ActiveRecord::Rollback
+      end
+    end
   end
 
 end

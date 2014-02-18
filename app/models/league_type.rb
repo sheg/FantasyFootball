@@ -8,7 +8,7 @@ class LeagueType < ActiveRecord::Base
 
   def validate_starting_positions(positions)
     valid = true
-    slots = @slots
+    slots = get_starting_slots
 
     positions.each { |p|
       found_index = nil
@@ -28,7 +28,7 @@ class LeagueType < ActiveRecord::Base
 
     puts
     puts slots.inspect
-    valid = false if slots.count > 0
+    #valid = false if slots.count > 0
 
     valid
   end
