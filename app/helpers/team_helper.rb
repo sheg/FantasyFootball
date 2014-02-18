@@ -1,4 +1,18 @@
 module TeamHelper
+
+  def leave_league(league, team)
+    unless league.started?
+      if team
+        team.destroy!
+        redirect_to(leagues_path, notice: "Thanks for playing - Please choose from any other leagues below")
+      else
+        redirect_to(leagues_path, notice: "No Team Selected...")
+      end
+    else
+      redirect_to(league_path(self), notice: "League has already started - please contact customer service for further assistance")
+    end
+  end
+
   def get_league_week_stats(league_week = nil)
     game = self.league.get_nfl_week_game_from_league_week(league_week)
     roster = self.get_roster(league_week)

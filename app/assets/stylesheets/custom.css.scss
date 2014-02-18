@@ -150,7 +150,13 @@ label.required:after{
 .joined-league {
   font-weight: bold;
   font-style: italic;
-  color: darkslategrey;
+  color: green;
+}
+
+.full-league {
+  font-weight: bold;
+  font-style: italic;
+  color: #8b0016;
 }
 
 .user-combobox {

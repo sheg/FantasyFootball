@@ -3,9 +3,12 @@ FantasyFootball::Application.routes.draw do
   root "fantasy_football#home"
 
   resources :leagues, param: :league_id, only: [:index, :show, :new, :create] do
-    get :schedule, on: :member
-    get :standings, on: :member
-    resources :teams, param: :team_id, only: [:show] do
+    member do
+      get :schedule
+      get :standings
+      get :league_info
+    end
+    resources :teams, param: :team_id, only: [:show, :destroy] do
       get :schedule, on: :collection
     end
   end
@@ -18,6 +21,5 @@ FantasyFootball::Application.routes.draw do
 
   resources :users, except: [:index]
   match "/users/email_exists/:email_address", to: "users#email_exists", via: "get", constraints: { :email_address => /[^\/]+/ }
-  match "/users/:id/user_leagues", to: "users#user_leagues", via: "get", as: "user_leagues"
   match "/signup", to: "users#new", via: "get"
 end

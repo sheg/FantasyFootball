@@ -3,6 +3,7 @@ class UsersController < ApplicationController
   before_action :correct_user, only: [:show, :edit, :update, :user_leagues]
 
   def show
+    @user_leagues = @user.leagues
   end
 
   def new
@@ -34,10 +35,6 @@ class UsersController < ApplicationController
   end
 
   def destroy
-  end
-
-  def user_leagues
-    @user_leagues = @user.leagues
   end
 
   def email_exists

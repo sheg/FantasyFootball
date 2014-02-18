@@ -11,6 +11,9 @@ Bundler.require(:default, Rails.env)
 module FantasyFootball
   class Application < Rails::Application
 
+    #To get rid of annoying warning message on OSX
+    config.i18n.enforce_available_locales = true
+
     config.assets.precompile += %w(*.png *.jpg *.jpeg *.gif)
     config.middleware.use Rack::Deflater
     config.beginning_of_week = :sunday

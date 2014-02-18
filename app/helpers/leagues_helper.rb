@@ -35,15 +35,30 @@ module LeaguesHelper
 
     data = get_league_week_data_for_week(1)
     nfl_game = get_nfl_week_game(data)
+
+    unless nfl_game
+      nfl_game = NflGame.where(season_type_id: 1, week: 1).order(start_time: :desc).first
+      raise "The season is over" if nfl_game.start_time < data.start_date
+
+      data.start_date = nfl_game.start_time.beginning_of_week - 1.week + 2.days
+    end
+
     self.nfl_start_week = nfl_game.week
     self.nfl_start_week += 17 if nfl_game.season_type_id == 3
+    self.nfl_start_week = 1 if nfl_game.season_type_id == 2
+
     self.start_week_date = data.start_date
+    self.start_week_date += (5 - nfl_game.week).weeks if nfl_game.season_type_id == 2
+
     self.save
   end
 
-  def get_league_week_data_for_week(league_week)
+  def get_league_week_data_for_week(league_week = nil)
     week_data = get_league_week_data
     league_week = week_data.week_number unless league_week
+
+    return nil if league_week > self.total_weeks or league_week <= 0
+
     week_data.start_date += (league_week - week_data.week_number).weeks
     week_data.week_number = league_week
     return week_data
@@ -110,10 +125,11 @@ module LeaguesHelper
     league_size = [10, 12].sample if league_size == 0
     league_type = [1, 2, 3].sample
     entry = [25.00, 50.00, 100.00, 150.00].sample
+    draft_date = Random.rand(90).days.from_now
 
     new_league = League.create!(name: league_name, size: league_size,
                                 league_type_id: league_type, entry_amount: entry,
-                                fee_percent: 0.20)
+                                fee_percent: 0.20, draft_start_date: draft_date)
 
     (new_league.size - open_teams).times do
       user_email = "#{Random.rand(100000)}.#{Faker::Internet.email}"
@@ -175,11 +191,11 @@ module LeaguesHelper
         end
         pick = draft_info.current_team.draft_player(player.id, false, transaction_date)
 
-        puts "DraftOrder #{draft_info.current_team.draft_order}: Team #{draft_info.current_team.name} drafted position #{position}: #{player.full_name}"
+        #puts "DraftOrder #{draft_info.current_team.draft_order}: Team #{draft_info.current_team.name} drafted position #{position}: #{player.full_name}"
       rescue Exception => e
         if e.message.include?("already taken")
-          puts "DraftOrder #{draft_info.current_team.draft_order}: Team #{draft_info.current_team.name} failed to draft position #{position}: #{player.full_name}"
-          puts "   #{e.message}"
+          #puts "DraftOrder #{draft_info.current_team.draft_order}: Team #{draft_info.current_team.name} failed to draft position #{position}: #{player.full_name}"
+          #puts "   #{e.message}"
           @retry_num += 1
         else
           raise e
@@ -214,6 +230,7 @@ module LeaguesHelper
     games_per_week = count / 2
     for week in 0...unique_weeks
       for i in 0...games_per_week
+
         x = (week + i) % (count - 1)
         y = (count - 1 - i + week) % (count - 1)
 
@@ -227,7 +244,6 @@ module LeaguesHelper
     end
 
     weeks = weeks.each_slice(count).to_a
-    weeks = weeks[0..self.weeks-1]
 
     remaining_games = (self.weeks - (self.size - 1))
     remaining_games.times do |remaining_week_index|

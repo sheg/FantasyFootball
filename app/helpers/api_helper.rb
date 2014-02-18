@@ -18,6 +18,7 @@ module ApiHelper
   end
 
   def load_json_data(url, cache_file, cache_seconds = 0)
+    cache_seconds = 0
     cache_fullpath = File.join(@base_folder, @my_folder, cache_file)
     FileUtils.mkpath(File.dirname(cache_fullpath))
     use_cache = false
