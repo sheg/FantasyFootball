@@ -34,7 +34,7 @@ module Loaders
         NflPlayer
       }
 
-      while array.count > 0
+      while array && array.count > 0
         item = nil
         Thread.exclusive {
           item = array.pop

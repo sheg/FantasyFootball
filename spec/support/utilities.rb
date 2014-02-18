@@ -1,9 +1,13 @@
-def create_league(league_size = 0, open_teams = 0)
+def create_league(league_size = 0, open_teams = 0, draft_started = false)
   league_name = Faker::Company.catch_phrase
   league_size = [10, 12].sample if league_size == 0
   league_type = [1, 2, 3].sample
   entry = [25.00, 50.00, 100.00, 150.00].sample
-  draft_date = Random.rand(90).days.from_now
+  if draft_started
+    draft_date = Random.rand(90).days.ago
+  else
+    draft_date = Random.rand(90).days.from_now
+  end
 
   new_league = League.create!(name: league_name, size: league_size,
                               league_type_id: league_type, entry_amount: entry,

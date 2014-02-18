@@ -36,9 +36,21 @@ module LeaguesHelper
 
     data = get_league_week_data_for_week(1)
     nfl_game = get_nfl_week_game(data)
+
+    unless nfl_game
+      nfl_game = NflGame.where(season_type_id: 1, week: 1).order(start_time: :desc).first
+      raise "The season is over" if nfl_game.start_time < data.start_date
+
+      data.start_date = nfl_game.start_time.beginning_of_week - 1.week + 2.days
+    end
+
     self.nfl_start_week = nfl_game.week
     self.nfl_start_week += 17 if nfl_game.season_type_id == 3
+    self.nfl_start_week = 1 if nfl_game.season_type_id == 2
+
     self.start_week_date = data.start_date
+    self.start_week_date += (5 - nfl_game.week).weeks if nfl_game.season_type_id == 2
+
     self.save
   end
 
@@ -169,11 +181,11 @@ module LeaguesHelper
         end
         pick = draft_info.current_team.draft_player(player.id, false, transaction_date)
 
-        puts "DraftOrder #{draft_info.current_team.draft_order}: Team #{draft_info.current_team.name} drafted position #{position}: #{player.full_name}"
+        #puts "DraftOrder #{draft_info.current_team.draft_order}: Team #{draft_info.current_team.name} drafted position #{position}: #{player.full_name}"
       rescue Exception => e
         if e.message.include?("already taken")
-          puts "DraftOrder #{draft_info.current_team.draft_order}: Team #{draft_info.current_team.name} failed to draft position #{position}: #{player.full_name}"
-          puts "   #{e.message}"
+          #puts "DraftOrder #{draft_info.current_team.draft_order}: Team #{draft_info.current_team.name} failed to draft position #{position}: #{player.full_name}"
+          #puts "   #{e.message}"
           @retry_num += 1
         else
           raise e

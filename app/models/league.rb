@@ -24,15 +24,11 @@ class League < ActiveRecord::Base
   end
 
   def full?
-    self.teams.count == self.size
+    self.teams_count == self.size
   end
 
   def started?
-    if full?
-      !self.get_league_week_data_for_week.nil? #TALK TO FUSSY ABOUT THIS
-    else
-      false
-    end
+    full? && (Time.now > self.draft_start_date)
   end
 
   def total_weeks

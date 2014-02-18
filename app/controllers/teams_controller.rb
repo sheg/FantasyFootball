@@ -5,11 +5,13 @@ class TeamsController < ApplicationController
 
   def show
     @user_team = Team.includes([:user, :league]).find_by(user_id: current_user, league_id: @league)
-
-    # Get roster and stats for the team for the given week
-    #@data = @user_team.get_league_week_stats()
-
     redirect_to(leagues_path, notice: "You are not part of this league") unless @user_team
+
+    if @league.started?
+      @roster_data = @user_team.get_league_week_stats(1)
+    else
+      redirect_to(@league, notice: "No team yet - Please execute a draft first")
+    end
   end
 
   def schedule

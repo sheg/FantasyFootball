@@ -11,8 +11,6 @@ describe League do
                          weeks: 13, start_week_date: 2.days.from_now)
   end
 
-  after  { @league = nil }
-
   subject { @league }
 
   it { should be_valid }
@@ -97,6 +95,119 @@ describe League do
       it "open scope should return empty" do
         League.open.should be_empty
       end
+    end
+  end
+
+  describe "draft started" do
+    describe "when the league is full" do
+      it "should show up as started" do
+        league = create_league(10,0,true)
+        league.started?.should be_true
+      end
+    end
+
+    describe "when the league not full" do
+      it "should show up as not started" do
+        league = create_league(10,1,true)
+        league.started?.should be_false
+      end
+    end
+  end
+
+  describe "draft did not start yet" do
+    describe "when the league is full" do
+      it "should show up as not started" do
+        league = create_league(10,0,false)
+        league.started?.should be_false
+      end
+    end
+
+    describe "when the league not full" do
+      it "should show up as not started" do
+        league = create_league(10,1,false)
+        league.started?.should be_false
+      end
+    end
+  end
+
+  describe "fully drafted league in preason" do
+    before do
+      @league = create_league(12, 0, true)
+      @league.draft_start_date = Date.new(2013,8,16)
+      @league.save!
+      @league.test_draft
+      @league = League.find(@league.id)
+    end
+
+    it "nfl start week should be set to one" do
+      @league.nfl_start_week.should_not be_nil
+      @league.nfl_start_week.should == 1
+    end
+
+    it "should have a populated start_week_date" do
+      @league.start_week_date.should_not be_nil
+      @league.start_week_date.should == Date.new(2013,9,3)
+      @league.start_week_date.wday.should == 2
+    end
+  end
+
+  describe "fully drafted league before preseason" do
+    before do
+      @league = create_league(12, 0, true)
+      @league.draft_start_date = Date.new(2013,5,15)
+      @league.save!
+      @league.test_draft
+      @league = League.find(@league.id)
+    end
+
+    it "nfl start week should be set to one" do
+      @league.nfl_start_week.should_not be_nil
+      @league.nfl_start_week.should == 1
+    end
+
+    it "should have a populated start_week_date" do
+      @league.start_week_date.should_not be_nil
+      @league.start_week_date.should == Date.new(2013,9,3)
+    end
+  end
+
+  describe "fully drafted league in the middle of the season" do
+    before do
+      @league = create_league(12, 0, true)
+      @league.draft_start_date = Date.new(2013,10,16)
+      @league.save!
+      @league.test_draft
+      @league = League.find(@league.id)
+    end
+
+    it "nfl start week should be set to one" do
+      @league.nfl_start_week.should_not be_nil
+      @league.nfl_start_week.should == 8
+    end
+
+    it "should have a populated start_week_date" do
+      @league.start_week_date.should_not be_nil
+      @league.start_week_date.should == Date.new(2013,10,22)
+    end
+  end
+
+  describe "fully drafted league on a monday during the season" do
+    before do
+      @league = create_league(12, 0, true)
+      @league.draft_start_date = Date.new(2013,10,14)
+      @league.save!
+      @league.test_draft
+      @league = League.find(@league.id)
+    end
+
+    it "nfl start week should be set to one" do
+      @league.nfl_start_week.should_not be_nil
+      @league.nfl_start_week.should == 7
+    end
+
+    it "should have a populated start_week_date for the following Tuesday" do
+      @league.start_week_date.should_not be_nil
+      @league.start_week_date.should == Date.new(2013,10,15)
     end
   end
 end
