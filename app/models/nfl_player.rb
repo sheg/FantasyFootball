@@ -38,6 +38,12 @@ class NflPlayer < ActiveRecord::Base
     week_order += week
   end
 
+  def game_for_week(season_type_id, week)
+    week_order = get_week_order(season_type_id, week)
+    game_player = self.game_players.find_by('nfl_games.week_order = ?', week_order)
+    game_player.game if game_player
+  end
+
   def get_latest_game(season_type_id, week)
     week_order = get_week_order(season_type_id, week)
     self.game_players.where('nfl_games.week_order <= ?', week_order).order('nfl_games.week_order desc').first
