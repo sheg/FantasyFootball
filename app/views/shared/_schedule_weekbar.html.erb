@@ -1,5 +1,5 @@
-<div class="btn-group week-bar" role="toolbar" data-week=<%= week %>>
-  <% for week_number in 1..@league.weeks %>
-      <button type="button" class="btn btn-default">Week <%= week_number %></button>
+<div class="btn-group week-bar" role="toolbar" data-current-week=<%= @current_week %> data-league=<%= @league.id %>>
+  <% for week_number in start_week..end_week %>
+      <button type="button" class="btn btn-default" data-selected-week=<%= week_number %>>Week <%= week_number %></button>
   <% end %>
 </div>

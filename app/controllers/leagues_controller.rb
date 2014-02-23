@@ -39,7 +39,9 @@ class LeaguesController < ApplicationController
   end
 
   def standings
-    @league = League.includes(games: [:home_team, :away_team]).find_by(id: params[:league_id])
+    league = League.includes(games: [:home_team, :away_team]).find_by(id: params[:league_id])
+    @current_standings = TeamStanding.for_league_week(league.id, @current_week)
+    render partial: "league_standings" if params[:current_week]
   end
 
   def schedule
@@ -75,15 +77,19 @@ class LeaguesController < ApplicationController
   def get_current_week
     render text: "Current league is not set..." unless @league
 
-    if @league.started?
-      current_week_data = @league.get_league_week_data_for_week
-      if current_week_data
-        @current_week = current_week_data.week_number
+    @current_week = params[:current_week]
+
+    unless @current_week
+      if @league.started?
+        current_week_data = @league.get_league_week_data_for_week
+        if current_week_data
+          @current_week = current_week_data.week_number
+        else
+          @current_week = @league.weeks
+        end
       else
-        @current_week = @league.weeks
+        @current_week = 0 #You should see your league before it starts - counting down or something...
       end
-    else
-      @current_week = 0 #You should see your league before it starts - counting down or something...
     end
   end
 end

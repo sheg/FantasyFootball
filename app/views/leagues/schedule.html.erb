@@ -2,7 +2,8 @@
 <h1>League Schedule</h1>
 
 <% if @league.available_teams == 0 %>
-    <%= render 'shared/schedule_weekbar', week: @current_week%>
+    <%= render 'shared/schedule_weekbar', start_week: 1, end_week: @league.weeks %>
+    <!-- Pass in league length-->
 
     <table class="table table-responsive table-condensed">
       <th>Home Team</th>

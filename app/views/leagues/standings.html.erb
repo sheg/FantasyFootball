@@ -1,25 +1,7 @@
 <%= render "shared/league_header" %>
 <h1>League Standings</h1>
 
-<table class="table table-responsive table-condensed standings-table">
-  <th>Team</th>
-  <th>Win</th>
-  <th>Loss</th>
-  <th>Tie</th>
-  <th>PF</th>
-  <th>PA</th>
-  <th>Streak</th>
-    <tbody>
-    <% @league.teams.each do |team| %>
-        <tr>
-            <%= content_tag(:td, link_to(team.name, '#', class: highlight_my_team(@user_team, team))) %>
-            <td><%= [1,2,3,4,5].sample %></td>
-            <td><%= [1,2,3,4,5].sample%></td>
-            <td><%= [1,2,3,4,5].sample%></td>
-            <td><%= [123,142,312,421,522].sample%></td>
-            <td><%= [122,142,152,222,152].sample%></td>
-            <td><%= ["2W","2L","3L","4W","5L"].sample%></td>
-        </tr>
-    <% end %>
-    </tbody>
-</table>
+<%= render 'shared/schedule_weekbar', start_week: 1, end_week: @league.weeks %>
+
+<div id="dynamic_league_standings">
+</div>

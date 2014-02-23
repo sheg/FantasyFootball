@@ -6,7 +6,7 @@ class TeamStanding < ActiveRecord::Base
   belongs_to :team
   has_one :league, through: :team
 
-  scope :for_league_week, ->(l, w) { joins(:team).where('week = ? and league_id = ?', w, l).order('percent desc') }
+  scope :for_league_week, ->(l, w) { joins(:team).includes(:team).where('week = ? and league_id = ?', w, l).order('percent desc') }
 
   def game
     Game.find_by("week = #{self.week} and (home_team_id = #{self.team_id} or away_team_id = #{self.team_id})")

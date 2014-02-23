@@ -1,13 +1,6 @@
-<%
-   # Move to controller
-   teams = @league.teams.to_a;
-   team_index = teams.find_index(@user_team);
-   teams.insert(0, teams.delete_at(team_index));
-%>
-
 <div class="team_info_panel">
     <div class="panel panel-default">
-        <% teams.each do |team| %>
+        <% @teams.each do |team| %>
             <div class="panel-body">
                 <%= tag("div", data: {team: team.id, league: team.league_id}, class: "team-panel") %>
                     <%= image_tag("default_team_icon.png", align: 'left') %>
