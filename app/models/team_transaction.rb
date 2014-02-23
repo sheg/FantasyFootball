@@ -25,7 +25,7 @@ class TeamTransaction < ActiveRecord::Base
     transactions = TeamTransaction.includes(:nfl_player).find_league_team(league_id, team_id)
     if league_week
       week = League.find_by(id: league_id).get_league_week_data_for_week(league_week)
-      transactions = transactions.where("transaction_date < ?", week.end_date)
+      transactions = transactions.where("transaction_date < ?", week.end_date).order(:transaction_date, :id)
     end
     transactions = transactions.to_a
 
@@ -39,9 +39,16 @@ class TeamTransaction < ActiveRecord::Base
     players.values
   end
 
-  def self.get_players_taken(league_id)
+  def self.get_players_taken(league_id, league_week = nil)
     players = []
-    transactions = TeamTransaction.find_league_team(league_id, 0).to_a
+    transactions = TeamTransaction.find_league_team(league_id, 0)
+
+    if league_week
+      week = League.find_by(id: league_id).get_league_week_data_for_week(league_week)
+      transactions = transactions.where("transaction_date < ?", week.end_date).order(:transaction_date, :id)
+    end
+    transactions = transactions.to_a
+
     transactions.each { |t|
       if(t.from_team_id == 0)             # Add to array any players that were taken from 0 (i.e. drafted from NFL pool)
         players.push t.nfl_player_id unless players.include?(t.nfl_player_id)

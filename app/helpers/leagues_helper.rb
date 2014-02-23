@@ -107,10 +107,12 @@ module LeaguesHelper
 
   def get_nfl_week_game(league_week_data)
     game = nil
-    # Adding extra weeks to end date in case of missing weeks (i.e. skipped week before super bowl)
-    games = NflGame.where('start_time between ? and ?', league_week_data.start_date + 1.days, league_week_data.end_date + 2.week + 1.days).order(:start_time)
-    if(games.count > 0)
-      game = games.first
+    if(league_week_data)
+      # Adding extra weeks to end date in case of missing weeks (i.e. skipped week before super bowl)
+      games = NflGame.where('start_time between ? and ?', league_week_data.start_date + 1.days, league_week_data.end_date + 2.week + 1.days).order(:start_time)
+      if(games.count > 0)
+        game = games.first
+      end
     end
     return game
   end
