@@ -1,7 +1,19 @@
 <%= render "shared/league_header" %>
+<%= render "shared/schedule_weekbar", start_week: 1, end_week: @league.weeks %>
 
-<h3 class="center">My team roster coming soon...</h3>
+<h3 class="center">Team Roster: <%= @user_team.name %></h3>
 
-<%# @roster_data.inspect.to_yaml %>
-
-<%= @roster_data.map {|d| [ d.player.id, d.player.full_name, d.points.to_s, d.league_points.to_s ]}.inspect.to_yaml %>
+<table class="table table-responsive table-condensed roster-table">
+  <th>Player</th>
+  <th>Position</th>
+  <th>Total Points</th>
+  <tbody>
+  <% @roster_data.each do |data| %>
+  <tr>
+    <td><%= data.player.full_name %></td>
+    <td><%= data.position.abbr %></td>
+    <td><%= data.league_points %></td>
+  </tr>
+  <% end %>
+  </tbody>
+</table>

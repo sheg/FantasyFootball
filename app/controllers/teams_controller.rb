@@ -9,7 +9,8 @@ class TeamsController < ApplicationController
     redirect_to(leagues_path, notice: "You are not part of this league") unless @user_team
 
     if @league.started?
-      @roster_data = @user_team.get_league_week_stats(@current_week.to_i)
+      team = Team.includes(:league).find_by(id: params[:team_id])
+      @roster_data = team.get_league_week_stats(@current_week.to_i)
     else
       redirect_to(@league, notice: "No team yet - Please execute a draft first")
     end
