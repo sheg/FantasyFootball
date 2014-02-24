@@ -3,17 +3,25 @@
 
 <h3 class="center">Team Roster: <%= @user_team.name %></h3>
 
+<div class="team-info">
+  <%= "Team Record: #{@team_standing.wins} - #{@team_standing.losses} - #{@team_standing.ties}" %>
+</div>
+
 <table class="table table-responsive table-condensed roster-table">
   <th>Player</th>
   <th>Position</th>
   <th>Total Points</th>
   <tbody>
-  <% @roster_data.each do |data| %>
-  <tr>
-    <td><%= data.player.full_name %></td>
-    <td><%= data.position.abbr %></td>
-    <td><%= data.league_points %></td>
-  </tr>
+  <% NflPosition.all.each do |nfl_position| %>
+  <% matches = @roster_data.find_all { |data| data.position.abbr == nfl_position.abbr } %>
+  <% matches.each do |positioned_player| %>
+      <tr>
+        <td><%= positioned_player.player.full_name %></td>
+        <td><%= positioned_player.position.abbr %></td>
+        <td></td>
+      </tr>
+    <% end %>
   <% end %>
+
   </tbody>
 </table>

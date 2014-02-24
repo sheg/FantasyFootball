@@ -11,6 +11,11 @@ class TeamsController < ApplicationController
     if @league.started?
       team = Team.includes(:league).find_by(id: params[:team_id])
       @roster_data = team.get_league_week_stats(@current_week.to_i)
+
+      current_standings = TeamStanding.for_league_week(@league.id, @current_week)
+      @team_standing = current_standings.find_by(team_id: params[:team_id])
+
+
     else
       redirect_to(@league, notice: "No team yet - Please execute a draft first")
     end
