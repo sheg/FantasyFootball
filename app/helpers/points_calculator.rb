@@ -29,6 +29,8 @@ class PointsCalculator
   end
 
   def do_calculation_db(season_type_id = nil, week = nil)
+    puts "Calculating points data for SeasonTypeId #{season_type_id}, Week #{week}"
+
     sql = "CALL UpdateGamePlayerPoints(#{season_type_id}, #{week});"
     ActiveRecord::Base.connection.execute(sql)
 
