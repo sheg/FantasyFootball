@@ -29,13 +29,12 @@ class NflPlayer < ActiveRecord::Base
   scope :sort_last_name, -> { order(:last_name) }
 
   def get_week_order(season_type_id, week)
-    week_order = 0
     if(season_type_id == 2)
       week_order = 10
     else
       week_order = season_type_id * 100
     end
-    week_order += week
+    week_order + week
   end
 
   def game_for_week(season_type_id, week)
@@ -48,15 +47,16 @@ class NflPlayer < ActiveRecord::Base
     week_order = get_week_order(season_type_id, week)
     game = self.game_players.where('nfl_games.week_order <= ?', week_order).order('nfl_games.week_order desc').first
     game = NflSeasonTeamPlayer.find_by(player_id: self.id) unless game
+    game
   end
 
   def team_for_week(season_type_id, week)
     game = get_latest_game(season_type_id, week)
-    return game.team
+    game.team
   end
 
   def position_for_week(season_type_id, week)
     game = get_latest_game(season_type_id, week)
-    return game.position
+    game.position
   end
 end
