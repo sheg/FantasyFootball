@@ -135,16 +135,12 @@ label.required:after{
 }
 
 .week-bar {
-  margin-bottom: 25px
+  margin-bottom: 20px
 }
 
 .highlight {
   color: green !important;
   font-weight: bold !important;
-}
-
-.schedule-games {
-  display: none;
 }
 
 .joined-league {
@@ -205,8 +201,4 @@ label.required:after{
   border: 1px solid #ddd;
   padding: 10px;
   display: inline-block;
-}
-
-#dynamic-team-schedule {
-  width: 60%;
 }

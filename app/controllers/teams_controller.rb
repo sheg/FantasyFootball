@@ -15,10 +15,10 @@ class TeamsController < ApplicationController
       current_standings = TeamStanding.for_league_week(@league.id, @current_week)
       @team_standing = current_standings.find_by(team_id: params[:team_id])
 
-
     else
       redirect_to(@league, notice: "No team yet - Please execute a draft first")
     end
+    render partial: "weekly_roster" if params[:use_json]
   end
 
   def schedule

@@ -1,7 +1,7 @@
 <%= render "shared/league_header" %>
 <h1>League Standings</h1>
 
-<%= render 'shared/schedule_weekbar', start_week: 1, end_week: @league.weeks %>
+<%= render 'shared/weekbar', ajax_path: standings_league_path ,start_week: 1, end_week: @league.weeks %>
 
-<div id="dynamic_league_standings">
+<div class="weekly-league-info">
 </div>

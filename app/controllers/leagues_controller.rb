@@ -41,21 +41,23 @@ class LeaguesController < ApplicationController
   def standings
     league = League.includes(games: [:home_team, :away_team]).find_by(id: params[:league_id])
     @current_standings = TeamStanding.for_league_week(league.id, @current_week)
-    render partial: "league_standings" if params[:current_week]
+    render partial: "league_standings" if params[:use_json]
   end
 
   def schedule
-    @league = League.includes(games: [:home_team, :away_team]).find_by(id: params[:league_id])
+    league = League.includes(games: [:home_team, :away_team]).find_by(id: params[:league_id])
 
-    unless @league
+    unless league
       redirect_to(leagues_path, notice: "Selected League not found")
       return
     end
 
-    unless @league.games
+    unless league.games
       redirect_to(league_path(@league), notice: "No games have been defined yet")
-      return
     end
+
+    @games_this_week = league.games.where(week: @current_week)
+    render partial: "league_schedule" if params[:use_json]
   end
 
   def league_info
