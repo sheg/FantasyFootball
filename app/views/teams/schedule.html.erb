@@ -1,6 +1,6 @@
 <%= render "shared/league_header" %>
 
-<% if @league.available_teams == 0 %>
+<% if @league.full? %>
     <h3>Team Schedules</h3>
 
     <div class="team_schedule">

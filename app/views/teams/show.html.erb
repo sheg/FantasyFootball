@@ -1,7 +1,6 @@
 <%= render "shared/league_header" %>
+<%= render "shared/weekbar", ajax_path: league_team_path(@league, params[:team_id]), start_week: 1, end_week: @league.weeks %>
 
-<h3 class="center">My team roster coming soon...</h3>
+<h3 class="center">Team Roster: <%= @user_team.name %></h3>
 
-<%= @data.inspect.to_yaml %>
-
-<%# @data.map {|d| [ d.player.full_name, d.points.to_s, d.league_points.to_s ]}.inspect.to_yaml %>
+<div class="weekly-league-info"></div>

@@ -1,0 +1,5 @@
+<div class="btn-group week-bar" role="toolbar" data-current-week=<%= @current_week %>>
+  <% for week_number in start_week..end_week %>
+    <%= link_to("week #{week_number}", "#{ajax_path}?current_week=#{week_number}", class: "btn btn-default") %>
+  <% end %>
+</div>

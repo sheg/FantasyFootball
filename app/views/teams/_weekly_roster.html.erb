@@ -1,0 +1,21 @@
+<div class="team-info">
+  <%= "Team Record: #{@team_standing.wins} - #{@team_standing.losses} - #{@team_standing.ties}" %>
+</div>
+
+<table class="table table-responsive table-condensed roster-table">
+  <th>Player</th>
+  <th>Position</th>
+  <th>Total Points</th>
+  <tbody>
+  <% NflPosition.all.each do |nfl_position| %>
+    <% matches = @roster_data.find_all { |data| data.position.abbr == nfl_position.abbr } %>
+    <% matches.each do |positioned_player| %>
+      <tr>
+        <td><%= positioned_player.player.full_name %></td>
+        <td><%= positioned_player.position.abbr %></td>
+        <td></td>
+      </tr>
+    <% end %>
+  <% end %>
+  </tbody>
+</table>

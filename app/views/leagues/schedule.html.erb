@@ -2,22 +2,10 @@
 <h1>League Schedule</h1>
 
 <% if @league.available_teams == 0 %>
-    <%= render 'shared/schedule_weekbar', week: @current_week%>
+  <%= render 'shared/weekbar', ajax_path: schedule_league_path, start_week: 1, end_week: @league.weeks %>
 
-    <table class="table table-responsive table-condensed">
-      <th>Home Team</th>
-      <th>Away Team</th>
-      <th>Result</th>
-      <tbody>
-      <% @league.games.each do |game| %>
-          <tr class="schedule-games game-<%= game.week %>">
-            <%= content_tag(:td, game.home_team.name, class: highlight_my_team(@user_team, game.home_team)) %>
-            <%= content_tag(:td, game.away_team.name, class: highlight_my_team(@user_team, game.away_team)) %>
-            <td><%= "#{game.home_score} - #{game.away_score}"%></td>
-          </tr>
-      <% end %>
-      </tbody>
-    </table>
+  <div class="weekly-league-info"></div>
+
 <% else %>
     <h3 class="center highlight">League not full yet... only <%= @league.available_teams %> slots to go!</h3>
 <% end %>

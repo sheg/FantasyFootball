@@ -1,0 +1,22 @@
+<table class="table table-responsive table-condensed standings-table">
+  <th>Team</th>
+  <th>Win</th>
+  <th>Loss</th>
+  <th>Tie</th>
+  <th>PF</th>
+  <th>PA</th>
+  <th>Streak</th>
+  <tbody>
+  <% @current_standings.each do |team_standing| %>
+    <tr>
+      <%= content_tag(:td, link_to(team_standing.team.name, '#', class: highlight_my_team(@user_team, team_standing.team))) %>
+      <td><%= team_standing.wins %></td>
+      <td><%= team_standing.losses %></td>
+      <td><%= team_standing.ties %></td>
+      <td><%= team_standing.points_for %></td>
+      <td><%= team_standing.points_against %></td>
+      <td><%= team_standing.streak %></td>
+    </tr>
+  <% end %>
+  </tbody>
+</table>
