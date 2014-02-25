@@ -27,5 +27,10 @@ namespace :ff do
         puts "No such league ID #{id}"
       end
     end
+
+    desc "Recalculate all League points, scores, standings, etc"
+    task recalculate_points: :environment do
+      PointsCalculator.new.update_game_player_points_for_games(NflGame.all)
+    end
   end
 end
