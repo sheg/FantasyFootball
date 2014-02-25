@@ -46,14 +46,17 @@ class NflPlayer < ActiveRecord::Base
 
   def get_latest_game(season_type_id, week)
     week_order = get_week_order(season_type_id, week)
-    self.game_players.where('nfl_games.week_order <= ?', week_order).order('nfl_games.week_order desc').first
+    game = self.game_players.where('nfl_games.week_order <= ?', week_order).order('nfl_games.week_order desc').first
+    game = NflSeasonTeamPlayer.find_by(player_id: self.id) unless game
   end
 
   def team_for_week(season_type_id, week)
-    get_latest_game(season_type_id, week).team
+    game = get_latest_game(season_type_id, week)
+    return game.team
   end
 
   def position_for_week(season_type_id, week)
-    get_latest_game(season_type_id, week).position
+    game = get_latest_game(season_type_id, week)
+    return game.position
   end
 end
