@@ -38,7 +38,6 @@ module TeamHelper
     grouped = Hash.new
 
     starter_groups = data.group_by { |d| d.started? }
-    starter_slots = self.league.league_type.get_starting_slots.map { |s| s.join(",") }
 
     grouped[:starters] = self.league.league_type.populate_positions(starter_groups[true])
     grouped[:starters] = [] unless grouped[:starters]
