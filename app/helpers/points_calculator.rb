@@ -12,6 +12,7 @@ class PointsCalculator
     attr_accessor :league_points
     attr_accessor :started
     attr_accessor :is_home
+    attr_accessor :bye
 
     def initialize
       self.points = 0.0
@@ -268,6 +269,8 @@ class PointsCalculator
 
     player_hash = game_players.group_by{ |gp| [ gp.player, gp.game.week ] }
 
+    byes = NflGame.where(season_id: season.id, away_team_id: 1).index_by { |g| g.home_team_id }
+
     weeks.each { |data_week|
       players.each { |player|
         data = PlayerGameData.new
@@ -288,6 +291,8 @@ class PointsCalculator
           data.team = data.player.team_for_week(season_type_id, data_week)
           data.position = data.player.position_for_week(season_type_id, data_week)
         end
+
+        data.bye = byes[data.team.id].week
 
         all_stats.push(data)
       }
