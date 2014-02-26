@@ -26,6 +26,10 @@ class PointsCalculator
       self.started = false
     end
 
+    def started?
+      started == 1
+    end
+
     def opponent_abbr
       abbr = 'N/A'
       abbr = (is_home ? '' : '@') + opponent.abbr if opponent
