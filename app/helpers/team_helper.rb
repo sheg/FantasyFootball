@@ -43,7 +43,7 @@ module TeamHelper
     grouped[:starters] = [] unless grouped[:starters]
     grouped[:bench] = starter_groups[false]
     grouped[:bench] = [] unless grouped[:bench]
-    grouped[:bench] = grouped[:bench].group_by { |d| d.position.abbr }
+    grouped[:bench] = grouped[:bench].sort { |a, b| a.position.sort_order <=> b.position.sort_order }.group_by { |d| d.position.abbr }
 
     grouped
   end

@@ -39,16 +39,17 @@ end
 
 puts 'Seeding Positions'
 positions = [
-  { abbr: "QB", name: 'Quarterback' },
-  { abbr: "RB", name: 'Running Back' },
-  { abbr: "WR", name: 'Wide Receiver' },
-  { abbr: "TE", name: 'Tight End' },
-  { abbr: "K", name: 'Kicker' },
-  { abbr: "DST", name: 'Defense' },
+  { abbr: "QB", name: 'Quarterback', sort_order: 10 },
+  { abbr: "RB", name: 'Running Back', sort_order: 20 },
+  { abbr: "WR", name: 'Wide Receiver', sort_order: 30 },
+  { abbr: "TE", name: 'Tight End', sort_order: 40 },
+  { abbr: "K", name: 'Kicker', sort_order: 50 },
+  { abbr: "DST", name: 'Defense', sort_order: 60 },
 ]
 positions.each do |data|
   position = NflPosition.find_or_create_by(abbr: data[:abbr])
   position.name = data[:name]
+  position.sort_order = data[:sort_order]
   position.save
 end
 @positions = Hash[NflPosition.all.map{ |p| [p.abbr, p]}]
