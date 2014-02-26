@@ -8,14 +8,21 @@ class PointsCalculator
     attr_accessor :position
     attr_accessor :game
     attr_accessor :game_stats
-    attr_accessor :points
+    attr_accessor :current_points
+    attr_accessor :last_points
+    attr_accessor :total_points
+    attr_accessor :average_points
     attr_accessor :league_points
     attr_accessor :started
     attr_accessor :is_home
     attr_accessor :bye
 
     def initialize
-      self.points = 0.0
+      self.current_points = 0.0
+      self.last_points = 0.0
+      self.total_points = 0.0
+      self.average_points = 0.0
+
       self.started = false
     end
 
@@ -271,6 +278,9 @@ class PointsCalculator
 
     byes = NflGame.where(season_id: season.id, away_team_id: 1).index_by { |g| g.home_team_id }
 
+    all_points = NflGamePlayer.unscoped.joins(:game).where(nfl_player_id: players).where("nfl_games.season_id = ? and nfl_games.season_type_id = ?", season.id, season_type_id)
+      .select("nfl_player_id, week, points").group_by { |gp| gp.nfl_player_id }
+
     weeks.each { |data_week|
       players.each { |player|
         data = PlayerGameData.new
@@ -286,13 +296,20 @@ class PointsCalculator
           data.is_home = (data.game.home_team_id == data.team.id)
           data.opponent = data.is_home ? data.game.away_team : data.game.home_team
           data.position = data.game_player.position
-          data.points = data.game_player.points
+          data.current_points = data.game_player.points
         else
           data.team = data.player.team_for_week(season_type_id, data_week)
           data.position = data.player.position_for_week(season_type_id, data_week)
         end
 
         data.bye = byes[data.team.id].week
+
+        points_til_now = all_points[player.id].find_all { |gp| gp.week <= data_week }
+        data.total_points = points_til_now.sum { |gp| gp.points }
+        data.average_points = (data.total_points / points_til_now.count).round(2) if points_til_now.count > 0
+
+        last_points = all_points[player.id].find { |gp| gp.week == data_week - 1 }
+        data.last_points = last_points.points if last_points
 
         all_stats.push(data)
       }
