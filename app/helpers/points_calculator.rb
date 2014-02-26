@@ -304,12 +304,15 @@ class PointsCalculator
 
         data.bye = byes[data.team.id].week
 
-        points_til_now = all_points[player.id].find_all { |gp| gp.week <= data_week }
-        data.total_points = points_til_now.sum { |gp| gp.points }
-        data.average_points = (data.total_points / points_til_now.count).round(2) if points_til_now.count > 0
+        all_points_for_player = all_points[player.id]
+        if all_points_for_player
+          points_til_now = all_points_for_player.find_all { |gp| gp.week <= data_week }
+          data.total_points = points_til_now.sum { |gp| gp.points }
+          data.average_points = (data.total_points / points_til_now.count).round(2) if points_til_now.count > 0
 
-        last_points = all_points[player.id].find { |gp| gp.week == data_week - 1 }
-        data.last_points = last_points.points if last_points
+          last_points = all_points[player.id].find { |gp| gp.week == data_week - 1 }
+          data.last_points = last_points.points if last_points
+        end
 
         all_stats.push(data)
       }
