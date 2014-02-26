@@ -306,6 +306,8 @@ class PointsCalculator
         end
 
         data.bye = byes[data.team.id].week
+        data.game = byes[data.team.id] unless data.game
+
         data.is_home = (data.game.home_team_id == data.team.id)
         data.opponent = data.is_home ? data.game.away_team : data.game.home_team
 
