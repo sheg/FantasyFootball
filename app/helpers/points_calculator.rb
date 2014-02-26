@@ -4,16 +4,24 @@ class PointsCalculator
     attr_accessor :week
     attr_accessor :game_player
     attr_accessor :team
+    attr_accessor :opponent
     attr_accessor :position
     attr_accessor :game
     attr_accessor :game_stats
     attr_accessor :points
     attr_accessor :league_points
     attr_accessor :started
+    attr_accessor :is_home
 
     def initialize
       self.points = 0.0
       self.started = false
+    end
+
+    def opponent_abbr
+      abbr = 'N/A'
+      abbr = (is_home ? '' : '@') + opponent.abbr if opponent
+      abbr
     end
 
     def find_season_type(season_type_id)
@@ -272,6 +280,8 @@ class PointsCalculator
           data.game = data.game_player.game
           data.game_stats = stats[data.game_player.id]
           data.team = data.game_player.team
+          data.is_home = (data.game.home_team_id == data.team.id)
+          data.opponent = data.is_home ? data.game.away_team : data.game.home_team
           data.position = data.game_player.position
           data.points = data.game_player.points
         else
