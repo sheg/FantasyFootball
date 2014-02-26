@@ -266,9 +266,9 @@ class PointsCalculator
     season = year ? NflSeason.find_by(year: year) : NflLoader.new.current_season
     season_type_id = 1 unless season_type_id
 
-    weeks = NflGame.where(season_id: season.id, season_type_id: season_type_id)
-    weeks = weeks.where(week: week) if week
-    weeks = weeks.select("distinct week").map { |g| g.week }.to_a
+    games = NflGame.where(season_id: season.id, season_type_id: season_type_id)
+    games = games.where(week: week) if week
+    weeks = games.select("distinct week").map { |g| g.week }.to_a
 
     #game_players = get_game_players(players, season, season_type_id, week).includes(:game, player: [ :news, :injuries, :teams, :positions ]).to_a
     game_players = get_game_players(players, season, season_type_id, week).includes(:game, :player, :team, :position).to_a
@@ -293,16 +293,17 @@ class PointsCalculator
           data.game = data.game_player.game
           data.game_stats = stats[data.game_player.id]
           data.team = data.game_player.team
-          data.is_home = (data.game.home_team_id == data.team.id)
-          data.opponent = data.is_home ? data.game.away_team : data.game.home_team
           data.position = data.game_player.position
           data.current_points = data.game_player.points
         else
           data.team = data.player.team_for_week(season_type_id, data_week)
           data.position = data.player.position_for_week(season_type_id, data_week)
+          data.game = games.find { |g| g.week == data_week and (g.home_team_id == data.team.id or g.away_team_id == data.team.id) }
         end
 
         data.bye = byes[data.team.id].week
+        data.is_home = (data.game.home_team_id == data.team.id)
+        data.opponent = data.is_home ? data.game.away_team : data.game.home_team
 
         all_points_for_player = all_points[player.id]
         if all_points_for_player
