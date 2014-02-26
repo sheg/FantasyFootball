@@ -1,21 +1,80 @@
 <div class="team-info">
-  <%= "Team Record: #{@team_standing.wins} - #{@team_standing.losses} - #{@team_standing.ties}" %>
+  <p><%= "Team Record: #{@team_standing.wins} - #{@team_standing.losses} - #{@team_standing.ties}" %></p>
+  <p>Waiver Rank: N/A </p>
 </div>
 
-<table class="table table-responsive table-condensed roster-table">
-  <th>Player</th>
-  <th>Position</th>
-  <th>Total Points</th>
+<h3>Starters</h3>
+<table class="table table-responsive table-condensed" border="2">
+  <thead>
+    <tr>
+      <th>POS</th>
+      <th>ACTION</th>
+      <th>PLAYER</th>
+      <th>INJ</th>
+      <th>BYE</th>
+      <th>OPP</th>
+      <th>WEATHER</th>
+      <th>LAST</th>
+      <th>AVG</th>
+      <th>TOTAL</th>
+    </tr>
+  </thead>
   <tbody>
-  <% NflPosition.all.each do |nfl_position| %>
-    <% matches = @roster_data.find_all { |data| data.position.abbr == nfl_position.abbr } %>
-    <% matches.each do |positioned_player| %>
-      <tr>
-        <td><%= positioned_player.player.full_name %></td>
-        <td><%= positioned_player.position.abbr %></td>
+  <% placeholder_slots = @league.league_type.get_starting_slots.map { |d| d.join(",") } %>
+  <% placeholder_slots.each do |slot| %>
+    <tr>
+      <td><%= slot %></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+  <% end %>
+  </tbody>
+</table>
+
+<h3>Bench</h3>
+<table class="table table-responsive table-condensed" border="2">
+  <thead>
+  <tr>
+    <th>POS</th>
+    <th>ACTION</th>
+    <th>PLAYER</th>
+    <th>INJ</th>
+    <th>BYE</th>
+    <th>OPP</th>
+    <th>WEATHER</th>
+    <th>LAST</th>
+    <th>AVG</th>
+    <th>TOTAL</th>
+  </tr>
+  </thead>
+  <tbody>
+  <% @grouped_roster_data.keys.each do |position_abbr| %>
+    <% @grouped_roster_data[position_abbr].each do |data| %>
+      <tr class="<%= data.started? ? "success":"" %>">
+        <td><%= data.position.abbr %></td>
+        <td><%= button_tag("MOVE", class: "btn btn-success roster-action") %></td>
+        <td>
+          <%= "#{data.player.full_name}, #{data.team.abbr}" %>
+          </br>
+          <%= data.game.start_time.in_time_zone("EST").strftime("%D %a %l:%M %p") if data.game && data.game.start_time %>
+        </td>
         <td></td>
+        <td><%= data.bye %></td>
+        <td><%= data.opponent_abbr %></td>
+        <td></td>
+        <td><%= data.last_points %></td>
+        <td><%= data.average_points %></td>
+        <td><%= data.total_points %></td>
       </tr>
     <% end %>
   <% end %>
   </tbody>
 </table>
+
