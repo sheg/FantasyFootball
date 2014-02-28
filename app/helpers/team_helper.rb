@@ -33,6 +33,21 @@ module TeamHelper
     return data
   end
 
+  def get_league_week_stats_grouped(league_week = nil)
+    data = get_league_week_stats(league_week)
+    grouped = Hash.new
+
+    starter_groups = data.group_by { |d| d.started? }
+
+    grouped[:starters] = self.league.league_type.populate_positions(starter_groups[true])
+    grouped[:starters] = [] unless grouped[:starters]
+    grouped[:bench] = starter_groups[false]
+    grouped[:bench] = [] unless grouped[:bench]
+    grouped[:bench] = grouped[:bench].sort { |a, b| a.position.sort_order <=> b.position.sort_order }.group_by { |d| d.position.abbr }
+
+    grouped
+  end
+
   def get_roster(league_week = nil)
     unless @roster
       #players = TeamTransaction.get_players_for_league_team(self.league_id, self.id, league_week)
