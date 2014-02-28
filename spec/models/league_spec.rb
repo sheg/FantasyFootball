@@ -180,7 +180,7 @@ describe League do
       @league = League.find(@league.id)
     end
 
-    it "nfl start week should be set to one" do
+    it "nfl start week should be set to it's appropriate start date" do
       @league.nfl_start_week.should_not be_nil
       @league.nfl_start_week.should == 8
     end
@@ -200,7 +200,7 @@ describe League do
       @league = League.find(@league.id)
     end
 
-    it "nfl start week should be set to one" do
+    it "nfl start week should be set to appropriate start date" do
       @league.nfl_start_week.should_not be_nil
       @league.nfl_start_week.should == 7
     end

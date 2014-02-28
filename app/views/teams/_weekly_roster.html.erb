@@ -1,19 +1,89 @@
 <div class="team-info">
-  <%= "Team Record: #{@team_standing.wins} - #{@team_standing.losses} - #{@team_standing.ties}" %>
+  <p><%= "Team Record: #{@team_standing.wins} - #{@team_standing.losses} - #{@team_standing.ties}" %></p>
+  <p>Waiver Rank: N/A </p>
 </div>
 
-<table class="table table-responsive table-condensed roster-table">
-  <th>Player</th>
-  <th>Position</th>
-  <th>Total Points</th>
+<h3>Starters</h3>
+<table class="table table-responsive table-condensed" border="2">
+  <thead>
+    <tr>
+      <th>POS</th>
+      <th>ACTION</th>
+      <th>PLAYER</th>
+      <th>INJ</th>
+      <th>BYE</th>
+      <th>OPP</th>
+      <th>WEATHER</th>
+      <th>LAST</th>
+      <th>AVG</th>
+      <th>TOTAL</th>
+    </tr>
+  </thead>
   <tbody>
-  <% NflPosition.all.each do |nfl_position| %>
-    <% matches = @roster_data.find_all { |data| data.position.abbr == nfl_position.abbr } %>
-    <% matches.each do |positioned_player| %>
-      <tr>
-        <td><%= positioned_player.player.full_name %></td>
-        <td><%= positioned_player.position.abbr %></td>
+  <% @grouped_roster_data[:starters].each do |content| %>
+    <% starter_data = content[:data] %>
+    <tr>
+      <td><%= content[:slot_desc] %></td>
+      <td><%= button_tag("SWAP", class: "btn btn-success roster-action") %></td>
+      <td>
+        <% if starter_data %>
+          <%= "#{starter_data.player.full_name}, #{starter_data.team.abbr}" %>
+          </br>
+          <%= starter_data.game.start_time.in_time_zone("EST").strftime("%D %a %l:%M %p") if starter_data.game && starter_data.game.start_time %>
+        <% end %>
+      </td>
+      <% if starter_data %>
         <td></td>
+        <td><%= starter_data.bye %></td>
+        <td><%= starter_data.opponent_abbr %></td>
+        <td></td>
+        <td><%= starter_data.last_points %></td>
+        <td><%= starter_data.average_points %></td>
+        <td><%= starter_data.total_points %></td>
+      <% else %>
+        <% 7.times do %>
+          <td></td>
+        <% end %>
+      <% end %>
+    </tr>
+  <% end %>
+  </tbody>
+</table>
+
+<h3>Bench</h3>
+<table class="table table-responsive table-condensed" border="2">
+  <thead>
+  <tr>
+    <th>POS</th>
+    <th>ACTION</th>
+    <th>PLAYER</th>
+    <th>INJ</th>
+    <th>BYE</th>
+    <th>OPP</th>
+    <th>WEATHER</th>
+    <th>LAST</th>
+    <th>AVG</th>
+    <th>TOTAL</th>
+  </tr>
+  </thead>
+  <tbody>
+  <% @grouped_roster_data[:bench].keys.each do |position_abbr| %>
+    <% @grouped_roster_data[:bench][position_abbr].each do |data| %>
+      <tr>
+        <td><%= data.position.abbr %></td>
+        <td><%= button_tag("SWAP", class: "btn btn-success roster-action") %></td>
+        <td>
+          <%= "#{data.player.full_name}, #{data.team.abbr}" %>
+          </br>
+          <%= data.game.start_time.in_time_zone("EST").strftime("%D %a %l:%M %p") if data.game && data.game.start_time %>
+        </td>
+        <td></td>
+        <td><%= data.bye %></td>
+        <td><%= data.opponent_abbr %></td>
+        <td><%= data.player.id %></td>
+        <td><%= data.last_points %></td>
+        <td><%= data.average_points %></td>
+        <td><%= data.total_points %></td>
       </tr>
     <% end %>
   <% end %>
