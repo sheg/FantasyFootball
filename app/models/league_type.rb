@@ -6,6 +6,29 @@ class LeagueType < ActiveRecord::Base
     @slots
   end
 
+  def populate_positions(data)
+    slot_data = []
+    get_starting_slots.each { |slot|
+      slot_data.push({ slot: slot, slot_desc: slot.join(","), data: nil })
+    }
+
+    slots = get_starting_slots
+    data.each { |d|
+      found_index = nil
+
+      p = d.position.abbr
+      options = slots.find_all{ |s| s.index(p) }.sort{ |s1, s2| s1.length <=> s2.length }
+      found_index = slots.index(options.first) if options.length > 0
+      raise "Invalid starters" unless found_index
+
+      item = slot_data.find { |s| s[:slot] == options.first and s[:data].nil? }
+      item[:data] = d if item
+      slots.delete_at(found_index)
+    }
+
+    slot_data
+  end
+
   def validate_starting_positions(positions)
     valid = true
     slots = get_starting_slots

@@ -4,16 +4,36 @@ class PointsCalculator
     attr_accessor :week
     attr_accessor :game_player
     attr_accessor :team
+    attr_accessor :opponent
     attr_accessor :position
     attr_accessor :game
     attr_accessor :game_stats
-    attr_accessor :points
+    attr_accessor :current_points
+    attr_accessor :last_points
+    attr_accessor :total_points
+    attr_accessor :average_points
     attr_accessor :league_points
     attr_accessor :started
+    attr_accessor :is_home
+    attr_accessor :bye
 
     def initialize
-      self.points = 0.0
+      self.current_points = 0.0
+      self.last_points = 0.0
+      self.total_points = 0.0
+      self.average_points = 0.0
+
       self.started = false
+    end
+
+    def started?
+      started == 1
+    end
+
+    def opponent_abbr
+      abbr = 'N/A'
+      abbr = (is_home ? '' : '@') + opponent.abbr if opponent
+      abbr
     end
 
     def find_season_type(season_type_id)
@@ -250,15 +270,20 @@ class PointsCalculator
     season = year ? NflSeason.find_by(year: year) : NflLoader.new.current_season
     season_type_id = 1 unless season_type_id
 
-    weeks = NflGame.where(season_id: season.id, season_type_id: season_type_id)
-    weeks = weeks.where(week: week) if week
-    weeks = weeks.select("distinct week").map { |g| g.week }.to_a
+    games = NflGame.where(season_id: season.id, season_type_id: season_type_id)
+    games = games.where(week: week) if week
+    weeks = games.select("distinct week").map { |g| g.week }.to_a
 
     #game_players = get_game_players(players, season, season_type_id, week).includes(:game, player: [ :news, :injuries, :teams, :positions ]).to_a
     game_players = get_game_players(players, season, season_type_id, week).includes(:game, :player, :team, :position).to_a
     stats = get_stats(players, season, season_type_id, week)
 
     player_hash = game_players.group_by{ |gp| [ gp.player, gp.game.week ] }
+
+    byes = NflGame.where(season_id: season.id, away_team_id: 1).index_by { |g| g.home_team_id }
+
+    all_points = NflGamePlayer.unscoped.joins(:game).where(nfl_player_id: players).where("nfl_games.season_id = ? and nfl_games.season_type_id = ?", season.id, season_type_id)
+      .select("nfl_player_id, week, points").group_by { |gp| gp.nfl_player_id }
 
     weeks.each { |data_week|
       players.each { |player|
@@ -273,10 +298,27 @@ class PointsCalculator
           data.game_stats = stats[data.game_player.id]
           data.team = data.game_player.team
           data.position = data.game_player.position
-          data.points = data.game_player.points
+          data.current_points = data.game_player.points
         else
           data.team = data.player.team_for_week(season_type_id, data_week)
           data.position = data.player.position_for_week(season_type_id, data_week)
+          data.game = games.find { |g| g.week == data_week and (g.home_team_id == data.team.id or g.away_team_id == data.team.id) }
+        end
+
+        data.bye = byes[data.team.id].week
+        data.game = byes[data.team.id] unless data.game
+
+        data.is_home = (data.game.home_team_id == data.team.id)
+        data.opponent = data.is_home ? data.game.away_team : data.game.home_team
+
+        all_points_for_player = all_points[player.id]
+        if all_points_for_player
+          points_til_now = all_points_for_player.find_all { |gp| gp.week <= data_week }
+          data.total_points = points_til_now.sum { |gp| gp.points }
+          data.average_points = (data.total_points / points_til_now.count).round(2) if points_til_now.count > 0
+
+          last_points = all_points[player.id].find { |gp| gp.week == data_week - 1 }
+          data.last_points = last_points.points if last_points
         end
 
         all_stats.push(data)
