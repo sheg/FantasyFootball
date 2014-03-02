@@ -10,9 +10,11 @@ FantasyFootball::Application.routes.draw do
     end
     resources :teams, param: :team_id, only: [:show, :destroy] do
       get :schedule, on: :collection
+      get :set_lineup, on: :member
     end
   end
 
+  #match "/set_lineup", to: "teams#set_lineup", via: "post"
   match "/join_league", to: "leagues#join", via: "get", as:"join_league"
 
   resources :sessions, only: [:new, :create, :destroy], path_names: { new: 'signin', destroy: 'signout' }
