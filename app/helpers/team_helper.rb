@@ -163,6 +163,66 @@ module TeamHelper
     starter = Starter.where(team_id: self.id, week: league_week, active: true).to_a
   end
 
+  def set_starters(player_ids, league_week = nil, now = nil)
+    player_ids = [player_ids] unless player_ids.is_a?(Array)
+    roster = get_roster(league_week).map { |r| r[:player_id] }
+    league_week = self.league.get_league_week_data.week_number unless league_week
+    league_week = [self.league.total_weeks, league_week].min
+    nfl_week = self.league.get_nfl_week(league_week)
+    now = Time.now unless now
+    now = Time.parse(now) if now.is_a? String
+    now = now.utc
+
+    ActiveRecord::Base.transaction do
+      #begin
+        invalid = player_ids - roster
+        if(invalid.count > 0)
+          raise "Cannot start players, not on roster [#{invalid.join(', ')}]"
+        end
+
+        starters = Starter.where(team_id: self.id, week: league_week)
+        starters.destroy_all if starters
+
+        starters = Starter.where(team_id: self.id, week: league_week, active: true).map { |s| s.player_id }
+        new_starters = player_ids | starters
+        players = NflPlayer.where(id: new_starters).to_a
+
+
+        positions = []
+        players.each { |player|
+          if player_ids.include?(player.id) and not starters.include?(player.id)
+            game = player.game_for_week(nfl_week[:season_type_id], nfl_week[:week])
+            if game
+              if game.start_time <= now
+                raise "Cannot add #{player.full_name} (Id #{player.id}), NFL game has already started"
+              end
+            end
+          end
+
+          position = player.position_for_week(nfl_week[:season_type_id], nfl_week[:week])
+          unless position
+            raise "Cannot add #{player.full_name} (Id #{player.id}), cannot find position for league week #{league_week}"
+          end
+          positions.push(position.abbr)
+        }
+
+        unless(self.league.league_type.validate_starting_positions(positions))
+          raise "Invalid starting lineup for league type, starting positions [#{positions.join(', ')}]"
+        end
+
+        new_starters.each { |id|
+          starter = Starter.find_or_create_by(team_id: self.id, week: league_week, player_id: id)
+          starter.active = true
+          starter.save
+        }
+      #rescue Exception => e
+      #  puts e.message[0,400]
+      #  puts e.backtrace.join("\n   ")
+      #  raise ActiveRecord::Rollback
+      #end
+    end
+  end
+
   def add_starters(player_ids, league_week = nil, now = nil)
     player_ids = [player_ids] unless player_ids.is_a?(Array)
     roster = get_roster(league_week).map { |r| r[:player_id] }

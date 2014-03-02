@@ -20,6 +20,15 @@ class TeamsController < ApplicationController
     render partial: "weekly_roster" if params[:use_json]
   end
 
+  def set_lineup
+    error = ""
+    begin
+      @team.set_starters(params['starters'].split(',').map { |x| x.to_i }, @current_week.to_i, 55.months.ago)
+    rescue Exception => e
+      error = e.message
+    end
+    render text: error
+  end
   def schedule
     if params[:team_id]
       find_team_and_league
