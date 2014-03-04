@@ -5,6 +5,7 @@ $(function() {
   var league_id = null;
   var team_id = null;
   var current_week = null;
+  var rosterActive = false;
 
   $('.weekly-league-info').on('loaded', function() {
     league_id = $("#current_league").val();
@@ -54,6 +55,7 @@ $(function() {
     var positions = position.split(",");
 
     $(".player-row .select").hide();
+    $(this).closest(".player-row").find(".cancel").show();
 
     $.each(positions, function(index, position) {
       if(position == "") { return }
@@ -72,6 +74,23 @@ $(function() {
 
     $(".weekly-league-info .swap-actions .select").show();
     $(".weekly-league-info .swap-actions .swap").hide();
+    $(".weekly-league-info .swap-actions .cancel").hide();
+
+    rosterActive = true;
+  });
+
+  $(".weekly-league-info").on('click', '.swap-actions .cancel', function(event) {
+    event.preventDefault();
+    $(".weekly-league-info .swap-actions .swap").hide();
+    $(this).closest(".player-row").find(".cancel").hide();
+    $(".weekly-league-info .swap-actions .select").show();
+    selectMove.removeClass("success");
+  });
+
+  $(window).bind('beforeunload', function() {
+    if (rosterActive) {
+      return 'Lineup not saved!';
+    }
   });
 
   $.fn.swap = function(other) {
