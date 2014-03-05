@@ -14,6 +14,7 @@ $(function() {
 
     var byeRows = $(".player-row .bye").filter(function(index) { return $(this).text() === current_week; }).closest('tr');
     byeRows.addClass("info");
+    $(".submit-lineup").attr('disabled', 'disabled');
   });
 
   $('.weekly-league-info').on('click', '.submit-lineup', function() {
@@ -39,6 +40,12 @@ $(function() {
           $("#success").show();
           $("#errors").html("").hide();
         }
+        rosterActive = false;
+        $(".swap-actions .cancel").hide();
+        $(".swap-actions .swap").hide();
+        selectMove.removeClass("success");
+        $(".player-row").removeClass("warning");
+        $(".submit-lineup").attr('disabled', 'disabled');
       },
 
       error: function(response) {
@@ -50,6 +57,8 @@ $(function() {
 
   $(".weekly-league-info").on('click', '.swap-actions .select', function(event) {
     event.preventDefault();
+    $("#success").hide();
+    $("#errors").hide();
     selectMove = $(this).closest("tr");
     var position = selectMove.attr('data-position');
     var positions = position.split(",");
@@ -71,12 +80,14 @@ $(function() {
     swapMove = $(this).closest("tr");
     selectMove.removeClass("success");
     selectMove.swap(swapMove);
+    swapMove.addClass("warning");
 
     $(".weekly-league-info .swap-actions .select").show();
     $(".weekly-league-info .swap-actions .swap").hide();
     $(".weekly-league-info .swap-actions .cancel").hide();
 
     rosterActive = true;
+    $(".submit-lineup").removeAttr('disabled');
   });
 
   $(".weekly-league-info").on('click', '.swap-actions .cancel', function(event) {
@@ -96,9 +107,14 @@ $(function() {
   $.fn.swap = function(other) {
     var thisPosition = $(this).find(".position").html();
     var otherPosition = $(other).find(".position").html();
+    var thisDataPosition = $(this).attr("data-position");
+    var otherDataPosition = $(other).attr("data-position");
 
     $(this).find(".position").html(otherPosition);
     $(other).find(".position").html(thisPosition);
+
+    $(this).attr("data-position", otherDataPosition);
+    $(other).attr("data-position", thisDataPosition);
 
     $(this).replaceWith($(other).after($(this).clone(true)));
   };
