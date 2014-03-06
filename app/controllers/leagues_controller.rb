@@ -1,7 +1,7 @@
 class LeaguesController < ApplicationController
   before_action :signed_in_user, except: [:index]
   before_action :user_team, except: [:index, :new, :create, :join]
-  before_action :get_current_week, except: [:index, :join]
+  before_action :get_current_week, except: [:new, :create, :index, :join]
 
   def index
     @leagues = League.all_leagues
@@ -14,9 +14,25 @@ class LeaguesController < ApplicationController
   end
 
   def new
+    @league = League.new
   end
 
   def create
+
+    start_date = ""
+    unless params[:league][:draft_start_date].empty?
+      start_date = Time.parse(params[:league][:draft_start_date]).utc
+    end
+
+    @league = League.new(name: params[:league][:name], size: params[:league][:size].to_i,
+                         league_type_id: params[:league][:league_type].to_i, entry_amount: params[:league][:entry_amount].to_i,
+                         draft_start_date: start_date, fee_percent: 0.20)
+
+    if @league.save
+      redirect_to(leagues_path, notice: "The league #{params[:league][:name]} was created successfully")
+    else
+      render 'new'
+    end
   end
 
   def join
@@ -94,4 +110,8 @@ class LeaguesController < ApplicationController
       end
     end
   end
+
+  #def league_params
+  #  params.require(:league).permit(:name, :size, :league_type, :entry_amount, :draft_start_date)
+  #end
 end

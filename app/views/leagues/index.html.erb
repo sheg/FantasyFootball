@@ -1,3 +1,5 @@
 <h1><%= "Leagues".titleize %></h1>
 
+<%= link_to "Create New league", new_league_path, class: "btn btn-warning" %>
+<hr>
 <%= render 'league_index_table', leagues: @leagues %>

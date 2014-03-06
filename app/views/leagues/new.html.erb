@@ -1,0 +1,65 @@
+<h1>Create New League</h1>
+
+<div class="row">
+  <div class="span3">
+    <%= form_for(@league) do |f| %>
+
+      <div class="span6">
+        <%= render "shared/error_messages", object: @league %>
+      </div>
+
+      <h4>Name</h4>
+      <%= f.text_field(:name) %>
+
+      <h4>Type</h4>
+      <div class="radio">
+        <label>
+          <% league_type = "Normal" %>
+          <% league_type_id = LeagueType.find_by(name: league_type).id %>
+          <input type="radio" name="league[league_type]" id="league_type_<%= league_type_id %>" value=<%= league_type_id %> checked>
+          <%=league_type%>
+        </label>
+        <label>
+          <% league_type = "Flex 9" %>
+          <% league_type_id = LeagueType.find_by(name: league_type).id %>
+          <input type="radio" name="league[league_type]" id="league_type_<%= league_type_id %>" value=<%= league_type_id %>>
+          <%=league_type%>
+        </label>
+        <label>
+          <% league_type = "Flex 10" %>
+          <% league_type_id = LeagueType.find_by(name: league_type).id %>
+          <input type="radio" name="league[league_type]" id="league_type_<%= league_type_id %>" value=<%= league_type_id %>>
+          <%=league_type%>
+        </label>
+      </div>
+      <hr>
+
+      <h4>Size</h4>
+      <div class="league-size">
+        <label class="radio inline">
+          <input type="radio" name="league[size]" id="league_size_10" value=10 checked>
+          10
+        </label>
+        <label class="radio inline">
+          <input type="radio" name="league[size]" id="league_size_12" value=12>
+          12
+        </label>
+      </div>
+      <hr>
+
+      <h4>Entry Amount</h4>
+      <div class="entry">
+        <% min_entry = 25 %>
+        <text id="extracted-fee-amount">$<%= min_entry %></text>
+        <%= f.range_field(:entry_amount, min: min_entry, max: 1000, step: 25, id: "entry-slider") %>
+      </div>
+
+      <h4>Draft Date</h4>
+      <div class="draft-date">
+        <%= f.text_field(:draft_start_date, id: "draft-date") %>
+      </div>
+
+      <%= f.submit("Create League", class: "btn btn-primary") %>
+    <% end %>
+  </div>
+</div>
