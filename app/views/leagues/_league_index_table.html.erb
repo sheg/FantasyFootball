@@ -16,7 +16,7 @@
       <td><%= league.size %></td>
       <td><%= league.available_teams %></td>
       <td><%= number_to_currency(league.entry_amount) %></td>
-      <td><%= league.draft_start_date.in_time_zone('EST').strftime("%A %B %C, %T") %></td>
+      <td><%= league.draft_start_date.in_time_zone("EST").strftime("%D %a %l:%M %p") %> EST</td>
       <%= render 'join_button', league: league %>
     </tr>
   <% end %>
