@@ -24,6 +24,7 @@ end
 
 gem 'jquery-ui-rails'
 gem 'jquery-rails'
+gem 'bootstrap-timepicker-rails'
 gem 'turbolinks', '1.1.1'
 gem 'jbuilder', '1.0.2'
 gem 'bcrypt-ruby', '~> 3.0.0'

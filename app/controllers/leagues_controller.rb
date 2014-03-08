@@ -18,10 +18,11 @@ class LeaguesController < ApplicationController
   end
 
   def create
-
     start_date = ""
-    unless params[:league][:draft_start_date].empty?
-      start_date = Time.parse(params[:league][:draft_start_date]).utc
+    unless params[:league][:draft_start_date].empty? && params[:league][:draft_time].empty?
+      date = params[:league][:draft_start_date]
+      time = params[:league][:draft_time]
+      start_date = Time.parse("#{date} #{time}").utc
     end
 
     @league = League.new(name: params[:league][:name], size: params[:league][:size].to_i,
