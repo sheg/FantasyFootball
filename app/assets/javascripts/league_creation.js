@@ -6,5 +6,5 @@ $(function() {
   });
 
   $("#draft-date").datepicker({ dateFormat: 'yy-mm-dd' });
-
+  $("#timepicker1").timepicker();
 });

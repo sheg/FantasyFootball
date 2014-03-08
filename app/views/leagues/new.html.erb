@@ -59,6 +59,11 @@
         <%= f.text_field(:draft_start_date, id: "draft-date") %>
       </div>
 
+      <div class="input-append bootstrap-timepicker">
+        <input id="timepicker1" type="text" name=league[draft_time] class="input-small">
+        <span class="add-on"><i class="icon-time"></i></span>
+      </div>
+
       <%= f.submit("Create League", class: "btn btn-primary") %>
     <% end %>
   </div>
