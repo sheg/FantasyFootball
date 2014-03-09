@@ -27,7 +27,8 @@ class LeaguesController < ApplicationController
 
     @league = League.new(name: params[:league][:name], size: params[:league][:size].to_i,
                          league_type_id: params[:league][:league_type].to_i, entry_amount: params[:league][:entry_amount].to_i,
-                         draft_start_date: start_date, fee_percent: 0.20)
+                         draft_start_date: start_date, weeks: params[:league][:duration],
+                         draft_pick_time: params[:league][:draft_pick_time], fee_percent: 0.20)
 
     if @league.save
       redirect_to(leagues_path, notice: "The league #{params[:league][:name]} was created successfully")
@@ -111,8 +112,4 @@ class LeaguesController < ApplicationController
       end
     end
   end
-
-  #def league_params
-  #  params.require(:league).permit(:name, :size, :league_type, :entry_amount, :draft_start_date)
-  #end
 end
