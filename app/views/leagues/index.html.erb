@@ -4,4 +4,7 @@
 <%= link_to "Create New Weekly league", "#", class: "btn btn-warning" %>
 
 <hr>
+
 <%= render 'league_index_table', leagues: @leagues %>
+
+<%= will_paginate @leagues%>
