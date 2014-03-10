@@ -15,10 +15,11 @@
       <td><%= league.weeks %></td>
       <td><%= league.size %></td>
       <td><%= league.available_teams %></td>
-      <td><%= number_to_currency(league.entry_amount) %></td>
+      <td><%= league.entry_amount != 0.00 ? number_to_currency(league.entry_amount) : "FREE" %></td>
       <td><%= league.draft_start_date.in_time_zone("Eastern Time (US & Canada)").strftime("%D %a %l:%M %p %Z") %></td>
       <%= render 'join_button', league: league %>
     </tr>
   <% end %>
   </tbody>
 </table>
+

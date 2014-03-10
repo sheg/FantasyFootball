@@ -8,7 +8,8 @@ describe League do
                                                password_confirmation: "asdqwe" )
 
     @league = League.new(name: "test_league #{Random.rand(10000)}",size: 12,
-                         weeks: 13, start_week_date: 2.days.from_now)
+                         weeks: 13, start_week_date: 2.days.from_now, league_type_id: 1,
+                         entry_amount: 10, fee_percent: 0.10, draft_start_date: 1.day.from_now)
   end
 
   subject { @league }
@@ -25,6 +26,7 @@ describe League do
   it { should respond_to(:roster_count)}
   it { should respond_to(:playoff_weeks)}
   it { should respond_to(:teams_in_playoffs)}
+  it { should respond_to(:draft_start_date) }
 
   describe "when league name is already taken" do
     before do
@@ -71,6 +73,7 @@ describe League do
   describe "scopes" do
     describe "when no leagues are filled" do
       before do
+        League.destroy_all
         @league.save!
       end
 

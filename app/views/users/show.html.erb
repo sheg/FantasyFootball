@@ -4,16 +4,24 @@
   <h3>My Leagues</h3>
   <table class="table table-responsive table-condensed">
     <th>Name</th>
-    <th>Type</th>
-    <th>Entry</th>
+    <th>Format</th>
+    <th>Draft Date</th>
+    <th>Current Week</th>
+    <th>Weeks Remaining</th>
     <th>Rank</th>
+    <th>Entry</th>
+    <th>Payout</th>
     <tbody>
     <% @user_leagues.each do |league| %>
       <tr>
         <td><%= link_to league.name, league %></td>
         <td><%= league.league_type.name %></td>
-        <td><%= number_to_currency(league.entry_amount) %></td>
-        <td><%=%W{1 2 3 4 5 6 7 8 9 10 11 12}.sample%></td>
+        <td><%= league.draft_start_date.in_time_zone("Eastern Time (US & Canada)").strftime("%D %a %l:%M %p %Z") %></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td><%= league.entry_amount != 0.00 ? number_to_currency(league.entry_amount) : "FREE" %></td>
+        <td></td>
       </tr>
     <% end %>
     </tbody>
