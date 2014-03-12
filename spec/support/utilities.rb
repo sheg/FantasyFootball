@@ -1,4 +1,4 @@
-def create_league(league_size = 0, open_teams = 0, draft_started = false)
+def create_league(league_size = 0, open_teams = 0, draft_started = false, is_private = false)
   league_name = Faker::Company.catch_phrase
   league_size = [10, 12].sample if league_size == 0
   league_type = [1, 2, 3].sample
@@ -11,7 +11,7 @@ def create_league(league_size = 0, open_teams = 0, draft_started = false)
 
   new_league = League.create!(name: league_name, size: league_size,
                               league_type_id: league_type, entry_amount: entry,
-                              fee_percent: 0.20, draft_start_date: draft_date)
+                              fee_percent: 0.20, draft_start_date: draft_date, is_private: is_private)
 
   (new_league.size - open_teams).times do
     user_email = "#{Random.rand(100000)}.#{Faker::Internet.email}"
