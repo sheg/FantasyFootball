@@ -1,0 +1,122 @@
+<h1>Create New Traditional League</h1>
+
+<div class="row">
+  <div class="span3">
+    <%= form_for(@league) do |f| %>
+
+      <div class="span6">
+        <%= render "shared/error_messages", object: @league %>
+      </div>
+
+      <h4>Name</h4>
+      <%= f.text_field(:name) %>
+
+      <h4>Type</h4>
+      <div class="radio">
+        <label>
+          <% league_type = "Normal" %>
+          <% league_type_id = LeagueType.find_by(name: league_type).id %>
+          <input type="radio" name="league[league_type]" id="league_type_<%= league_type_id %>" value=<%= league_type_id %> checked>
+          <%=league_type%>
+        </label>
+        <label>
+          <% league_type = "Flex 9" %>
+          <% league_type_id = LeagueType.find_by(name: league_type).id %>
+          <input type="radio" name="league[league_type]" id="league_type_<%= league_type_id %>" value=<%= league_type_id %>>
+          <%=league_type%>
+        </label>
+        <label>
+          <% league_type = "Flex 10" %>
+          <% league_type_id = LeagueType.find_by(name: league_type).id %>
+          <input type="radio" name="league[league_type]" id="league_type_<%= league_type_id %>" value=<%= league_type_id %>>
+          <%=league_type%>
+        </label>
+      </div>
+      <hr>
+
+      <h4>Size</h4>
+      <div class="league-size">
+        <label class="radio inline">
+          <input type="radio" name="league[size]" value=10 checked>
+          10
+        </label>
+        <label class="radio inline">
+          <input type="radio" name="league[size]" value=12>
+          12
+        </label>
+        <label class="radio inline">
+          <input type="radio" name="league[size]" value=14>
+          14
+        </label>
+      </div>
+      <hr>
+
+      <h4>Duration</h4>
+      <div class="league-size">
+        <label class="radio inline">
+          <input type="radio" name="league[duration]" value=13 checked>
+          13
+        </label>
+      </div>
+      <hr>
+
+      <h4>Entry Amount</h4>
+      <div class="entry">
+        <% min_entry = 0 %>
+        <text id="extracted-fee-amount">FREE</text>
+        <%= f.range_field(:entry_amount, min: min_entry, max: 1000, step: 25, id: "entry-slider") %>
+      </div>
+
+      <hr>
+      <h4>Draft Info</h4>
+      <label>
+        Date
+        <div class="draft-date">
+          <input type="text" id="draft-date" name="league[draft_start_date]" value=<%= Time.now %>/>
+        </div>
+      </label>
+
+      <div class="input-append bootstrap-timepicker">
+        <input id="timepicker1" type="text" name=league[draft_time] class="input-small">
+        <span class="add-on"><i class="icon-time"></i></span>
+      </div>
+
+      <label>
+        Draft Pick Time(In Seconds)
+        <div class="draft-pick-time">
+          <%= f.number_field(:draft_pick_time, min: 120, max: 600, step: 30) %>
+        </div>
+      </label>
+
+      <hr>
+
+      <h4>Rules</h4>
+      <div class="checkbox rules-options">
+        <label>
+          <input type="checkbox" name=league[ppr] value="1">
+          Points per reception?
+          <span class="ppr-info"><i class="icon-info-sign"></i></span>
+          <div id="ppr-info-popup">
+            <p>League will be set with 0.5 points per reception</p>
+          </div>
+        </label>
+      </div>
+      <hr>
+
+      <h4>Visibility</h4>
+      <div class="league-visibility">
+        <label class="radio inline">
+          <input type="radio" name="league[visibility]" value=public checked>
+          Public
+        </label>
+        <label class="radio inline">
+          <input type="radio" name="league[visibility]" value=private >
+          Private
+        </label>
+      </div>
+      <hr>
+
+      <%= f.submit("Create League", class: "btn btn-primary") %>
+    <% end %>
+  </div>
+</div>

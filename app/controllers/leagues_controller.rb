@@ -1,10 +1,10 @@
 class LeaguesController < ApplicationController
   before_action :signed_in_user, except: [:index]
   before_action :user_team, except: [:index, :new, :create, :join]
-  before_action :get_current_week, except: [:index, :join]
+  before_action :get_current_week, except: [:new, :create, :index, :join]
 
   def index
-    @leagues = League.all_leagues
+    @leagues = League.all_leagues.paginate(:page => params[:page], :per_page => 5)
     @user_leagues = current_user.leagues if signed_in?
   end
 
@@ -14,9 +14,27 @@ class LeaguesController < ApplicationController
   end
 
   def new
+    @league = League.new
   end
 
   def create
+    start_date = ""
+    unless params[:league][:draft_start_date].empty? && params[:league][:draft_time].empty?
+      date = params[:league][:draft_start_date]
+      time = params[:league][:draft_time]
+      start_date = Time.parse("#{date} #{time}").utc
+    end
+
+    @league = League.new(name: params[:league][:name], size: params[:league][:size].to_i,
+                         league_type_id: params[:league][:league_type].to_i, entry_amount: params[:league][:entry_amount].to_i,
+                         draft_start_date: start_date, weeks: params[:league][:duration],
+                         draft_pick_time: params[:league][:draft_pick_time], fee_percent: 0.20)
+
+    if @league.save
+      redirect_to(leagues_path, notice: "The league #{params[:league][:name]} was created successfully")
+    else
+      render 'new'
+    end
   end
 
   def join

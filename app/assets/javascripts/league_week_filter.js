@@ -14,10 +14,9 @@ var league_schedule = {
     $.ajax(ajax_url, {
       data: { 'use_json': 'json' },
       success: function(response) {
-        $(".weekly-league-info").html(response).show();
-
-        $(".weekly-league-info").trigger("loaded");
-
+        var weeklyInfo = $(".weekly-league-info");
+        weeklyInfo.html(response).show();
+        weeklyInfo.trigger("loaded");
         new_url = $(this)[0].url.replace(/\&?use_json[^\&]+/, "");
         history.pushState({}, '', new_url)
       }

@@ -1,6 +1,6 @@
 class UsersController < ApplicationController
-  before_action :signed_in_user, only: [:show, :edit, :update, :user_leagues]
-  before_action :correct_user, only: [:show, :edit, :update, :user_leagues]
+  before_action :signed_in_user, only: [:show, :edit, :update]
+  before_action :correct_user, only: [:show, :edit, :update]
 
   def show
     @user_leagues = @user.leagues

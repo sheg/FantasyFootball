@@ -1,6 +1,13 @@
 <%= render "shared/league_header" %>
 
 <p><b>Current Week: <%= @current_week %></b></p>
+
+<div class="draft-start-time">
+  <h3>
+    Draft Begins on: <b> <%= @league.draft_start_date.in_time_zone("Eastern Time (US & Canada)").strftime("%D %a %l:%M %p %Z") %></b>
+  </h3>
+</div>
+
 <p>NFL News</p>
 <p>League News</p>
 <p>Standings</p>

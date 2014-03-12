@@ -8,7 +8,11 @@ class League < ActiveRecord::Base
   has_many :payouts, class_name: LeaguePayout
   has_many :transactions, class_name: TeamTransaction
 
-  validates :name, :uniqueness => { :case_sensitive => false }
+  validates :name, :uniqueness => { :case_sensitive => false }, :presence => true
+  validates :size, :presence => true, :numericality => :only_integer
+  validates :league_type_id, :presence => true, :numericality => :only_integer
+  validates :entry_amount, :presence => true, :numericality => :only_integer
+  validates :draft_start_date, :presence => true
 
   scope :full, -> { where('size = teams_count') }
   scope :open, -> { where('size != teams_count') }

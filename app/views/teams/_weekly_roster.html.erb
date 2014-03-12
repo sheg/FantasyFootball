@@ -5,8 +5,12 @@
 
 <h3>Starters</h3>
   <%= button_tag("Set Lineup", class: "btn btn-primary submit-lineup") %>
-  <div id="errors"></div>
-  <div id="success" style= "display: none"> Lineup saved successfully!</div>
+
+  <div class="notifications">
+    <div id="errors"></div>
+    <div id="success" style= "display: none"> Lineup saved successfully!</div>
+  </div>
+
 
   <table class="table table-responsive table-condensed starters-table" border="2">
     <thead>
@@ -31,7 +35,8 @@
         <td>
           <div class="swap-actions">
             <%= link_to("SELECT", "#", class: "btn btn-success roster-action select") %>
-            <%= link_to("SWAP", "#", class: "btn btn-success roster-action swap") %>
+            <%= link_to("SWAP", "#", class: "btn btn-info roster-action swap") %>
+            <%= link_to("CANCEL", "#", class: "btn btn-danger roster-action cancel") %>
           </div>
         </td>
         <td>
@@ -87,7 +92,8 @@
         <td>
           <div class="swap-actions">
             <%= link_to("SELECT", "#", class: "btn btn-success roster-action select") %>
-            <%= link_to("SWAP", "#", class: "btn btn-success roster-action swap") %>
+            <%= link_to("SWAP", "#", class: "btn btn-info roster-action swap") %>
+            <%= link_to("CANCEL", "#", class: "btn btn-danger roster-action cancel") %>
           </div>
         </td>
         <td>
