@@ -122,6 +122,15 @@ module LeaguesHelper
     get_nfl_week_game(week_data)
   end
 
+  def is_waiver_period?(now = nil)
+    now = Time.now unless now
+    now = Time.parse(now) if now.is_a? String
+    now = now.utc
+
+    week_data = get_league_week_data(now)
+    now < (week_data.start_date + 2.days)
+  end
+
   def create_test_league(league_size = 0, open_teams = 0)
     league_name = Faker::Company.catch_phrase
     league_size = [10, 12].sample if league_size == 0

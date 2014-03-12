@@ -6,6 +6,7 @@ class TeamTransaction < ActiveRecord::Base
   belongs_to :league
   belongs_to :activity_type
   belongs_to :nfl_player
+  belongs_to :transaction_status
 
   scope :find_league_team, -> (l, t) {
     where('league_id = ? and (from_team_id = ? or to_team_id = ?)', l, t, t).order(:transaction_date)
@@ -17,7 +18,7 @@ class TeamTransaction < ActiveRecord::Base
   end
 
   def self.get_latest_pick_time(league_id)
-    TeamTransaction.where(league_id: league_id, from_team_id: 0).maximum(:transaction_date)
+    TeamTransaction.where(league_id: league_id, from_team_id: 0, transaction_status_id:  1).maximum(:transaction_date)
   end
 
   def self.get_players_for_league_team(league_id, team_id, league_week = nil)
@@ -45,7 +46,7 @@ class TeamTransaction < ActiveRecord::Base
 
     if league_week
       week = League.find_by(id: league_id).get_league_week_data_for_week(league_week)
-      transactions = transactions.where("transaction_date < ?", week.end_date).order(:transaction_date, :id)
+      transactions = transactions.where(transaction_status_id: 1).where("transaction_date < ?", week.end_date).order(:transaction_date, :id)
     end
     transactions = transactions.to_a
 

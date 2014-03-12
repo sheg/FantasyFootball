@@ -37,6 +37,19 @@ activity_types.each do |data|
   item.save
 end
 
+puts 'Seeding Transaction Statuses'
+transaction_statuses = [
+    { name: "completed", display_name: 'Completed' },
+    { name: "pending", display_name: 'Pending' },
+    { name: "cancelled", display_name: 'Cancelled' },
+    { name: "rejected", display_name: 'Rejected' },
+]
+transaction_statuses.each do |data|
+  item = TransactionStatus.find_or_create_by(name: data[:name])
+  item.display_name = data[:display_name]
+  item.save
+end
+
 puts 'Seeding Positions'
 positions = [
   { abbr: "QB", name: 'Quarterback', sort_order: 10 },

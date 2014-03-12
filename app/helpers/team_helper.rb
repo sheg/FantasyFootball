@@ -1,3 +1,5 @@
+require 'SecureRandom'
+
 module TeamHelper
 
   def leave_league(league, team)
@@ -108,26 +110,31 @@ module TeamHelper
   def add_drop_player(add_player_id, drop_player_id, league_week = nil, now = nil)
     get_roster(league_week)
     TeamTransaction.transaction do
-      drop_player(drop_player_id, league_week, now)
-      add_player(add_player_id, league_week, now)
+      group = SecureRandom.uuid
+      drop_player(drop_player_id, league_week, now, group)
+      add_player(add_player_id, league_week, now, group)
     end
   end
 
-  def add_player(player_id, league_week = nil, now = nil)
+  def add_player(player_id, league_week = nil, now = nil, group_id = nil)
     check_player_taken(player_id, league_week)
-    process_roster_change(ActivityType.ADD, player_id, league_week, now)
+    process_roster_change(ActivityType.ADD, player_id, league_week, now, group_id)
   end
+  private :add_player
 
-  def drop_player(player_id, league_week = nil, now = nil)
-    process_roster_change(ActivityType.DROP, player_id, league_week, now)
+  def drop_player(player_id, league_week = nil, now = nil, group_id = nil)
+    process_roster_change(ActivityType.DROP, player_id, league_week, now, group_id)
   end
+  private :drop_player
 
-  def process_roster_change(activity_type, player_id, league_week = nil, now = nil)
+  def process_roster_change(activity_type, player_id, league_week = nil, now = nil, group_id)
     roster = get_roster(league_week).map { |r| r[:player_id] }
     player = NflPlayer.find_by(id: player_id)
     now = Time.now unless now
     now = Time.parse(now) if now.is_a? String
     now = now.utc
+    transaction_status = TransactionStatus.COMPLETED
+    group_id = SecureRandom.uuid unless group_id
 
     raise "#{player.full_name} is not on the team" unless(roster.include?(player_id)) if activity_type.id == ActivityType.DROP.id
 
@@ -147,6 +154,10 @@ module TeamHelper
       end
     end
 
+    if self.league.is_waiver_period?(transaction_date)
+      transaction_status = TransactionStatus.PENDING
+    end
+
     if activity_type.id == ActivityType.DROP.id
       starters = Starter.where(team_id: self.id, player_id: player_id).where('week >= ?', week_data.week_number)
       starters.destroy_all if starters
@@ -158,11 +169,16 @@ module TeamHelper
         to_team_id: 0,
         nfl_player_id: player_id,
         transaction_date: transaction_date,
-        activity_type_id: activity_type.id
+        activity_type_id: activity_type.id,
+        transaction_status_id: transaction_status.id,
+        group_id: group_id
     )
     transaction.from_team_id = self.id if activity_type.id == ActivityType.DROP.id
     transaction.to_team_id = self.id if activity_type.id == ActivityType.ADD.id
+
     transaction.save!
+
+    transaction
   end
   private :process_roster_change
 
