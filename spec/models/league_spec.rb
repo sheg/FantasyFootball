@@ -27,6 +27,7 @@ describe League do
   it { should respond_to(:playoff_weeks)}
   it { should respond_to(:teams_in_playoffs)}
   it { should respond_to(:draft_start_date) }
+  it { should respond_to(:is_private)}
 
   describe "when league name is already taken" do
     before do
@@ -211,6 +212,28 @@ describe League do
     it "should have a populated start_week_date for the following Tuesday" do
       @league.start_week_date.should_not be_nil
       @league.start_week_date.should == Date.new(2013,10,15)
+    end
+  end
+
+  describe "visibility" do
+    describe "league is set to private" do
+      before do
+        @league = create_league(0,0,true,true)
+      end
+
+      it "should be private" do
+        @league.is_private.should be_true
+      end
+    end
+
+    describe "league is set to public" do
+      before do
+        @league = create_league(0,0,true,false)
+      end
+
+      it "should not be private" do
+        @league.is_private.should be_false
+      end
     end
   end
 end
