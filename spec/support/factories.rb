@@ -16,6 +16,7 @@ FactoryGirl.define do
 
     after(:build) do |league, evaluator|
       create_list(:team, evaluator.number_of_teams, league: league)
+      league.reload if league.id
     end
 
     factory :empty_league do

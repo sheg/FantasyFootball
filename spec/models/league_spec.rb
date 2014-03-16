@@ -58,7 +58,6 @@ describe League do
   describe "when league has no open teams" do
     before do
       @league = FactoryGirl.create :league
-      @league.reload #to pick up teams counter
     end
     it { should be_full }
   end
@@ -66,7 +65,6 @@ describe League do
   describe "when league has open teams" do
     before do
       @league = FactoryGirl.create :partially_filled_league
-      @league.reload
     end
     it { should_not be_full }
   end
@@ -76,7 +74,6 @@ describe League do
       before do
         League.destroy_all
         @league.save!
-        @league.reload
       end
 
       it "full scope should return empty" do
@@ -92,7 +89,6 @@ describe League do
       before do
         League.destroy_all
         @filled_league = FactoryGirl.create :league
-        @filled_league.reload
       end
 
       it "full scope should return the filled league" do
@@ -109,7 +105,6 @@ describe League do
     describe "when the league is full" do
       it "should show up as started" do
         league = FactoryGirl.create :draft_started_league
-        league.reload
         league.started?.should be_true
       end
     end
@@ -117,7 +112,6 @@ describe League do
     describe "when the league not full" do
       it "should show up as not started" do
         league = FactoryGirl.create :partially_filled_drafted_league
-        league.reload
         league.started?.should be_false
       end
     end
@@ -127,7 +121,6 @@ describe League do
     describe "when the league is full" do
       it "should show up as not started" do
         league = FactoryGirl.create :league
-        league.reload
         league.started?.should be_false
       end
     end
@@ -135,7 +128,6 @@ describe League do
     describe "when the league not full" do
       it "should show up as not started" do
         league = FactoryGirl.create :partially_filled_league
-        league.reload
         league.started?.should be_false
       end
     end
@@ -144,7 +136,6 @@ describe League do
   describe "fully drafted league in preason" do
     before do
       @league = FactoryGirl.create :draft_started_league
-      @league.reload
       @league.draft_start_date = Date.new(2013,8,16)
       @league.save!
       @league.test_draft
@@ -166,7 +157,6 @@ describe League do
   describe "fully drafted league before preseason" do
     before do
       @league = FactoryGirl.create :draft_started_league
-      @league.reload
       @league.draft_start_date = Date.new(2013,5,15)
       @league.save!
       @league.test_draft
@@ -187,7 +177,6 @@ describe League do
   describe "fully drafted league in the middle of the season" do
     before do
       @league = FactoryGirl.create :league
-      @league.reload
       @league.draft_start_date = Date.new(2013,10,16)
       @league.save!
       @league.test_draft
@@ -208,7 +197,6 @@ describe League do
   describe "fully drafted league on a monday during the season" do
     before do
       @league = FactoryGirl.create :league
-      @league.reload
       @league.draft_start_date = Date.new(2013,10,14)
       @league.save!
       @league.test_draft

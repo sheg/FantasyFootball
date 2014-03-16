@@ -18,11 +18,9 @@ group :test do
   gem 'factory_girl_rails'
 end
 
-group :assets do
-  gem 'sass-rails', '4.0.1'
-  gem 'uglifier', '2.1.1'
-end
-
+gem 'uglifier', '2.1.1'
+gem 'sass-rails', '~> 4.0.0'
+gem 'bootstrap-sass', '2.3.2.0'
 gem 'jquery-ui-rails'
 gem 'jquery-rails'
 gem 'bootstrap-timepicker-rails'
@@ -30,7 +28,6 @@ gem 'will_paginate', '~> 3.0'
 gem 'turbolinks', '1.1.1'
 gem 'jbuilder', '1.0.2'
 gem 'bcrypt-ruby', '~> 3.0.0'
-gem 'bootstrap-sass', '2.3.2.0'
 gem 'httparty', '0.12.0'
 gem 'composite_primary_keys'
 
