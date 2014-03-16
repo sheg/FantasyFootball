@@ -7,10 +7,10 @@ FactoryGirl.define do
 
     size { number_of_teams }
     name { generate(:random_name) }
-    league_type_id [1, 2, 3].sample
-    entry_amount [25.00, 50.00, 100.00, 150.00].sample
+    league_type_id { [1, 2, 3].sample }
+    entry_amount { [25.00, 50.00, 100.00, 150.00].sample }
     fee_percent 0.20
-    draft_start_date Random.rand(90).days.from_now
+    draft_start_date { Random.rand(90).days.from_now }
     is_private false
     weeks 13
 
