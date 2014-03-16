@@ -4,12 +4,11 @@ describe League do
   include LeaguesHelper
 
   before :each do
-    @user = User.new(email: "test@test.com", password: "asdqwe",
-                                               password_confirmation: "asdqwe" )
+    @league = FactoryGirl.build :empty_league
+  end
 
-    @league = League.new(name: "test_league #{Random.rand(10000)}",size: 12,
-                         weeks: 13, start_week_date: 2.days.from_now, league_type_id: 1,
-                         entry_amount: 10, fee_percent: 0.10, draft_start_date: 1.day.from_now)
+  after :each do
+    League.destroy_all
   end
 
   subject { @league }
@@ -39,8 +38,8 @@ describe League do
 
   describe "when I look for a new user just added to a league" do
     before do
-      @league.save!
-      @user.save!
+      @league = FactoryGirl.create :partially_filled_league
+      @user = FactoryGirl.create :user
       join_league(@league, @user)
     end
 
@@ -50,6 +49,7 @@ describe League do
   end
 
   describe "when a user is not part of a league" do
+    before { @user = FactoryGirl.create :user }
     it "should NOT be found" do
       @league.user_part_of_league?(@user).should be_false
     end
@@ -57,16 +57,14 @@ describe League do
 
   describe "when league has no open teams" do
     before do
-      size = @league.size
-      @league = create_league(size)
+      @league = FactoryGirl.create :league
     end
     it { should be_full }
   end
 
   describe "when league has open teams" do
     before do
-      size = @league.size
-      @league = create_league(size, 2)
+      @league = FactoryGirl.create :partially_filled_league
     end
     it { should_not be_full }
   end
@@ -87,9 +85,10 @@ describe League do
       end
     end
 
-    describe "when there is a filled up league" do
+    describe "when there is a filled league" do
       before do
-        @filled_league = create_league(10, 0)
+        League.destroy_all
+        @filled_league = FactoryGirl.create :league
       end
 
       it "full scope should return the filled league" do
@@ -105,14 +104,14 @@ describe League do
   describe "draft started" do
     describe "when the league is full" do
       it "should show up as started" do
-        league = create_league(10,0,true)
+        league = FactoryGirl.create :draft_started_league
         league.started?.should be_true
       end
     end
 
     describe "when the league not full" do
       it "should show up as not started" do
-        league = create_league(10,1,true)
+        league = FactoryGirl.create :partially_filled_drafted_league
         league.started?.should be_false
       end
     end
@@ -121,14 +120,14 @@ describe League do
   describe "draft did not start yet" do
     describe "when the league is full" do
       it "should show up as not started" do
-        league = create_league(10,0,false)
+        league = FactoryGirl.create :league
         league.started?.should be_false
       end
     end
 
     describe "when the league not full" do
       it "should show up as not started" do
-        league = create_league(10,1,false)
+        league = FactoryGirl.create :partially_filled_league
         league.started?.should be_false
       end
     end
@@ -136,7 +135,7 @@ describe League do
 
   describe "fully drafted league in preason" do
     before do
-      @league = create_league(12, 0, true)
+      @league = FactoryGirl.create :draft_started_league
       @league.draft_start_date = Date.new(2013,8,16)
       @league.save!
       @league.test_draft
@@ -157,7 +156,7 @@ describe League do
 
   describe "fully drafted league before preseason" do
     before do
-      @league = create_league(12, 0, true)
+      @league = FactoryGirl.create :draft_started_league
       @league.draft_start_date = Date.new(2013,5,15)
       @league.save!
       @league.test_draft
@@ -177,7 +176,7 @@ describe League do
 
   describe "fully drafted league in the middle of the season" do
     before do
-      @league = create_league(12, 0, true)
+      @league = FactoryGirl.create :league
       @league.draft_start_date = Date.new(2013,10,16)
       @league.save!
       @league.test_draft
@@ -197,7 +196,7 @@ describe League do
 
   describe "fully drafted league on a monday during the season" do
     before do
-      @league = create_league(12, 0, true)
+      @league = FactoryGirl.create :league
       @league.draft_start_date = Date.new(2013,10,14)
       @league.save!
       @league.test_draft
@@ -218,7 +217,7 @@ describe League do
   describe "visibility" do
     describe "league is set to private" do
       before do
-        @league = create_league(0,0,true,true)
+        @league = FactoryGirl.create(:league, is_private: true)
       end
 
       it "should be private" do
@@ -228,7 +227,7 @@ describe League do
 
     describe "league is set to public" do
       before do
-        @league = create_league(0,0,true,false)
+        @league = FactoryGirl.create(:league, is_private: false)
       end
 
       it "should not be private" do
