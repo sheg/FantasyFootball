@@ -5,7 +5,7 @@ gem 'rails', '4.0.0'
 group :development, :test do
   gem 'mysql2'
   gem 'sqlite3', '1.3.8'
-  gem 'rspec-rails', '2.13.1'
+  gem 'rspec-rails'
   gem 'better_errors'
   gem 'binding_of_caller'
   gem 'faker'
@@ -14,7 +14,7 @@ end
 group :test do
   gem 'cucumber-rails', '1.4.0', require: false
   gem 'selenium-webdriver', '2.40.0'
-  gem 'capybara', '2.1.0'
+  gem 'capybara'
   gem 'factory_girl_rails'
 end
 
