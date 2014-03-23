@@ -19,6 +19,13 @@ FactoryGirl.define do
       league.reload if league.id
     end
 
+    factory :weekly_league do
+      playoff_weeks 0
+      draft_dollars 1000
+      league_type_id 1
+      weeks 1
+    end
+
     factory :empty_league do
       ignore do
         number_of_teams 0
