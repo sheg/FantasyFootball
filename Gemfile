@@ -9,13 +9,13 @@ group :development, :test do
   gem 'better_errors'
   gem 'binding_of_caller'
   gem 'faker'
+  gem 'factory_girl_rails'
 end
 
 group :test do
   gem 'cucumber-rails', '1.4.0', require: false
   gem 'selenium-webdriver', '2.40.0'
   gem 'capybara'
-  gem 'factory_girl_rails'
 end
 
 gem 'uglifier', '2.1.1'

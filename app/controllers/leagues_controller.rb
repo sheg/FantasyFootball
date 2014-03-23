@@ -4,7 +4,7 @@ class LeaguesController < ApplicationController
   before_action :get_current_week, except: [:new, :create, :index, :join]
 
   def index
-    @leagues = League.all_leagues.where(is_private: false).paginate(page: params[:page], per_page: 5)
+    @leagues = League.public.paginate(page: params[:page], per_page: 5)
     @user_leagues = current_user.leagues if signed_in?
   end
 
@@ -77,6 +77,10 @@ class LeaguesController < ApplicationController
 
     @games_this_week = league.games.where(week: @current_week)
     render partial: "league_schedule" if params[:use_json]
+  end
+
+  def free_agency
+
   end
 
   def league_info
