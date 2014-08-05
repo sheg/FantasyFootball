@@ -13,7 +13,8 @@
 //= require jquery
 //= require jquery_ujs
 //= require bootstrap
+//= require twitter/bootstrap
 //= require turbolinks
-//= require jquery.ui.all
+//= require jquery-ui
 //= require bootstrap-timepicker
 //= require_tree .

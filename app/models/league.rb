@@ -18,7 +18,7 @@ class League < ActiveRecord::Base
 
   scope :full, -> { where('size = teams_count') }
   scope :open, -> { where('size != teams_count') }
-  scope :public, -> { where(is_private: false) }
+  scope :is_public, -> { where(is_private: false) }
 
   scope :all_leagues, -> { self.all.includes([:teams, :league_type]) }
 
