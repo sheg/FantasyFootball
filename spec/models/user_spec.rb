@@ -2,8 +2,7 @@ require 'spec_helper'
 
 describe User do
 
-  before { @user = User.new(email: "test@test.com", password: "asdqwe",
-                            password_confirmation: "asdqwe" ) }
+  before { @user = FactoryGirl.build :user }
 
   subject { @user }
 

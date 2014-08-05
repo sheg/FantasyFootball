@@ -4,7 +4,7 @@ class LeaguesController < ApplicationController
   before_action :get_current_week, except: [:new, :create, :index, :join]
 
   def index
-    @leagues = League.all_leagues.paginate(:page => params[:page], :per_page => 5)
+    @leagues = League.public.paginate(page: params[:page], per_page: 5)
     @user_leagues = current_user.leagues if signed_in?
   end
 
@@ -28,7 +28,8 @@ class LeaguesController < ApplicationController
     @league = League.new(name: params[:league][:name], size: params[:league][:size].to_i,
                          league_type_id: params[:league][:league_type].to_i, entry_amount: params[:league][:entry_amount].to_i,
                          draft_start_date: start_date, weeks: params[:league][:duration],
-                         draft_pick_time: params[:league][:draft_pick_time], fee_percent: 0.20)
+                         draft_pick_time: params[:league][:draft_pick_time], fee_percent: 0.20,
+                         is_private: params[:league][:visibility])
 
     if @league.save
       redirect_to(leagues_path, notice: "The league #{params[:league][:name]} was created successfully")
@@ -76,6 +77,10 @@ class LeaguesController < ApplicationController
 
     @games_this_week = league.games.where(week: @current_week)
     render partial: "league_schedule" if params[:use_json]
+  end
+
+  def free_agency
+
   end
 
   def league_info

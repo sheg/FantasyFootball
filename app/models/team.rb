@@ -17,9 +17,6 @@ class Team < ActiveRecord::Base
   end
 
   def remove_games
-
-    #See league.set_schedule - last filled user leaves, then rejoins. Gotta wipe games so we can re-recreate the schedule for the new guy.
-
     games = Game.where('league_id = ?', self.league_id)
     games.destroy_all
   end

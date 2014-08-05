@@ -14,10 +14,11 @@ class League < ActiveRecord::Base
   validates :entry_amount, :presence => true, :numericality => :only_integer
   validates :draft_start_date, :presence => true
   validates :season_id, presence: true
+  validates :is_private, :inclusion => { in: [true, false] }
 
   scope :full, -> { where('size = teams_count') }
   scope :open, -> { where('size != teams_count') }
-  scope :is_public, -> { where(is_private: false) }
+  scope :public, -> { where(is_private: false) }
 
   scope :all_leagues, -> { self.all.includes([:teams, :league_type]) }
 
