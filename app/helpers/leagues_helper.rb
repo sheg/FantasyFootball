@@ -138,7 +138,7 @@ module LeaguesHelper
     entry = [25.00, 50.00, 100.00, 150.00].sample
     draft_date = Random.rand(90).days.from_now
 
-    new_league = League.create!(name: league_name, size: league_size,
+    new_league = League.create!(name: league_name, size: league_size, season_id: NflLoader.new.current_season.id,
                                 league_type_id: league_type, entry_amount: entry,
                                 fee_percent: 0.20, draft_start_date: draft_date)
 
