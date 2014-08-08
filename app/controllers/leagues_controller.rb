@@ -4,7 +4,7 @@ class LeaguesController < ApplicationController
   before_action :get_current_week, except: [:new, :create, :index, :join]
 
   def index
-    @leagues = League.public.paginate(page: params[:page], per_page: 5)
+    @leagues = League.is_public.paginate(page: params[:page], per_page: 5)
     @user_leagues = current_user.leagues if signed_in?
   end
 

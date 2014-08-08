@@ -18,13 +18,16 @@ group :test do
   gem 'capybara'
 end
 
+
+gem "therubyracer"
+gem "twitter-bootstrap-rails"
+gem 'bootstrap-timepicker-rails'
 gem 'uglifier', '2.1.1'
 gem 'sass-rails', '~> 4.0.0'
 gem 'bootstrap-sass', '2.3.2.0'
 gem 'tzinfo-data'
 gem 'jquery-ui-rails'
 gem 'jquery-rails'
-gem 'bootstrap-timepicker-rails'
 gem 'will_paginate', '~> 3.0'
 gem 'turbolinks', '1.1.1'
 gem 'jbuilder', '1.0.2'
