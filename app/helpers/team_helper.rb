@@ -290,7 +290,7 @@ module TeamHelper
     ActiveRecord::Base.transaction do
       players = NflPlayer.where(id: players).to_a
       players.each { |player|
-        game = player.game_for_week(nfl_week[:season_type_id], nfl_week[:week])
+        game = player.game_for_week(self.league.season_id, nfl_week[:season_type_id], nfl_week[:week])
         if game
           if game.start_time <= now
             raise "Cannot drop #{player.full_name} (Id #{player.id}), NFL game has already started"

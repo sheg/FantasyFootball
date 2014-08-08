@@ -273,7 +273,7 @@ class PointsCalculator
 
     games = NflGame.where(season_id: season.id, season_type_id: season_type_id)
     games = games.where(week: week) if week
-    weeks = games.select("distinct week").map { |g| g.week }.to_a
+    weeks = games.select("distinct week, season_id, season_type_id").map { |g| g.week }.to_a
 
     #game_players = get_game_players(players, season, season_type_id, week).includes(:game, player: [ :news, :injuries, :teams, :positions ]).to_a
     game_players = get_game_players(players, season, season_type_id, week).includes(:game, :player, :team, :position).to_a

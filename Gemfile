@@ -19,7 +19,7 @@ group :test do
 end
 
 
-gem "therubyracer"
+gem "therubyracer", :platform => :ruby
 gem "twitter-bootstrap-rails"
 gem 'bootstrap-timepicker-rails'
 gem 'uglifier', '2.1.1'

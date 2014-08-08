@@ -29,6 +29,7 @@ class TeamsController < ApplicationController
     end
     render text: error
   end
+
   def schedule
     if params[:team_id]
       find_team_and_league
