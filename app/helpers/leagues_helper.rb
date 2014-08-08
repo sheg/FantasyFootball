@@ -59,6 +59,8 @@ module LeaguesHelper
 
     return nil if league_week > self.total_weeks or league_week <= 0
 
+    week_data.week_number = 1 if(week_data.week_number == 0)    # 0 is returned when league hasn't started yet
+
     week_data.start_date += (league_week - week_data.week_number).weeks
     week_data.week_number = league_week
     return week_data
@@ -131,6 +133,11 @@ module LeaguesHelper
     now < (week_data.start_date + 2.days)
   end
 
+  def get_waiver_order(league_week)
+    order = []
+    standings = self.team_standings.where(week: league_week).order(:percent, :points_for, points_against: :desc).order("rand()").to_a
+  end
+
   def test_draft()
     set_draft_order
 
@@ -158,15 +165,21 @@ module LeaguesHelper
     round = draft_info.draft_round
     slot = (round - 1) % slots.count
     position = slots[slot].sample
-    players = NflPlayer.find_position(position).to_a
-    pick = nil
 
+    @position_players = {} unless @position_players
+    unless @position_players[position]
+      @position_players[position] = NflPlayer.find_position(position).where("nfl_games.season_id between #{season_id} - 1 and #{season_id}")
+        .select("nfl_players.*, sum(nfl_game_players.points) as points").group("nfl_players.id").order("points desc").to_a
+    end
+    players = @position_players[position]
+
+    pick = nil
     @retry_num = 0
     while(pick.nil?)
       begin
         break if @retry_num >= 10
 
-        player = players.sample
+        player = players.slice!(0)
 
         # Adjust the transaction date in case this draft was made after time expired for that pick
         if(draft_info.time_left < 0)

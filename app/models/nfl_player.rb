@@ -24,7 +24,7 @@ class NflPlayer < ActiveRecord::Base
   #  )
   #end
 
-  scope :find_position, -> (p) { uniq.joins(game_players: [ :position, :team ]).where(nfl_positions: { abbr: p }) }
+  scope :find_position, -> (p) { uniq.joins(game_players: [ :game, :position, :team ]).where(nfl_positions: { abbr: p }) }
   scope :find_team, -> (t) { uniq.joins(game_players: [ :position, :team ]).where(nfl_teams: { abbr: t }) }
   scope :sort_last_name, -> { order(:last_name) }
 
@@ -37,26 +37,26 @@ class NflPlayer < ActiveRecord::Base
     week_order + week
   end
 
-  def game_for_week(season_type_id, week)
+  def game_for_week(season_id, season_type_id, week)
     week_order = get_week_order(season_type_id, week)
-    game_player = self.game_players.find_by('nfl_games.week_order = ?', week_order)
+    game_player = self.game_players.find_by('nfl_games.season_id = ? and nfl_games.week_order = ?', season_id, week_order)
     game_player.game if game_player
   end
 
-  def get_latest_game(season_type_id, week)
+  def get_latest_game(season_id, season_type_id, week)
     week_order = get_week_order(season_type_id, week)
-    game = self.game_players.where('nfl_games.week_order <= ?', week_order).order('nfl_games.week_order desc').first
+    game = self.game_players.where('nfl_games.season_id = ? and nfl_games.week_order <= ?', season_id, week_order).order('nfl_games.week_order desc').first
     game = NflSeasonTeamPlayer.find_by(player_id: self.id) unless game
     game
   end
 
-  def team_for_week(season_type_id, week)
-    game = get_latest_game(season_type_id, week)
+  def team_for_week(season_id, season_type_id, week)
+    game = get_latest_game(season_id, season_type_id, week)
     game.team
   end
 
-  def position_for_week(season_type_id, week)
-    game = get_latest_game(season_type_id, week)
+  def position_for_week(season_id, season_type_id, week)
+    game = get_latest_game(season_id, season_type_id, week)
     game.position
   end
 end

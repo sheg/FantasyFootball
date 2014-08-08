@@ -13,6 +13,7 @@ FactoryGirl.define do
     draft_start_date { Random.rand(90).days.from_now }
     is_private false
     weeks 13
+    season_id 2
 
     after(:build) do |league, evaluator|
       create_list(:team, evaluator.number_of_teams, league: league)

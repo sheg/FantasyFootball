@@ -48,13 +48,13 @@ class PointsCalculator
     @rules = @rules.keep_if { |r| r.multiplier > 0 || r.min_range > 0 || r.max_range > 0 }
   end
 
-  def do_calculation_db(season_type_id = nil, week = nil)
-    puts "Calculating points data for SeasonTypeId #{season_type_id}, Week #{week}"
+  def do_calculation_db(season_id = 0, season_type_id = 0, week = 0)
+    puts "Calculating points data for SeasonId #{season_id}, SeasonTypeId #{season_type_id}, Week #{week}"
 
-    sql = "CALL UpdateGamePlayerPoints(#{season_type_id}, #{week});"
+    sql = "CALL UpdateGamePlayerPoints(#{season_id}, #{season_type_id}, #{week});"
     ActiveRecord::Base.connection.execute(sql)
 
-    sql = "CALL LoadLeaguePlayerPoints(#{season_type_id}, #{week});"
+    sql = "CALL LoadLeaguePlayerPoints(#{season_id}, #{season_type_id}, #{week});"
     ActiveRecord::Base.connection.execute(sql)
 
     sql = "CALL UpdateTeamPoints(null, #{season_type_id}, #{week});"
@@ -123,9 +123,9 @@ class PointsCalculator
     return unless (games and games.length > 0)
 
     start = Time.now
-    groups = games.group_by{ |g| { season_type_id: g.season_type_id, week: g.week } }.keys
+    groups = games.group_by{ |g| { season_id: g.season_id, season_type_id: g.season_type_id, week: g.week } }.keys
     groups.each { |group|
-      do_calculation_db(group[:season_type_id], group[:week])
+      do_calculation_db(group[:season_id], group[:season_type_id], group[:week])
     }
     puts "Update Points for Games: DB Calculation Time taken: #{Time.now - start}"
 
@@ -144,7 +144,8 @@ class PointsCalculator
 
   def update_game_player_points(player_id = nil, year = nil, season_type_id = nil, week = nil)
     start = Time.now
-    do_calculation_db(season_type_id, week)
+    season = year ? NflSeason.find_by(year: year) : NflLoader.new.current_season
+    do_calculation_db(season.id, season_type_id, week)
     puts "Update Points for Games: DB Calculation Time taken: #{Time.now - start}"
     return
 
@@ -300,8 +301,8 @@ class PointsCalculator
           data.position = data.game_player.position
           data.current_points = data.game_player.points
         else
-          data.team = data.player.team_for_week(season_type_id, data_week)
-          data.position = data.player.position_for_week(season_type_id, data_week)
+          data.team = data.player.team_for_week(season, season_type_id, data_week)
+          data.position = data.player.position_for_week(season, season_type_id, data_week)
           data.game = games.find { |g| g.week == data_week and (g.home_team_id == data.team.id or g.away_team_id == data.team.id) }
         end
 
