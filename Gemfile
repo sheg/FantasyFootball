@@ -5,7 +5,7 @@ gem 'rails', '4.1.4'
 group :development, :test do
   gem 'mysql2'
   gem 'sqlite3', '1.3.8'
-  gem 'rspec-rails'
+  gem 'rspec-rails', '2.14.1'
   gem 'better_errors'
   gem 'binding_of_caller'
   gem 'faker'
@@ -17,7 +17,6 @@ group :test do
   gem 'selenium-webdriver', '2.40.0'
   gem 'capybara'
 end
-
 
 gem "therubyracer"
 gem "twitter-bootstrap-rails"
