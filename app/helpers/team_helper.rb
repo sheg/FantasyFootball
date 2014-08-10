@@ -50,12 +50,14 @@ module TeamHelper
     grouped
   end
 
-  def get_roster(league_week = nil)
-    unless @roster
+  def get_roster(league_week = nil, include_pending = false)
+    @roster = {} unless @roster
+
+    unless @roster[include_pending]
       nfl_week_game = self.league.get_nfl_week_game_from_league_week(league_week)
       nfl_week_game = self.league.get_nfl_week_game_from_league_week(self.league.total_weeks) unless nfl_week_game
 
-      results = ActiveRecord::Base.connection.execute("call GetTeamRoster(#{self.id}, #{nfl_week_game.season_type_id}, #{nfl_week_game.week}, true);")
+      results = ActiveRecord::Base.connection.execute("call GetTeamRoster(#{self.id}, #{nfl_week_game.season_type_id}, #{nfl_week_game.week}, true, #{include_pending});")
       results = results.each(as: :hash, symbolize_keys: true).to_a
       ActiveRecord::Base.connection.close
 
@@ -65,11 +67,16 @@ module TeamHelper
         found[:started] = 1 if found
       }
 
-      @roster = results
+      @roster[include_pending] = results
     end
 
-    return @roster
+    return @roster[include_pending]
   end
+
+  def clear_cache()
+    @roster = nil
+  end
+  private :clear_cache
 
   def check_player_taken(player_id, league_week = nil)
     if(self.league.draft_unique_players)
@@ -88,6 +95,10 @@ module TeamHelper
     if(self.league.draft_pick_time > 0)
       self.league.catchup_draft if do_catchup
       current_draft_info = self.league.get_current_draft_info
+
+      unless (current_draft_info)
+        raise "Unable to draft, the draft is over"
+      end
 
       if(current_draft_info.current_team.id != self.id)
         raise "Team #{self.name} cannot draft, current pick is #{current_draft_info.current_team.name}, #{current_draft_info.time_left} seconds left to pick"
@@ -108,12 +119,16 @@ module TeamHelper
   end
 
   def add_drop_player(add_player_id, drop_player_id, league_week = nil, now = nil)
+    # These are to preload the rosters outside of transaction because 2 proc calls in transaction fails for whatever reason
     get_roster(league_week)
+    get_roster(league_week, true)
+
     TeamTransaction.transaction do
       group = SecureRandom.uuid
       drop_player(drop_player_id, league_week, now, group)
       add_player(add_player_id, league_week, now, group)
     end
+    clear_cache
   end
 
   def add_player(player_id, league_week = nil, now = nil, group_id = nil)
@@ -129,6 +144,7 @@ module TeamHelper
 
   def process_roster_change(activity_type, player_id, league_week = nil, now = nil, group_id)
     roster = get_roster(league_week).map { |r| r[:player_id] }
+    roster_pending = get_roster(league_week, true).map { |r| r[:player_id] }
     player = NflPlayer.find_by(id: player_id)
     now = Time.now unless now
     now = Time.parse(now) if now.is_a? String
@@ -137,6 +153,8 @@ module TeamHelper
     group_id = SecureRandom.uuid unless group_id
 
     raise "#{player.full_name} is not on the team" unless(roster.include?(player_id)) if activity_type.id == ActivityType.DROP.id
+    raise "#{player.full_name} has a pending transaction already" unless(roster_pending.include?(player_id)) if activity_type.id == ActivityType.DROP.id
+    raise "#{player.full_name} has a pending transaction already" if(roster_pending.include?(player_id)) if activity_type.id == ActivityType.ADD.id
 
     week_data = self.league.get_league_week_data_for_week(league_week)
     raise "League is over" unless week_data
@@ -147,7 +165,7 @@ module TeamHelper
 
     nfl_week = self.league.get_nfl_week(week_data.week_number)
 
-    game = player.game_for_week(nfl_week[:season_type_id], nfl_week[:week])
+    game = player.game_for_week(self.league.season_id, nfl_week[:season_type_id], nfl_week[:week])
     if game
       if game.start_time <= now
         raise "Cannot process #{player.full_name} (Id #{player.id}), NFL game has already started"
@@ -215,6 +233,7 @@ module TeamHelper
     league_week = self.league.get_league_week_data.week_number unless league_week
     league_week = [self.league.total_weeks, league_week].min
     nfl_week = self.league.get_nfl_week(league_week)
+    season_id = self.league.season_id
     now = Time.now unless now
     now = Time.parse(now) if now.is_a? String
     now = now.utc
@@ -232,7 +251,7 @@ module TeamHelper
       positions = []
       players.each { |player|
         if player_ids.include?(player.id) and not starters.include?(player.id)
-          game = player.game_for_week(nfl_week[:season_type_id], nfl_week[:week])
+          game = player.game_for_week(season_id, nfl_week[:season_type_id], nfl_week[:week])
           if game
             if game.start_time <= now
               raise "Cannot add #{player.full_name} (Id #{player.id}), NFL game has already started"
@@ -240,7 +259,7 @@ module TeamHelper
           end
         end
 
-        position = player.position_for_week(nfl_week[:season_type_id], nfl_week[:week])
+        position = player.position_for_week(season_id, nfl_week[:season_type_id], nfl_week[:week])
         unless position
           raise "Cannot add #{player.full_name} (Id #{player.id}), cannot find position for league week #{league_week}"
         end
@@ -271,7 +290,7 @@ module TeamHelper
     ActiveRecord::Base.transaction do
       players = NflPlayer.where(id: players).to_a
       players.each { |player|
-        game = player.game_for_week(nfl_week[:season_type_id], nfl_week[:week])
+        game = player.game_for_week(self.league.season_id, nfl_week[:season_type_id], nfl_week[:week])
         if game
           if game.start_time <= now
             raise "Cannot drop #{player.full_name} (Id #{player.id}), NFL game has already started"

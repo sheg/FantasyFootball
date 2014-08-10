@@ -46,7 +46,7 @@ class TeamTransaction < ActiveRecord::Base
 
     if league_week
       week = League.find_by(id: league_id).get_league_week_data_for_week(league_week)
-      transactions = transactions.where(transaction_status_id: 1).where("transaction_date < ?", week.end_date).order(:transaction_date, :id)
+      transactions = transactions.where(transaction_status_id: [ 1, 2 ]).where("transaction_date < ?", week.end_date).order(:transaction_date, :id)
     end
     transactions = transactions.to_a
 

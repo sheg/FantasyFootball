@@ -7,6 +7,7 @@ class League < ActiveRecord::Base
   has_many :users, :through => :teams
   has_many :payouts, class_name: LeaguePayout
   has_many :transactions, class_name: TeamTransaction
+  has_many :team_standings, through: :teams
 
   validates :name, :uniqueness => { :case_sensitive => false }, :presence => true
   validates :size, :presence => true, :numericality => :only_integer
