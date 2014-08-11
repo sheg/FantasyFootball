@@ -1,6 +1,3 @@
-require 'factory_girl'
-require File.join(Rails.root, 'spec', 'support', 'factories.rb')
-
 namespace :ff do
   namespace :data do
     desc "Fill database with 10 fake leagues"

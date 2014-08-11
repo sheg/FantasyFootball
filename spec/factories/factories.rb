@@ -7,17 +7,25 @@ FactoryGirl.define do
 
     size { number_of_teams }
     name { generate(:random_name) }
-    league_type_id { [1, 2, 3].sample }
+    league_type_id { LeagueType.all.map { |league_type| league_type.id }.sample }
     entry_amount { [25.00, 50.00, 100.00, 150.00].sample }
     fee_percent 0.20
     draft_start_date { Random.rand(90).days.from_now }
     is_private false
     weeks 13
-    season_id 2
+    season_id NflLoader.new.current_season.id
 
     after(:build) do |league, evaluator|
       create_list(:team, evaluator.number_of_teams, league: league)
       league.reload if league.id
+    end
+
+    factory :drafted_league do
+      after(:build) { |league| league_draft(league.id) }
+    end
+
+    factory :private_league do
+      is_private true
     end
 
     factory :weekly_league do
@@ -77,5 +85,14 @@ FactoryGirl.define do
 
   sequence :random_email do |n|
     "#{n}_#{Faker::Internet.email}"
+  end
+end
+
+def league_draft(league_id)
+  league = League.find_by(id: league_id)
+  if league
+    league.test_draft
+  else
+    puts "No such league ID #{id}"
   end
 end
