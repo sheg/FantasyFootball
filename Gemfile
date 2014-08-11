@@ -18,12 +18,14 @@ group :test do
   gem 'capybara'
 end
 
+gem 'angularjs-rails'
 gem "therubyracer", :platform => :ruby
 gem "twitter-bootstrap-rails"
 gem 'bootstrap-timepicker-rails'
 gem 'uglifier', '2.1.1'
-gem 'sass-rails', '~> 4.0.0'
-gem 'bootstrap-sass', '2.3.2.0'
+gem 'bootstrap-sass', '~> 3.2.0'
+gem 'sass-rails', '>= 3.2'
+gem 'autoprefixer-rails'
 gem 'tzinfo-data'
 gem 'jquery-ui-rails'
 gem 'jquery-rails'
@@ -31,7 +33,6 @@ gem 'will_paginate', '~> 3.0'
 gem 'turbolinks', '1.1.1'
 gem 'jbuilder', '1.0.2'
 gem 'bcrypt-ruby', '~> 3.1.5', :require => 'bcrypt'
-gem 'bootstrap-sass', '2.3.2.0'
 gem 'httparty', '0.12.0'
 gem 'composite_primary_keys', {
     :git => 'git://github.com/composite-primary-keys/composite_primary_keys.git',

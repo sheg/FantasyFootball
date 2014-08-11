@@ -86,6 +86,9 @@ class LeaguesController < ApplicationController
   def league_info
   end
 
+  def draft
+  end
+
   private
 
   def user_team

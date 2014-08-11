@@ -1,3 +1,4 @@
+@import "bootstrap-sprockets";
 @import "bootstrap";
 
 label {
@@ -264,4 +265,13 @@ label.required:after{
       padding: 0.1em 0.25em;
     }
   }
+}
+
+.draft-pool {
+  width: 50%;
+}
+
+.team-draft-list {
+  background-color: #e2f3f5;
+  margin-bottom: 5px;
 }
