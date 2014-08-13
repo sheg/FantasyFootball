@@ -24,4 +24,9 @@ FantasyFootball::Application.routes.draw do
   resources :users, except: [:index]
   match "/users/email_exists/:email_address", to: "users#email_exists", via: "get", constraints: { :email_address => /[^\/]+/ }
   match "/signup", to: "users#new", via: "get"
+
+
+  namespace :api, path: '/v1', constraints: { subdomain: 'api' } do
+    resources :players, only: [:index, :show]
+  end
 end

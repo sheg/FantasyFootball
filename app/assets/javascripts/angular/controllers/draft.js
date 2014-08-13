@@ -8,26 +8,43 @@
         'first_name': 'Eli',
         'last_name': 'Manning',
         'position': 'QB',
-        'team': 'NYG'
+        'team': 'NYG',
+        'BYE': '5'
       },
       {
         'first_name': 'Alex',
         'last_name': 'Smith',
         'position': 'QB',
-        'team': 'KC'
+        'team': 'KC',
+        'BYE': '4'
       },
       {
         'first_name': 'Frank',
         'last_name': 'Gore',
         'position': 'RB',
-        'team': 'SF'
+        'team': 'SF',
+        'BYE': '8'
       }
     ];
   });
 
   app.controller('DraftPlayersController', ['$scope', 'Players', function($scope, players) {
     $scope.players = players;
+    $scope.selectedPlayer = {};
+
+    $scope.selectPlayer = function(player) {
+      $scope.selectedPlayer = player;
+    };
+
+    $scope.isPlayerSelected = function() {
+      return !($.isEmptyObject($scope.selectedPlayer));
+    };
+
+    $scope.playerFullName = function(player) {
+      return player.last_name + ", " + player.first_name;
+    };
   }]);
+
 })();
 
 
