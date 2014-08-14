@@ -27,11 +27,11 @@
     <th>BYE</th>
     <th>Rank</th>
     <tbody>
-      <tr ng-repeat="player in players">
-        <td ng-click="selectPlayer(player)"> {{ playerFullName(player) }} </td>
-        <td> {{ player.position }} </td>
-        <td> {{ player.team }} </td>
-        <td> {{ player.BYE }} </td>
+      <tr ng-repeat="playerData in players.playerData">
+        <td ng-click="selectPlayer(playerData.player)"> {{ playerFullName(playerData.player) }} </td>
+        <td> {{ playerData.position_abbr }} </td>
+        <td> {{ playerData.team.abbr }} </td>
+        <td> {{ playerData.player.BYE }} </td>
       </tr>
     </tbody>
   </table>
@@ -45,6 +45,3 @@
     <p ng-show="isPlayerSelected()"> {{ playerFullName(selectedPlayer) }} </p>
   </div>
 </div>
-
-
-
